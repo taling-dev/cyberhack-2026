@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/taling-dev/simaops-outbox-publisher
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8082
+
+env:
+  TIDB_DSN: "root:@tcp(tidb-cluster-tidb.platform:4000)/simaops?parseTime=true"
+  NATS_URL: "nats://nats.platform:4222"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
+  OTEL_SERVICE_NAME: "simaops-outbox-publisher"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+hpa:
+  enabled: false
+
+pdb:
+  enabled: false

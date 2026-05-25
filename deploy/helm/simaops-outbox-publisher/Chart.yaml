@@ -1,0 +1,5 @@
+apiVersion: v2
+name: simaops-outbox-publisher
+description: SimaOps outbox-to-NATS publisher (singleton)
+version: 0.1.0
+appVersion: "0.1.0"

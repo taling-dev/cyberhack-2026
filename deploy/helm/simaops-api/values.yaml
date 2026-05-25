@@ -1,0 +1,42 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/taling-dev/simaops-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8080
+
+env:
+  TIDB_DSN: "root:@tcp(tidb-cluster-tidb.platform:4000)/simaops?parseTime=true"
+  MINIO_ENDPOINT: "minio.platform:9000"
+  MINIO_ACCESS_KEY: "simaops"
+  MINIO_SECRET_KEY: "simaops-dev-secret"
+  NATS_URL: "nats://nats.platform:4222"
+  KEYCLOAK_ISSUER: "http://keycloak.platform:8080/realms/simaops"
+  KEYCLOAK_CLIENT_ID: "simaops-web"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
+  OTEL_SERVICE_NAME: "simaops-api"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilization: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: true
+  interval: 15s
