@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -125,7 +126,80 @@ func (s *QCService) GetQCResult(ctx context.Context, req *connect.Request[qcv1.G
 }
 
 func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.ReviewQCRequest]) (*connect.Response[qcv1.ReviewQCResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("implemented in Task 11"))
+	msg := req.Msg
+	if msg.QcJobId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("qc_job_id required"))
+	}
+	if msg.Decision == qcv1.SupervisorDecision_SUPERVISOR_DECISION_UNSPECIFIED {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("decision required"))
+	}
+
+	// Fetch job to validate state
+	job, err := s.q.GetQCJob(ctx, msg.QcJobId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("qc job not found"))
+	}
+	if job.Status != db.QcJobsStatusAICOMPLETED && job.Status != db.QcJobsStatusNEEDSHUMANREVIEW {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("job not in reviewable state (current: %s)", job.Status))
+	}
+
+	// Fetch result to check if reason is required (override)
+	result, err := s.q.GetQCResult(ctx, msg.QcJobId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("qc result not found for job"))
+	}
+
+	// Reason enforcement: required on rejection, and on approval when AI recommended REVIEW or FAIL
+	isOverride := (msg.Decision == qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED &&
+		(result.Recommendation == db.QcResultsRecommendationREVIEW || result.Recommendation == db.QcResultsRecommendationFAIL))
+	isRejection := msg.Decision == qcv1.SupervisorDecision_SUPERVISOR_DECISION_REJECTED
+
+	if (isOverride || isRejection) && msg.Reason == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("reason is required for rejections and approval overrides"))
+	}
+
+	// Map decision to DB enum
+	var dbDecision db.NullQcResultsSupervisorDecision
+	switch msg.Decision {
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED:
+		dbDecision = db.NullQcResultsSupervisorDecision{QcResultsSupervisorDecision: "APPROVED", Valid: true}
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_REJECTED:
+		dbDecision = db.NullQcResultsSupervisorDecision{QcResultsSupervisorDecision: "REJECTED", Valid: true}
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK:
+		dbDecision = db.NullQcResultsSupervisorDecision{QcResultsSupervisorDecision: "RECHECK", Valid: true}
+	}
+
+	// Update QC result with supervisor decision
+	err = s.q.UpdateQCResultReview(ctx, db.UpdateQCResultReviewParams{
+		SupervisorDecision: dbDecision,
+		ReviewedBy:         toNullString("dev-supervisor"), // TODO: from JWT in Task 15
+		ReviewReason:       toNullString(msg.Reason),
+		QcJobID:            msg.QcJobId,
+	})
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update review: %w", err))
+	}
+
+	// Advance lot and job status based on decision
+	switch msg.Decision {
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED:
+		_ = s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusAPPROVED, ID: msg.QcJobId})
+		_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCAPPROVED, ID: job.LotID})
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_REJECTED:
+		_ = s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusREJECTED, ID: msg.QcJobId})
+		_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCREJECTED, ID: job.LotID})
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK:
+		// Reset to allow re-upload and re-QC
+		_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: job.LotID})
+	}
+
+	now := time.Now()
+	return connect.NewResponse(&qcv1.ReviewQCResponse{
+		QcJobId:    msg.QcJobId,
+		Decision:   msg.Decision,
+		ReviewedBy: "dev-supervisor",
+		ReviewedAt: timestamppb.New(now),
+	}), nil
 }
 
 func (s *QCService) RetryQCJob(ctx context.Context, req *connect.Request[qcv1.RetryQCJobRequest]) (*connect.Response[qcv1.RetryQCJobResponse], error) {
@@ -247,4 +321,11 @@ func supervisorDecisionFromDB(s string) qcv1.SupervisorDecision {
 	default:
 		return qcv1.SupervisorDecision_SUPERVISOR_DECISION_UNSPECIFIED
 	}
+}
+
+func toNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: s, Valid: true}
 }
