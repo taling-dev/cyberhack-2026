@@ -52,7 +52,7 @@ func main() {
 
 	// Wrap with middleware
 	jwtMw := auth.NewJWTMiddleware()
-	h := middleware.RequestID(middleware.Logger(logger, middleware.CORS(jwtMw.Wrap(auth.RBACMiddleware(mux)))))
+	h := middleware.RequestID(middleware.Logger(logger, middleware.CORS(jwtMw.Wrap(auth.RBACMiddleware(middleware.Idempotency(dbConn, mux))))))
 
 	port := os.Getenv("PORT")
 	if port == "" {
