@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: simaops-seed
+  namespace: simaops
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        # Upload ONNX model to MinIO
+        - name: upload-model
+          image: minio/mc:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mc alias set minio http://minio.platform:9000 simaops simaops-dev-secret
+              mc cp --quiet /seed/yolov8n.onnx minio/simaops-model-artifacts/yolov8n.onnx || true
+              mc cp --quiet /seed/findings_map.yaml minio/simaops-model-artifacts/findings_map.yaml || true
+              echo "Model upload complete"
+          volumeMounts:
+            - name: seed-data
+              mountPath: /seed
+      containers:
+        # Run SQL seed
+        - name: seed-db
+          image: mysql:8.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mysql -h tidb-cluster-tidb.platform -P 4000 -u root simaops < /seed/data.sql
+              echo "Database seed complete"
+          volumeMounts:
+            - name: seed-data
+              mountPath: /seed
+      volumes:
+        - name: seed-data
+          configMap:
+            name: simaops-seed-data
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simaops-seed-data
+  namespace: simaops
+data:
+  data.sql: |
+    -- Seed data loaded from db/seed/data.sql at deploy time
+    -- This ConfigMap is populated by the CI/CD pipeline
+  findings_map.yaml: |
+    RAW_BOTANICAL:
+      classes:
+        banana: { mapped_to: ripeness_signal, anomaly: false }
+        apple: { mapped_to: ripeness_signal, anomaly: false }
+        bottle: { mapped_to: foreign_matter, anomaly: true }
+        person: { mapped_to: human_artifact, anomaly: true }
+      rules:
+        pass: "max_confidence >= 0.85 AND no_anomaly"
+        review: "max_confidence >= 0.50 AND any_anomaly"
+        fail: "anomaly_count >= 2"
+    EXTRACT_POWDER:
+      classes:
+        bowl: { mapped_to: container_visible, anomaly: false }
+        cup: { mapped_to: container_visible, anomaly: false }
+        bottle: { mapped_to: contamination_artifact, anomaly: true }
+        person: { mapped_to: human_artifact, anomaly: true }
+      rules:
+        pass: "max_confidence >= 0.80 AND no_anomaly"
+        review: "max_confidence >= 0.50 AND any_anomaly"
+        fail: "anomaly_count >= 2 OR any_class('person')"
