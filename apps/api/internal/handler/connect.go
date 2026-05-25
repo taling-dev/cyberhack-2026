@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"net/http"
 
-	"connectrpc.com/connect"
-
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1/adminv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/audit/v1/auditv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/dashboard/v1/dashboardv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1/lotv1connect"
@@ -39,15 +38,7 @@ func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.
 	dashPath, dashHandler := dashboardv1connect.NewDashboardServiceHandler(NewDashboardService(queries))
 	mux.Handle(dashPath, dashHandler)
 
-	// Remaining services — stubs
-	mux.Handle("/simaops.admin.v1.AdminService/", newUnimplementedHandler())
-}
-
-func newUnimplementedHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := connect.NewError(connect.CodeUnimplemented, nil)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"code":"` + err.Code().String() + `"}`))
-	})
+	// AdminService
+	adminPath, adminHandler := adminv1connect.NewAdminServiceHandler(NewAdminService(queries))
+	mux.Handle(adminPath, adminHandler)
 }

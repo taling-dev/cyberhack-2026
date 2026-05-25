@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/auth"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/handler"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/storage"
@@ -50,7 +51,8 @@ func main() {
 	handler.RegisterConnectHandlers(mux, dbConn, minioClient)
 
 	// Wrap with middleware
-	h := middleware.RequestID(middleware.Logger(logger, middleware.CORS(mux)))
+	jwtMw := auth.NewJWTMiddleware()
+	h := middleware.RequestID(middleware.Logger(logger, middleware.CORS(jwtMw.Wrap(auth.RBACMiddleware(mux)))))
 
 	port := os.Getenv("PORT")
 	if port == "" {
