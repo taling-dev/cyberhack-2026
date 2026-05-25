@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/audit/v1/auditv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1/lotv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/qc/v1/qcv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1/warehousev1connect"
@@ -29,8 +30,11 @@ func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.
 	whPath, whHandler := warehousev1connect.NewWarehouseServiceHandler(NewWarehouseService(queries))
 	mux.Handle(whPath, whHandler)
 
+	// AuditService
+	auditPath, auditHandler := auditv1connect.NewAuditServiceHandler(NewAuditService(queries))
+	mux.Handle(auditPath, auditHandler)
+
 	// Remaining services — stubs
-	mux.Handle("/simaops.audit.v1.AuditService/", newUnimplementedHandler())
 	mux.Handle("/simaops.dashboard.v1.DashboardService/", newUnimplementedHandler())
 	mux.Handle("/simaops.admin.v1.AdminService/", newUnimplementedHandler())
 }

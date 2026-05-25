@@ -5,10 +5,12 @@
   import { createConnectTransport } from '@connectrpc/connect-web';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
+  import { AuditService } from '$lib/gen/simaops/audit/v1/audit_pb';
 
   const transport = createConnectTransport({ baseUrl: 'http://localhost:8080', useBinaryFormat: false });
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
+  const auditClient = createClient(AuditService, transport);
   const queryClient = useQueryClient();
 
   const lotId = $derived($page.params.id);
@@ -16,6 +18,11 @@
   const lotQuery = createQuery({
     queryKey: ['lot', lotId],
     queryFn: () => lotClient.getLot({ lotId })
+  });
+
+  const timelineQuery = createQuery({
+    queryKey: ['lot-timeline', lotId],
+    queryFn: () => auditClient.getEntityAuditTrail({ entityType: 'lot', entityId: lotId })
   });
 
   // Upload state
@@ -199,10 +206,27 @@
       {/if}
     </div>
 
-    <!-- Timeline placeholder -->
+    <!-- Timeline -->
     <div class="border rounded-lg p-4">
       <h2 class="font-semibold text-sm text-gray-500 uppercase mb-3">Timeline</h2>
-      <p class="text-gray-400 text-sm">Audit trail will appear here (Task 13).</p>
+      {#if $timelineQuery.isLoading}
+        <p class="text-gray-400 text-sm">Loading timeline...</p>
+      {:else if ($timelineQuery.data?.entries?.length ?? 0) > 0}
+        <div class="space-y-3">
+          {#each $timelineQuery.data?.entries ?? [] as entry}
+            <div class="flex gap-3 text-sm">
+              <div class="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+              <div>
+                <span class="font-medium">{entry.action}</span>
+                <span class="text-gray-400 ml-2">by {entry.actorUserId} ({entry.actorRole})</span>
+                <p class="text-xs text-gray-400">{entry.createdAt?.toDate().toLocaleString()}</p>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <p class="text-gray-400 text-sm">No audit entries yet.</p>
+      {/if}
     </div>
 
     <a href="/lots" class="inline-block text-sm text-blue-600 hover:underline">← Back to lots</a>
