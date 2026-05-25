@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "SimaOps AI",
+    "tagline": "Operations Platform"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "lots": "Lots",
+    "qc": "Quality Control",
+    "warehouse": "Warehouse",
+    "audit": "Audit Log",
+    "admin": "Admin"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "search": "Search",
+    "filter": "Filter",
+    "status": "Status",
+    "actions": "Actions",
+    "created": "Created",
+    "updated": "Updated"
+  },
+  "locale": {
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "app": {
+    "name": "SimaOps AI",
+    "tagline": "Platform Operasional"
+  },
+  "nav": {
+    "dashboard": "Dasbor",
+    "lots": "Lot",
+    "qc": "Kontrol Kualitas",
+    "warehouse": "Gudang",
+    "audit": "Log Audit",
+    "admin": "Admin"
+  },
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "delete": "Hapus",
+    "search": "Cari",
+    "filter": "Filter",
+    "status": "Status",
+    "actions": "Aksi",
+    "created": "Dibuat",
+    "updated": "Diperbarui"
+  },
+  "locale": {
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  }
+}
