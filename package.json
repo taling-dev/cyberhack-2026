@@ -1,0 +1,14 @@
+{
+  "name": "simaops-ai",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @simaops/web dev",
+    "build": "pnpm --filter @simaops/web build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  }
+}

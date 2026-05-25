@@ -1,28 +1,54 @@
-# Dependencies
-/node_modules
-
-# Next.js
-/.next/
-/out/
-
-# Production
-/build
-
-# Misc
+# ─── OS ───────────────────────────────────────────────────────────
 .DS_Store
-*.pem
-docs
+Thumbs.db
 
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local environment variables
-.env*.local
+# ─── Env / secrets ────────────────────────────────────────────────
 .env
+.env.*
+!.env.example
 
-# MCP configuration (contains tokens)
-.vscode/mcp.json
-.kiro/settings/mcp.json
-.gemini/antigravity/mcp_config.json
+# ─── Node / pnpm ──────────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+dist/
+.svelte-kit/
+.next/
+.output/
+
+# ─── Go ───────────────────────────────────────────────────────────
+/apps/api/api
+/apps/outbox-publisher/outbox-publisher
+*.exe
+go.work.sum
+
+# ─── Python ───────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# ─── Proto generated (committed, but ignore local drift) ─────────
+# Generated code IS committed; this section intentionally empty.
+
+# ─── IDE ──────────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
+
+# ─── Docker / k8s ─────────────────────────────────────────────────
+*.tar
+*.tar.gz
+
+# ─── Infra / SST ──────────────────────────────────────────────────
+.sst/
+.pulumi/
+
+# ─── Test / coverage ──────────────────────────────────────────────
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+
+# ─── Misc ─────────────────────────────────────────────────────────
+*.log
+tmp/
