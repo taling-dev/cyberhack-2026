@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package simaops.qc.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service QCService {
+  rpc CreateQCUploadUrl(CreateQCUploadUrlRequest) returns (CreateQCUploadUrlResponse);
+  rpc CreateQCJob(CreateQCJobRequest) returns (CreateQCJobResponse);
+  rpc GetQCJob(GetQCJobRequest) returns (GetQCJobResponse);
+  rpc GetQCResult(GetQCResultRequest) returns (GetQCResultResponse);
+  rpc ReviewQC(ReviewQCRequest) returns (ReviewQCResponse);
+  rpc RetryQCJob(RetryQCJobRequest) returns (RetryQCJobResponse);
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum QCJobStatus {
+  QC_JOB_STATUS_UNSPECIFIED = 0;
+  QC_JOB_STATUS_QUEUED = 1;
+  QC_JOB_STATUS_PROCESSING = 2;
+  QC_JOB_STATUS_AI_COMPLETED = 3;
+  QC_JOB_STATUS_NEEDS_HUMAN_REVIEW = 4;
+  QC_JOB_STATUS_APPROVED = 5;
+  QC_JOB_STATUS_REJECTED = 6;
+  QC_JOB_STATUS_FAILED = 7;
+}
+
+enum QCRecommendation {
+  QC_RECOMMENDATION_UNSPECIFIED = 0;
+  QC_RECOMMENDATION_PASS = 1;
+  QC_RECOMMENDATION_REVIEW = 2;
+  QC_RECOMMENDATION_FAIL = 3;
+}
+
+enum SupervisorDecision {
+  SUPERVISOR_DECISION_UNSPECIFIED = 0;
+  SUPERVISOR_DECISION_APPROVED = 1;
+  SUPERVISOR_DECISION_REJECTED = 2;
+  SUPERVISOR_DECISION_RECHECK = 3;
+}
+
+// ─── Messages ────────────────────────────────────────────────────
+
+message QCJob {
+  string id = 1;
+  string lot_id = 2;
+  string image_object_key = 3;
+  QCJobStatus status = 4;
+  string requested_by = 5;
+  string failure_reason = 6;
+  google.protobuf.Timestamp started_at = 7;
+  google.protobuf.Timestamp completed_at = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message QCFinding {
+  string class_name = 1;
+  string mapped_finding = 2;
+  double confidence = 3;
+  bool is_anomaly = 4;
+}
+
+message QCResult {
+  string id = 1;
+  string qc_job_id = 2;
+  string lot_id = 3;
+  QCRecommendation recommendation = 4;
+  double confidence = 5;
+  repeated QCFinding findings = 6;
+  string model_version = 7;
+  string annotated_image_key = 8;
+  SupervisorDecision supervisor_decision = 9;
+  string reviewed_by = 10;
+  string review_reason = 11;
+  google.protobuf.Timestamp reviewed_at = 12;
+  google.protobuf.Timestamp created_at = 13;
+}
+
+// ─── Requests / Responses ────────────────────────────────────────
+
+message CreateQCUploadUrlRequest {
+  string lot_id = 1;
+  string filename = 2;
+  string content_type = 3;
+  string idempotency_key = 4;
+}
+
+message CreateQCUploadUrlResponse {
+  string object_key = 1;
+  string upload_url = 2;
+  int64 expires_at_unix = 3;
+}
+
+message CreateQCJobRequest {
+  string lot_id = 1;
+  string image_object_key = 2;
+  string idempotency_key = 3;
+}
+
+message CreateQCJobResponse {
+  QCJob job = 1;
+}
+
+message GetQCJobRequest {
+  string qc_job_id = 1;
+}
+
+message GetQCJobResponse {
+  QCJob job = 1;
+}
+
+message GetQCResultRequest {
+  string qc_job_id = 1;
+}
+
+message GetQCResultResponse {
+  QCResult result = 1;
+}
+
+message ReviewQCRequest {
+  string qc_job_id = 1;
+  SupervisorDecision decision = 2;
+  string reason = 3;
+  string idempotency_key = 4;
+}
+
+message ReviewQCResponse {
+  string qc_job_id = 1;
+  SupervisorDecision decision = 2;
+  string reviewed_by = 3;
+  google.protobuf.Timestamp reviewed_at = 4;
+}
+
+message RetryQCJobRequest {
+  string qc_job_id = 1;
+  string reason = 2;
+}
+
+message RetryQCJobResponse {
+  QCJob job = 1;
+}

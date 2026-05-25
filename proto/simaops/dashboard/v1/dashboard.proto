@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package simaops.dashboard.v1;
+
+service DashboardService {
+  rpc GetOpsDashboard(GetOpsDashboardRequest) returns (GetOpsDashboardResponse);
+  rpc GetQCMetrics(GetQCMetricsRequest) returns (GetQCMetricsResponse);
+  rpc GetWarehouseMetrics(GetWarehouseMetricsRequest) returns (GetWarehouseMetricsResponse);
+}
+
+// ─── Messages ────────────────────────────────────────────────────
+
+message StatusCount {
+  string status = 1;
+  int32 count = 2;
+}
+
+// ─── Ops Dashboard ───────────────────────────────────────────────
+
+message GetOpsDashboardRequest {}
+
+message GetOpsDashboardResponse {
+  repeated StatusCount lots_by_status = 1;
+  int32 today_intake_count = 2;
+  int32 lots_awaiting_qc = 3;
+  int32 lots_ready_for_production = 4;
+  int32 total_lots = 5;
+}
+
+// ─── QC Metrics ──────────────────────────────────────────────────
+
+message GetQCMetricsRequest {
+  int32 hours = 1; // lookback window, default 24
+}
+
+message GetQCMetricsResponse {
+  int32 total_jobs = 1;
+  int32 pass_count = 2;
+  int32 review_count = 3;
+  int32 fail_count = 4;
+  double average_confidence = 5;
+  double pass_rate = 6;
+  int32 pending_review_count = 7;
+}
+
+// ─── Warehouse Metrics ───────────────────────────────────────────
+
+message GetWarehouseMetricsRequest {}
+
+message ZoneMetrics {
+  string zone = 1;
+  int32 total_capacity = 2;
+  int32 occupied = 3;
+  int32 available = 4;
+}
+
+message GetWarehouseMetricsResponse {
+  repeated ZoneMetrics zones = 1;
+  int32 total_capacity = 2;
+  int32 total_occupied = 3;
+  int32 total_available = 4;
+}

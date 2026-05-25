@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package simaops.warehouse.v1;
+
+import "google/protobuf/timestamp.proto";
+import "simaops/lot/v1/lot.proto";
+
+service WarehouseService {
+  rpc ListLocations(ListLocationsRequest) returns (ListLocationsResponse);
+  rpc RecommendSlot(RecommendSlotRequest) returns (RecommendSlotResponse);
+  rpc AssignSlot(AssignSlotRequest) returns (AssignSlotResponse);
+  rpc GetWarehouseAssignments(GetWarehouseAssignmentsRequest) returns (GetWarehouseAssignmentsResponse);
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum LocationStatus {
+  LOCATION_STATUS_UNSPECIFIED = 0;
+  LOCATION_STATUS_AVAILABLE = 1;
+  LOCATION_STATUS_OCCUPIED = 2;
+  LOCATION_STATUS_MAINTENANCE = 3;
+}
+
+enum AssignmentStatus {
+  ASSIGNMENT_STATUS_UNSPECIFIED = 0;
+  ASSIGNMENT_STATUS_ACTIVE = 1;
+  ASSIGNMENT_STATUS_RELEASED = 2;
+}
+
+// ─── Messages ────────────────────────────────────────────────────
+
+message WarehouseLocation {
+  string id = 1;
+  string code = 2;
+  string zone = 3;
+  double temperature_min = 4;
+  double temperature_max = 5;
+  repeated simaops.lot.v1.HazardClass hazard_allowed = 6;
+  repeated string drum_compatibility = 7;
+  int32 capacity = 8;
+  LocationStatus current_status = 9;
+}
+
+message WarehouseAssignment {
+  string id = 1;
+  string lot_id = 2;
+  string location_id = 3;
+  string location_code = 4;
+  string assigned_by = 5;
+  google.protobuf.Timestamp assigned_at = 6;
+  AssignmentStatus status = 7;
+}
+
+message SlotRecommendation {
+  WarehouseLocation location = 1;
+  string reason = 2;
+  double score = 3;
+}
+
+// ─── Requests / Responses ────────────────────────────────────────
+
+message ListLocationsRequest {
+  string zone_filter = 1;
+  LocationStatus status_filter = 2;
+}
+
+message ListLocationsResponse {
+  repeated WarehouseLocation locations = 1;
+}
+
+message RecommendSlotRequest {
+  string lot_id = 1;
+}
+
+message RecommendSlotResponse {
+  repeated SlotRecommendation recommendations = 1;
+}
+
+message AssignSlotRequest {
+  string lot_id = 1;
+  string location_id = 2;
+  string idempotency_key = 3;
+}
+
+message AssignSlotResponse {
+  WarehouseAssignment assignment = 1;
+}
+
+message GetWarehouseAssignmentsRequest {
+  string lot_id = 1;
+  string location_id = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+}
+
+message GetWarehouseAssignmentsResponse {
+  repeated WarehouseAssignment assignments = 1;
+  string next_page_token = 2;
+}

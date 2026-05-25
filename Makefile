@@ -2,8 +2,10 @@
 
 # ─── Code generation ──────────────────────────────────────────────
 .PHONY: gen
-gen: ## Run buf generate (proto → Go/TS/Python)
-	@echo "TODO: buf lint && buf generate"
+gen: ## Run buf lint + buf generate (proto → Go/TS/Python)
+	buf lint
+	buf format -w
+	buf generate
 
 # ─── Lint ─────────────────────────────────────────────────────────
 .PHONY: lint

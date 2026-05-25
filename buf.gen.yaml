@@ -1,0 +1,29 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen
+plugins:
+  # Go protobuf messages
+  - remote: buf.build/protocolbuffers/go
+    out: apps/api/internal/gen
+    opt: paths=source_relative
+
+  # Go Connect RPC service stubs
+  - remote: buf.build/connectrpc/go
+    out: apps/api/internal/gen
+    opt: paths=source_relative
+
+  # TypeScript Connect-ES (messages + service definitions)
+  - remote: buf.build/connectrpc/es
+    out: apps/web/src/lib/gen
+    opt: target=ts
+
+  # Python protobuf messages (for AI worker type hints)
+  - remote: buf.build/protocolbuffers/python
+    out: apps/ai-worker/simaops_proto
+
+  # Python gRPC stubs (for type completeness)
+  - remote: buf.build/grpc/python
+    out: apps/ai-worker/simaops_proto

@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package simaops.lot.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service LotService {
+  rpc CreateLot(CreateLotRequest) returns (CreateLotResponse);
+  rpc GetLot(GetLotRequest) returns (GetLotResponse);
+  rpc ListLots(ListLotsRequest) returns (ListLotsResponse);
+  rpc UpdateLotStatus(UpdateLotStatusRequest) returns (UpdateLotStatusResponse);
+  rpc GetLotTimeline(GetLotTimelineRequest) returns (GetLotTimelineResponse);
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum MaterialType {
+  MATERIAL_TYPE_UNSPECIFIED = 0;
+  MATERIAL_TYPE_RAW_BOTANICAL = 1;
+  MATERIAL_TYPE_EXTRACT = 2;
+  MATERIAL_TYPE_POWDER = 3;
+  MATERIAL_TYPE_OTHER = 4;
+}
+
+enum LotStatus {
+  LOT_STATUS_UNSPECIFIED = 0;
+  LOT_STATUS_DRAFT = 1;
+  LOT_STATUS_PENDING_QC = 2;
+  LOT_STATUS_AI_PROCESSING = 3;
+  LOT_STATUS_QC_REVIEW = 4;
+  LOT_STATUS_QC_APPROVED = 5;
+  LOT_STATUS_QC_REJECTED = 6;
+  LOT_STATUS_WAREHOUSE_ASSIGNED = 7;
+  LOT_STATUS_READY_FOR_PRODUCTION = 8;
+  LOT_STATUS_BLOCKED = 9;
+}
+
+enum TemperatureRange {
+  TEMPERATURE_RANGE_UNSPECIFIED = 0;
+  TEMPERATURE_RANGE_AMBIENT = 1;
+  TEMPERATURE_RANGE_COLD = 2;
+  TEMPERATURE_RANGE_DEEP_FREEZE = 3;
+}
+
+enum HazardClass {
+  HAZARD_CLASS_UNSPECIFIED = 0;
+  HAZARD_CLASS_NONE = 1;
+  HAZARD_CLASS_IBC = 2;
+  HAZARD_CLASS_IPPC = 3;
+}
+
+// ─── Messages ────────────────────────────────────────────────────
+
+message StorageRequirement {
+  TemperatureRange temperature_range = 1;
+  HazardClass hazard_class = 2;
+}
+
+message Lot {
+  string id = 1;
+  string lot_number = 2;
+  string supplier_name = 3;
+  string material_name = 4;
+  MaterialType material_type = 5;
+  double quantity = 6;
+  string unit = 7;
+  string arrival_date = 8;
+  StorageRequirement storage_requirement = 9;
+  LotStatus status = 10;
+  string created_by = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+// ─── Requests / Responses ────────────────────────────────────────
+
+message CreateLotRequest {
+  string supplier_name = 1;
+  string material_name = 2;
+  MaterialType material_type = 3;
+  double quantity = 4;
+  string unit = 5;
+  string arrival_date = 6;
+  StorageRequirement storage_requirement = 7;
+  string idempotency_key = 8;
+}
+
+message CreateLotResponse {
+  Lot lot = 1;
+}
+
+message GetLotRequest {
+  string lot_id = 1;
+}
+
+message GetLotResponse {
+  Lot lot = 1;
+}
+
+message ListLotsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  LotStatus status_filter = 3;
+  MaterialType material_type_filter = 4;
+}
+
+message ListLotsResponse {
+  repeated Lot lots = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+message UpdateLotStatusRequest {
+  string lot_id = 1;
+  LotStatus new_status = 2;
+  string reason = 3;
+  string idempotency_key = 4;
+}
+
+message UpdateLotStatusResponse {
+  Lot lot = 1;
+}
+
+message GetLotTimelineRequest {
+  string lot_id = 1;
+}
+
+message TimelineEntry {
+  string id = 1;
+  string action = 2;
+  string actor_user_id = 3;
+  string actor_role = 4;
+  string details = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message GetLotTimelineResponse {
+  repeated TimelineEntry entries = 1;
+}
