@@ -1,12 +1,5 @@
 {
   "mcpServers": {
-    "buildpad": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@buildpad/mcp@latest"
-      ]
-    },
     "daas": {
       "url": "https://7d04fbd4-4f59-4527-bf9c-ed315c67c5f8.daas3.buildpad.ai/api/mcp",
       "headers": {
@@ -18,6 +11,25 @@
       "headers": {
         "Authorization": "Bearer 41c3fb55f5bd4b9ab90821908b6ca402a3b52f35265c406f9a016db93090b1ad"
       }
-    }
+    },
+    "buildpad": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@buildpad/mcp@latest"
+      ]
+    },
+    "exa": {
+  "command": "npx",
+  "args": [
+    "--no",
+    "-y",
+    "exa-mcp-server"
+  ],
+  "env": {
+    "EXA_API_KEY": "8c992ed2-c6d7-4d6d-89f5-3838f09dad5d"
+  }
+}
+
   }
 }

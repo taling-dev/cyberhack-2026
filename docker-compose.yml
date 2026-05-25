@@ -1,0 +1,107 @@
+services:
+  # ─── TiDB (MySQL-compatible distributed SQL) ──────────────────
+  tidb:
+    image: pingcap/tidb:v7.5.0
+    ports:
+      - "4000:4000"   # MySQL protocol
+      - "10080:10080" # status/metrics
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "4000", "-u", "root"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # ─── MinIO (S3-compatible object storage) ─────────────────────
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console
+    environment:
+      MINIO_ROOT_USER: simaops
+      MINIO_ROOT_PASSWORD: simaops-dev-secret
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - minio-data:/data
+
+  # MinIO bucket initialization
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 simaops simaops-dev-secret &&
+      mc mb --ignore-existing local/simaops-qc-images &&
+      mc mb --ignore-existing local/simaops-qc-results &&
+      mc mb --ignore-existing local/simaops-reports &&
+      mc mb --ignore-existing local/simaops-model-artifacts &&
+      echo 'Buckets created successfully'
+      "
+
+  # ─── NATS JetStream (event bus) ──────────────────────────────
+  nats:
+    image: nats:2.10-alpine
+    command: ["--jetstream", "--store_dir", "/data", "-p", "4222", "-m", "8222"]
+    ports:
+      - "4222:4222"   # Client
+      - "8222:8222"   # Monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - nats-data:/data
+
+  # ─── Keycloak (OIDC Identity Provider) ───────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: ["start-dev", "--import-realm"]
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - ./deploy/keycloak:/opt/keycloak/data/import:ro
+
+  # ─── OpenTelemetry Collector ─────────────────────────────────
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    command: ["--config", "/etc/otel/config.yaml"]
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    volumes:
+      - ./infra/otel/otel-collector-config.yaml:/etc/otel/config.yaml:ro
+    depends_on:
+      jaeger:
+        condition: service_started
+
+  # ─── Jaeger (distributed tracing UI) ─────────────────────────
+  jaeger:
+    image: jaegertracing/all-in-one:1.54
+    ports:
+      - "16686:16686" # UI
+      - "14268:14268" # Collector HTTP
+      - "14250:14250" # Collector gRPC
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+volumes:
+  minio-data:
+  nats-data:
