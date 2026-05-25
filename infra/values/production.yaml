@@ -1,0 +1,24 @@
+# infra/values/production.yaml — SST stage: production
+gcp:
+  project: taling-cyberhack
+  region: asia-southeast2
+  zone: asia-southeast2-a
+
+cluster:
+  name: simaops-gke
+  systemPool:
+    machineType: e2-standard-4
+    nodeCount: 3
+  appPool:
+    machineType: e2-standard-8
+    minNodes: 3
+    maxNodes: 6
+
+dns:
+  strategy: sslip.io
+  # domain: simaops.example.com
+
+ingress:
+  class: nginx
+  tls:
+    issuer: letsencrypt-prod
