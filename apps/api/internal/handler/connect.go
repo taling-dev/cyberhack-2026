@@ -8,18 +8,23 @@ import (
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1/lotv1connect"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/qc/v1/qcv1connect"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/storage"
 )
 
 // RegisterConnectHandlers mounts Connect RPC service handlers on the mux.
-func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB) {
+func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.MinIOClient) {
 	queries := db.New(dbConn)
 
-	// LotService — real implementation
+	// LotService
 	lotPath, lotHandler := lotv1connect.NewLotServiceHandler(NewLotService(queries))
 	mux.Handle(lotPath, lotHandler)
 
-	// Remaining services — stubs until implemented
-	mux.Handle("/simaops.qc.v1.QCService/", newUnimplementedHandler())
+	// QCService
+	qcPath, qcHandler := qcv1connect.NewQCServiceHandler(NewQCService(queries, minio))
+	mux.Handle(qcPath, qcHandler)
+
+	// Remaining services — stubs
 	mux.Handle("/simaops.warehouse.v1.WarehouseService/", newUnimplementedHandler())
 	mux.Handle("/simaops.audit.v1.AuditService/", newUnimplementedHandler())
 	mux.Handle("/simaops.dashboard.v1.DashboardService/", newUnimplementedHandler())
@@ -31,11 +36,6 @@ func newUnimplementedHandler() http.Handler {
 		err := connect.NewError(connect.CodeUnimplemented, nil)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotFound)
-		writeConnectError(w, err)
+		w.Write([]byte(`{"code":"` + err.Code().String() + `"}`))
 	})
-}
-
-func writeConnectError(w http.ResponseWriter, err *connect.Error) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"code":"` + err.Code().String() + `"}`))
 }

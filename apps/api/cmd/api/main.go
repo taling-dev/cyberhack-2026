@@ -14,6 +14,7 @@ import (
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/handler"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/storage"
 )
 
 func main() {
@@ -42,7 +43,11 @@ func main() {
 	mux.HandleFunc("GET /readyz", handler.Readyz)
 
 	// Connect RPC handlers
-	handler.RegisterConnectHandlers(mux, dbConn)
+	minioClient, err := storage.NewMinIOClient()
+	if err != nil {
+		slog.Warn("MinIO client init failed (non-fatal for dev)", "err", err)
+	}
+	handler.RegisterConnectHandlers(mux, dbConn, minioClient)
 
 	// Wrap with middleware
 	h := middleware.RequestID(middleware.Logger(logger, middleware.CORS(mux)))

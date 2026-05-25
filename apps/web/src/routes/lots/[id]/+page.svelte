@@ -1,36 +1,89 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { createQuery } from '@tanstack/svelte-query';
+  import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { createConnectTransport } from '@connectrpc/connect-web';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
 
   const transport = createConnectTransport({ baseUrl: 'http://localhost:8080', useBinaryFormat: false });
-  const client = createClient(LotService, transport);
+  const lotClient = createClient(LotService, transport);
+  const qcClient = createClient(QCService, transport);
+  const queryClient = useQueryClient();
 
   const lotId = $derived($page.params.id);
 
   const lotQuery = createQuery({
     queryKey: ['lot', lotId],
-    queryFn: () => client.getLot({ lotId })
+    queryFn: () => lotClient.getLot({ lotId })
   });
+
+  // Upload state
+  let uploadProgress = $state(0);
+  let uploading = $state(false);
+  let uploadedKey = $state('');
+  let uploadError = $state('');
+
+  async function handleUpload(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    uploading = true;
+    uploadProgress = 0;
+    uploadError = '';
+
+    try {
+      // 1. Get presigned URL from API
+      const res = await qcClient.createQCUploadUrl({
+        lotId,
+        filename: file.name,
+        contentType: file.type || 'image/jpeg',
+        idempotencyKey: crypto.randomUUID()
+      });
+
+      // 2. PUT directly to MinIO via presigned URL
+      const xhr = new XMLHttpRequest();
+      xhr.open('PUT', res.uploadUrl, true);
+      xhr.setRequestHeader('Content-Type', file.type || 'image/jpeg');
+
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable) {
+          uploadProgress = Math.round((ev.loaded / ev.total) * 100);
+        }
+      };
+
+      await new Promise<void>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            uploadedKey = res.objectKey;
+            resolve();
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(file);
+      });
+    } catch (err: any) {
+      uploadError = err.message || 'Upload failed';
+    } finally {
+      uploading = false;
+    }
+  }
 
   const statusLabels: Record<number, string> = {
     1: 'Draft', 2: 'Pending QC', 3: 'AI Processing', 4: 'QC Review',
     5: 'QC Approved', 6: 'QC Rejected', 7: 'Warehouse Assigned', 8: 'Ready for Production', 9: 'Blocked'
   };
+  const materialLabels: Record<number, string> = { 1: 'Raw Botanical', 2: 'Extract', 3: 'Powder', 4: 'Other' };
+  const tempLabels: Record<number, string> = { 1: 'Ambient (15–25 °C)', 2: 'Cold (2–8 °C)', 3: 'Deep Freeze (−20 to −4 °C)' };
+  const hazardLabels: Record<number, string> = { 1: 'None', 2: 'IBC', 3: 'IPPC' };
 
-  const materialLabels: Record<number, string> = {
-    1: 'Raw Botanical', 2: 'Extract', 3: 'Powder', 4: 'Other'
-  };
-
-  const tempLabels: Record<number, string> = {
-    1: 'Ambient (15–25 °C)', 2: 'Cold (2–8 °C)', 3: 'Deep Freeze (−20 to −4 °C)'
-  };
-
-  const hazardLabels: Record<number, string> = {
-    1: 'None', 2: 'IBC', 3: 'IPPC'
-  };
+  // Upload allowed only in certain statuses
+  const uploadAllowed = $derived(
+    [1, 2, 6].includes($lotQuery.data?.lot?.status ?? 0) // DRAFT, PENDING_QC, QC_REJECTED
+  );
 </script>
 
 <div class="max-w-3xl space-y-6">
@@ -69,6 +122,38 @@
           <div class="flex justify-between"><dt class="text-gray-500">Hazard/Drum Class</dt><dd>{hazardLabels[lot.storageRequirement?.hazardClass ?? 0] ?? '—'}</dd></div>
         </dl>
       </div>
+    </div>
+
+    <!-- QC Image Upload -->
+    <div class="border rounded-lg p-4 space-y-3">
+      <h2 class="font-semibold text-sm text-gray-500 uppercase">QC Image Upload</h2>
+      {#if uploadedKey}
+        <div class="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded">
+          <span>✓</span>
+          <span class="text-sm">Uploaded: <code class="text-xs">{uploadedKey}</code></span>
+        </div>
+      {:else if uploadAllowed}
+        <div class="space-y-2">
+          <input
+            type="file"
+            accept="image/jpeg,image/png"
+            onchange={handleUpload}
+            disabled={uploading}
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+          {#if uploading}
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: {uploadProgress}%"></div>
+            </div>
+            <p class="text-xs text-gray-500">{uploadProgress}%</p>
+          {/if}
+          {#if uploadError}
+            <p class="text-sm text-red-600">{uploadError}</p>
+          {/if}
+        </div>
+      {:else}
+        <p class="text-sm text-gray-400">Upload not available in current status.</p>
+      {/if}
     </div>
 
     <!-- Timeline placeholder -->
