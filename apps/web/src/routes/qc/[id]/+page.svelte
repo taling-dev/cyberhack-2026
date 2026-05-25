@@ -4,8 +4,8 @@
   import { createQuery, useQueryClient } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { createConnectTransport } from '@connectrpc/connect-web';
-  import { LotService } from '$lib/gen/simaops/lot/v1/lot_connect';
-  import { QCService } from '$lib/gen/simaops/qc/v1/qc_connect';
+  import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
 
   const transport = createConnectTransport({ baseUrl: 'http://localhost:8080', useBinaryFormat: false });
   const lotClient = createClient(LotService, transport);

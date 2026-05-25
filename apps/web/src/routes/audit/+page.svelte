@@ -3,7 +3,7 @@
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { createConnectTransport } from '@connectrpc/connect-web';
-  import { AuditService } from '$lib/gen/simaops/audit/v1/audit_connect';
+  import { AuditService } from '$lib/gen/simaops/audit/v1/audit_pb';
 
   const transport = createConnectTransport({ baseUrl: 'http://localhost:8080', useBinaryFormat: false });
   const client = createClient(AuditService, transport);

@@ -3,7 +3,7 @@
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { createConnectTransport } from '@connectrpc/connect-web';
-  import { DashboardService } from '$lib/gen/simaops/dashboard/v1/dashboard_connect';
+  import { DashboardService } from '$lib/gen/simaops/dashboard/v1/dashboard_pb';
 
   const transport = createConnectTransport({ baseUrl: 'http://localhost:8080', useBinaryFormat: false });
   const client = createClient(DashboardService, transport);
