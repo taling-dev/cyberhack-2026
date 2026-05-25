@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -108,11 +109,19 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 }
 
 func (s *QCService) GetQCJob(ctx context.Context, req *connect.Request[qcv1.GetQCJobRequest]) (*connect.Response[qcv1.GetQCJobResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("implemented in Task 10"))
+	job, err := s.q.GetQCJob(ctx, req.Msg.QcJobId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("qc job not found"))
+	}
+	return connect.NewResponse(&qcv1.GetQCJobResponse{Job: dbJobToProto(job)}), nil
 }
 
 func (s *QCService) GetQCResult(ctx context.Context, req *connect.Request[qcv1.GetQCResultRequest]) (*connect.Response[qcv1.GetQCResultResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("implemented in Task 10"))
+	result, err := s.q.GetQCResult(ctx, req.Msg.QcJobId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("qc result not found"))
+	}
+	return connect.NewResponse(&qcv1.GetQCResultResponse{Result: dbResultToProto(result)}), nil
 }
 
 func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.ReviewQCRequest]) (*connect.Response[qcv1.ReviewQCResponse], error) {
@@ -162,5 +171,80 @@ func qcJobStatusFromDB(s string) qcv1.QCJobStatus {
 		return qcv1.QCJobStatus_QC_JOB_STATUS_FAILED
 	default:
 		return qcv1.QCJobStatus_QC_JOB_STATUS_UNSPECIFIED
+	}
+}
+
+func dbResultToProto(r db.QcResult) *qcv1.QCResult {
+	pr := &qcv1.QCResult{
+		Id:             r.ID,
+		QcJobId:        r.QcJobID,
+		LotId:          r.LotID,
+		Recommendation: qcRecommendationFromDB(string(r.Recommendation)),
+		Confidence:     parseFloat(r.Confidence),
+		ModelVersion:   r.ModelVersion,
+		CreatedAt:      timestamppb.New(r.CreatedAt),
+	}
+
+	// Parse findings JSON
+	if len(r.FindingsJson) > 0 {
+		var findings []struct {
+			ClassName     string  `json:"class_name"`
+			MappedFinding string  `json:"mapped_finding"`
+			Confidence    float64 `json:"confidence"`
+			IsAnomaly     bool    `json:"is_anomaly"`
+		}
+		if json.Unmarshal(r.FindingsJson, &findings) == nil {
+			for _, f := range findings {
+				pr.Findings = append(pr.Findings, &qcv1.QCFinding{
+					ClassName:     f.ClassName,
+					MappedFinding: f.MappedFinding,
+					Confidence:    f.Confidence,
+					IsAnomaly:     f.IsAnomaly,
+				})
+			}
+		}
+	}
+
+	if r.AnnotatedImageKey.Valid {
+		pr.AnnotatedImageKey = r.AnnotatedImageKey.String
+	}
+	if r.SupervisorDecision.Valid {
+		pr.SupervisorDecision = supervisorDecisionFromDB(string(r.SupervisorDecision.QcResultsSupervisorDecision))
+	}
+	if r.ReviewedBy.Valid {
+		pr.ReviewedBy = r.ReviewedBy.String
+	}
+	if r.ReviewReason.Valid {
+		pr.ReviewReason = r.ReviewReason.String
+	}
+	if r.ReviewedAt.Valid {
+		pr.ReviewedAt = timestamppb.New(r.ReviewedAt.Time)
+	}
+	return pr
+}
+
+func qcRecommendationFromDB(s string) qcv1.QCRecommendation {
+	switch s {
+	case "PASS":
+		return qcv1.QCRecommendation_QC_RECOMMENDATION_PASS
+	case "REVIEW":
+		return qcv1.QCRecommendation_QC_RECOMMENDATION_REVIEW
+	case "FAIL":
+		return qcv1.QCRecommendation_QC_RECOMMENDATION_FAIL
+	default:
+		return qcv1.QCRecommendation_QC_RECOMMENDATION_UNSPECIFIED
+	}
+}
+
+func supervisorDecisionFromDB(s string) qcv1.SupervisorDecision {
+	switch s {
+	case "APPROVED":
+		return qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED
+	case "REJECTED":
+		return qcv1.SupervisorDecision_SUPERVISOR_DECISION_REJECTED
+	case "RECHECK":
+		return qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK
+	default:
+		return qcv1.SupervisorDecision_SUPERVISOR_DECISION_UNSPECIFIED
 	}
 }
