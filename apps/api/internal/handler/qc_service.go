@@ -84,6 +84,19 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 	// Advance lot to PENDING_QC
 	_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: msg.LotId})
 
+	// Write outbox event for async processing (consumed by outbox-publisher → NATS → AI worker)
+	outboxPayload, _ := json.Marshal(map[string]string{
+		"qc_job_id":        jobID,
+		"lot_id":           msg.LotId,
+		"image_object_key": msg.ImageObjectKey,
+		"material_type":    "RAW_BOTANICAL", // TODO: fetch from lot
+	})
+	_ = s.q.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "qc.job.created",
+		PayloadJson: outboxPayload,
+	})
+
 	// ─── Inline mock AI (removed in Task 19 when NATS worker takes over) ───
 	resultID := uuid.NewString()
 	findingsJSON := []byte(`[{"class_name":"bottle","mapped_finding":"foreign_matter","confidence":0.87,"is_anomaly":true},{"class_name":"banana","mapped_finding":"ripeness_signal","confidence":0.92,"is_anomaly":false}]`)
