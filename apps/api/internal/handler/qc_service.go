@@ -97,27 +97,6 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 		PayloadJson: outboxPayload,
 	})
 
-	// ─── Inline mock AI (removed in Task 19 when NATS worker takes over) ───
-	resultID := uuid.NewString()
-	findingsJSON := []byte(`[{"class_name":"bottle","mapped_finding":"foreign_matter","confidence":0.87,"is_anomaly":true},{"class_name":"banana","mapped_finding":"ripeness_signal","confidence":0.92,"is_anomaly":false}]`)
-
-	err = s.q.CreateQCResult(ctx, db.CreateQCResultParams{
-		ID:             resultID,
-		QcJobID:        jobID,
-		LotID:          msg.LotId,
-		Recommendation: db.QcResultsRecommendationREVIEW,
-		Confidence:     "0.8200",
-		FindingsJson:   findingsJSON,
-		ModelVersion:   "mock-v0.1.0",
-	})
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create qc result: %w", err))
-	}
-
-	// Advance job to AI_COMPLETED and lot to QC_REVIEW
-	_ = s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusAICOMPLETED, ID: jobID})
-	_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCREVIEW, ID: msg.LotId})
-
 	job, _ := s.q.GetQCJob(ctx, jobID)
 	return connect.NewResponse(&qcv1.CreateQCJobResponse{Job: dbJobToProto(job)}), nil
 }
