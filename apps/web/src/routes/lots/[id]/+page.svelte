@@ -72,6 +72,31 @@
     }
   }
 
+  // QC Job state
+  let startingQC = $state(false);
+  let qcStarted = $state(false);
+  let qcError = $state('');
+
+  async function handleStartQC() {
+    if (!uploadedKey) return;
+    startingQC = true;
+    qcError = '';
+    try {
+      await qcClient.createQCJob({
+        lotId,
+        imageObjectKey: uploadedKey,
+        idempotencyKey: crypto.randomUUID()
+      });
+      qcStarted = true;
+      // Refetch lot to see updated status
+      queryClient.invalidateQueries({ queryKey: ['lot', lotId] });
+    } catch (e: any) {
+      qcError = e.message || 'Failed to start QC';
+    } finally {
+      startingQC = false;
+    }
+  }
+
   const statusLabels: Record<number, string> = {
     1: 'Draft', 2: 'Pending QC', 3: 'AI Processing', 4: 'QC Review',
     5: 'QC Approved', 6: 'QC Rejected', 7: 'Warehouse Assigned', 8: 'Ready for Production', 9: 'Blocked'
@@ -132,6 +157,24 @@
           <span>✓</span>
           <span class="text-sm">Uploaded: <code class="text-xs">{uploadedKey}</code></span>
         </div>
+        <!-- Start QC button -->
+        {#if !qcStarted}
+          <button
+            onclick={handleStartQC}
+            disabled={startingQC}
+            class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm disabled:opacity-50"
+          >
+            {startingQC ? 'Starting QC...' : '🔬 Start QC'}
+          </button>
+          {#if qcError}
+            <p class="text-sm text-red-600">{qcError}</p>
+          {/if}
+        {:else}
+          <div class="flex items-center gap-2 text-blue-700 bg-blue-50 p-3 rounded">
+            <span>🔬</span>
+            <span class="text-sm">QC job created — lot advanced to QC Review</span>
+          </div>
+        {/if}
       {:else if uploadAllowed}
         <div class="space-y-2">
           <input
