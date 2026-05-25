@@ -12,6 +12,20 @@ import nats
 import pymysql
 import uvicorn
 from fastapi import FastAPI
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+
+# ─── OTel Init ────────────────────────────────────────────────────
+
+resource = Resource.create({"service.name": "simaops-ai-worker"})
+provider = TracerProvider(resource=resource)
+otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint, insecure=True)))
+trace.set_tracer_provider(provider)
+tracer = trace.get_tracer("simaops-ai-worker")
 
 # ─── Config ──────────────────────────────────────────────────────
 
@@ -99,17 +113,16 @@ async def process_message(msg):
         image_key = payload["image_object_key"]
         material_type = payload.get("material_type", "RAW_BOTANICAL")
 
-        print(f"[worker] processing job={job_id} image={image_key} material={material_type}")
+        with tracer.start_as_current_span("qc.process", attributes={
+            "qc.job_id": job_id, "qc.lot_id": lot_id, "qc.material_type": material_type
+        }):
+            print(f"[worker] processing job={job_id} image={image_key} material={material_type}")
 
-        result = await strategy.analyze(image_key, material_type)
-        write_qc_result(job_id, lot_id, result)
+            result = await strategy.analyze(image_key, material_type)
+            write_qc_result(job_id, lot_id, result)
 
-        # Publish completion event
-        nc = msg._client
-        await nc.publish("qc.job.completed", json.dumps({"qc_job_id": job_id, "lot_id": lot_id}).encode())
-
-        await msg.ack()
-        print(f"[worker] completed job={job_id} recommendation={result['recommendation']}")
+            await msg.ack()
+            print(f"[worker] completed job={job_id} recommendation={result['recommendation']}")
 
     except Exception as e:
         print(f"[worker] error processing message: {e}")

@@ -16,11 +16,17 @@ import (
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/handler"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/storage"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/telemetry"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
+
+	// OpenTelemetry
+	ctx := context.Background()
+	shutdownTracer := telemetry.Init(ctx, "simaops-api")
+	defer shutdownTracer()
 
 	// Database connection
 	dsn := os.Getenv("TIDB_DSN")
