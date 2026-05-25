@@ -4,7 +4,7 @@
   import { t, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
 
-  let { children } = $props();
+  let { children, data } = $props();
 
   const navItems = [
     { href: '/dashboard', icon: '📊', key: 'nav.dashboard' },
@@ -18,6 +18,8 @@
   function toggleLocale() {
     locale.set($locale === 'en' ? 'id' : 'en');
   }
+
+  const user = $derived(data.user);
 </script>
 
 <div class="flex h-screen bg-gray-50">
@@ -56,10 +58,13 @@
         >
           {$t(`locale.${$locale === 'en' ? 'id' : 'en'}`)}
         </button>
-        <!-- User placeholder -->
-        <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-medium">
-          ?
-        </div>
+        <!-- User -->
+        {#if user}
+          <span class="text-sm text-gray-700">{user.name}</span>
+          <a href="/auth/logout" class="text-xs text-gray-500 hover:text-red-600">Logout</a>
+        {:else}
+          <a href="/auth/login" class="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Login</a>
+        {/if}
       </div>
     </header>
 

@@ -15,8 +15,13 @@ plugins:
     out: apps/api/internal/gen
     opt: paths=source_relative
 
-  # TypeScript Connect-ES (messages + service definitions)
-  - remote: buf.build/connectrpc/es
+  # TypeScript protobuf messages (protobuf-es v1)
+  - remote: buf.build/bufbuild/es:v1.10.0
+    out: apps/web/src/lib/gen
+    opt: target=ts
+
+  # TypeScript Connect-ES service definitions (connect-es v1)
+  - remote: buf.build/connectrpc/es:v1.6.1
     out: apps/web/src/lib/gen
     opt: target=ts
 
