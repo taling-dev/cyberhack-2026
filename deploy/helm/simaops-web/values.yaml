@@ -32,3 +32,7 @@ hpa:
 pdb:
   enabled: true
   minAvailable: 1
+
+serviceMonitor:
+  enabled: false
+  interval: 15s
