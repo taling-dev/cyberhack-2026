@@ -137,3 +137,5 @@ SimaOps AI is a single enterprise platform that:
 | v3       | 2026-05-26   | Cloud target switched from GCP/GKE to OCI/OKE (Singapore, E4.Flex burstable, OCI API key auth). |
 
 **Awaiting:** explicit `go` from the user before Task 1 (monorepo bootstrap) executes.
+
+**Version Policy:** Always use the latest stable versions of all dependencies, runtimes, and platform services (Kubernetes, Helm charts, npm packages, Go modules, Python packages). Never hardcode outdated versions — query the provider/registry for supported versions at deploy time.

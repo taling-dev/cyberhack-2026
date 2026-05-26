@@ -82,9 +82,20 @@ export default $config({
     const subnet = new oci.core.Subnet("simaops-subnet", {
       compartmentId,
       vcnId: vcn.id,
-      cidrBlock: "10.0.0.0/20",
-      displayName: `simaops-${stage}-subnet`,
-      dnsLabel: "main",
+      cidrBlock: "10.0.16.0/24",
+      displayName: `simaops-${stage}-lb-subnet`,
+      dnsLabel: "lb",
+      routeTableId: routeTable.id,
+      securityListIds: [securityList.id],
+      prohibitPublicIpOnVnic: false,
+    });
+
+    const workerSubnet = new oci.core.Subnet("simaops-worker-subnet", {
+      compartmentId,
+      vcnId: vcn.id,
+      cidrBlock: "10.0.17.0/24",
+      displayName: `simaops-${stage}-worker-subnet`,
+      dnsLabel: "worker",
       routeTableId: routeTable.id,
       securityListIds: [securityList.id],
       prohibitPublicIpOnVnic: false,
@@ -94,7 +105,7 @@ export default $config({
     const cluster = new oci.containerengine.Cluster("simaops-oke", {
       compartmentId,
       vcnId: vcn.id,
-      kubernetesVersion: "v1.30.1",
+      kubernetesVersion: "v1.36.0",
       name: `simaops-${stage}-oke`,
       type: "BASIC_CLUSTER",
       endpointConfig: {
@@ -114,7 +125,7 @@ export default $config({
     const ads = oci.identity.getAvailabilityDomains({ compartmentId });
     const adName = ads.then((d) => d.availabilityDomains[0].name);
 
-    // Get latest OKE-compatible Oracle Linux 8 image for E4.Flex
+    // Get latest OKE-compatible Oracle Linux 8 image for E4.Flex (matching cluster version)
     const nodePoolOption = oci.containerengine.getNodePoolOption({
       nodePoolOptionId: "all",
       compartmentId,
@@ -123,7 +134,7 @@ export default $config({
       const sources = (o.sources ?? []).filter(
         (s) =>
           s.sourceName.includes("Oracle-Linux-8") &&
-          s.sourceName.includes("OKE") &&
+          s.sourceName.includes("OKE-1.36") &&
           !s.sourceName.includes("aarch64") &&
           !s.sourceName.includes("GPU"),
       );
@@ -135,19 +146,18 @@ export default $config({
       compartmentId,
       clusterId: cluster.id,
       name: `simaops-${stage}-pool`,
-      kubernetesVersion: "v1.30.1",
+      kubernetesVersion: "v1.36.0",
       nodeShape: "VM.Standard.E4.Flex",
       nodeShapeConfig: {
         ocpus: 2,
         memoryInGbs: 16,
-        baselineOcpuUtilization: "BASELINE_1_8",
       },
       nodeConfigDetails: {
         size: 2,
         placementConfigs: [
           {
             availabilityDomain: adName,
-            subnetId: subnet.id,
+            subnetId: workerSubnet.id,
           },
         ],
       },
