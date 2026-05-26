@@ -12,6 +12,7 @@ import (
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
 	whv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1/warehousev1connect"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
 )
 
 var _ warehousev1connect.WarehouseServiceHandler = (*WarehouseService)(nil)
@@ -141,6 +142,8 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 	if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
 	}
+
+	middleware.IncWarehouseAssignment()
 
 	return connect.NewResponse(&whv1.AssignSlotResponse{
 		Assignment: &whv1.WarehouseAssignment{

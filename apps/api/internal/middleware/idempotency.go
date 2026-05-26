@@ -78,6 +78,7 @@ func Idempotency(dbConn *sql.DB, next http.Handler) http.Handler {
 
 		if err == nil && cachedResponse.Valid {
 			// Return cached response
+			IncIdempotencyHit("hit")
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("X-Idempotency-Replayed", "true")
 			w.WriteHeader(http.StatusOK)
@@ -86,6 +87,7 @@ func Idempotency(dbConn *sql.DB, next http.Handler) http.Handler {
 		}
 
 		// First request — capture the response
+		IncIdempotencyHit("miss")
 		rec := &responseRecorder{ResponseWriter: w, body: &bytes.Buffer{}, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
 

@@ -10,43 +10,81 @@ data:
   simaops-api.json: |
     {
       "title": "SimaOps — API",
+      "uid": "simaops-api",
       "tags": ["simaops"],
       "timezone": "browser",
       "schemaVersion": 38,
+      "refresh": "30s",
+      "time": {"from": "now-1h", "to": "now"},
       "panels": [
         {
-          "type": "timeseries",
-          "title": "Request rate (req/s)",
-          "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
-          "targets": [{"expr": "sum by (rpc_method) (rate(http_server_request_duration_seconds_count{job=\"simaops-api\"}[1m]))", "legendFormat": "{{`{{rpc_method}}`}}"}]
+          "id": 1,
+          "type": "stat",
+          "title": "Request rate (1m)",
+          "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "sum(rate(simaops_api_http_requests_total[1m]))", "refId": "A"}],
+          "fieldConfig": {"defaults": {"unit": "reqps", "decimals": 2}}
         },
         {
-          "type": "timeseries",
-          "title": "Error rate (%)",
-          "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
-          "targets": [{"expr": "100 * sum(rate(http_server_request_duration_seconds_count{job=\"simaops-api\",code=~\"5..\"}[5m])) / sum(rate(http_server_request_duration_seconds_count{job=\"simaops-api\"}[5m]))"}]
-        },
-        {
-          "type": "timeseries",
-          "title": "Latency p50 / p95 / p99",
-          "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8},
+          "id": 2,
+          "type": "stat",
+          "title": "Error rate (5m)",
+          "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
           "targets": [
-            {"expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"simaops-api\"}[5m])))", "legendFormat": "p50"},
-            {"expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"simaops-api\"}[5m])))", "legendFormat": "p95"},
-            {"expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"simaops-api\"}[5m])))", "legendFormat": "p99"}
-          ]
+            {"expr": "100 * sum(rate(simaops_api_http_requests_total{code=~\"5..\"}[5m])) / clamp_min(sum(rate(simaops_api_http_requests_total[5m])),1)", "refId": "A"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "percent", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]}}}
         },
         {
+          "id": 3,
+          "type": "stat",
+          "title": "Auth failures (5m)",
+          "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "sum(rate(simaops_api_http_requests_total{code=~\"401|403\"}[5m]))", "refId": "A"}],
+          "fieldConfig": {"defaults": {"unit": "reqps", "decimals": 2}}
+        },
+        {
+          "id": 4,
           "type": "stat",
           "title": "Idempotency hit rate",
-          "gridPos": {"x": 0, "y": 16, "w": 8, "h": 4},
-          "targets": [{"expr": "sum(rate(simaops_idempotency_hits_total[5m])) / sum(rate(simaops_idempotency_requests_total[5m]))"}]
+          "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "sum(rate(simaops_api_idempotency_total{outcome=\"hit\"}[5m])) / clamp_min(sum(rate(simaops_api_idempotency_total[5m])),1)", "refId": "A"}],
+          "fieldConfig": {"defaults": {"unit": "percentunit", "decimals": 2}}
         },
         {
-          "type": "stat",
-          "title": "Auth failures (401/403)",
-          "gridPos": {"x": 8, "y": 16, "w": 8, "h": 4},
-          "targets": [{"expr": "sum(rate(http_server_request_duration_seconds_count{job=\"simaops-api\",code=~\"401|403\"}[5m]))"}]
+          "id": 5,
+          "type": "timeseries",
+          "title": "Request rate by RPC",
+          "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+          "targets": [{"expr": "sum by (rpc) (rate(simaops_api_http_requests_total[1m]))", "refId": "A", "legendFormat": "{{`{{rpc}}`}}"}],
+          "fieldConfig": {"defaults": {"unit": "reqps"}}
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Latency p50 / p95 / p99",
+          "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "histogram_quantile(0.50, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))", "refId": "A", "legendFormat": "p50"},
+            {"expr": "histogram_quantile(0.95, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))", "refId": "B", "legendFormat": "p95"},
+            {"expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))", "refId": "C", "legendFormat": "p99"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "HTTP status codes",
+          "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+          "targets": [{"expr": "sum by (code) (rate(simaops_api_http_requests_total[1m]))", "refId": "A", "legendFormat": "{{`{{code}}`}}"}]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Top 5 slowest RPCs (p95)",
+          "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+          "targets": [{"expr": "topk(5, histogram_quantile(0.95, sum by (le, rpc) (rate(simaops_api_http_request_duration_seconds_bucket[5m]))))", "refId": "A", "legendFormat": "{{`{{rpc}}`}}"}],
+          "fieldConfig": {"defaults": {"unit": "s"}}
         }
       ]
     }

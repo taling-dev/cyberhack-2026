@@ -46,10 +46,10 @@ networkPolicy:
   enabled: false
 
 prometheusRule:
-  enabled: false
+  enabled: true
 
 grafanaDashboards:
-  enabled: false
+  enabled: true
   namespace: observability
 
 seedJob:

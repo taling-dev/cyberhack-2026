@@ -54,3 +54,4 @@ htmlcov/
 tmp/
 apps/outbox-publisher/publisher
 apps/api/api
+CREDENTIALS.md

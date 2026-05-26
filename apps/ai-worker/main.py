@@ -3,6 +3,7 @@
 import asyncio
 import json
 import os
+import time
 import uuid
 import signal
 from abc import ABC, abstractmethod
@@ -11,7 +12,8 @@ from contextlib import asynccontextmanager
 import nats
 import pymysql
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from opentelemetry import trace, context as otel_context
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -39,6 +41,27 @@ TIDB_PASSWORD = os.getenv("TIDB_PASSWORD", "")
 TIDB_DB = os.getenv("TIDB_DB", "simaops")
 QC_STRATEGY = os.getenv("QC_STRATEGY", "mock")
 MODEL_VERSION = os.getenv("MODEL_VERSION", "mock-v0.1.0")
+
+# ─── Prometheus Metrics ──────────────────────────────────────────
+
+jobs_total = Counter(
+    "simaops_ai_worker_jobs_total",
+    "Total QC jobs processed by the AI worker",
+    ["status", "recommendation"],
+)
+
+inference_duration = Histogram(
+    "simaops_ai_worker_inference_duration_seconds",
+    "Time spent running AI inference per job",
+    ["material_type"],
+    buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0),
+)
+
+job_failures = Counter(
+    "simaops_ai_worker_job_failures_total",
+    "Total job processing failures",
+    ["reason"],
+)
 
 # ─── Strategy Interface ──────────────────────────────────────────
 
@@ -159,14 +182,19 @@ async def message_handler(msg):
             # Mark job as PROCESSING (only succeeds if still QUEUED — prevents re-processing)
             mark_job_processing(job_id)
 
+            t0 = time.monotonic()
             result = await strategy.analyze(image_key, material_type)
+            inference_duration.labels(material_type=material_type).observe(time.monotonic() - t0)
             write_qc_result(job_id, lot_id, result)
 
+            jobs_total.labels(status="completed", recommendation=result["recommendation"]).inc()
             await msg.ack()
             print(f"[worker] completed job={job_id} recommendation={result['recommendation']}", flush=True)
 
     except Exception as e:
         print(f"[worker] error processing job={job_id}: {e}", flush=True)
+        job_failures.labels(reason=type(e).__name__).inc()
+        jobs_total.labels(status="failed", recommendation="none").inc()
         try:
             if job_id != "?":
                 mark_job_failed(job_id, str(e))
@@ -248,6 +276,11 @@ def readyz():
         return {"status": "ready"}
     except Exception as e:
         return {"status": "not_ready", "error": str(e)}
+
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 if __name__ == "__main__":

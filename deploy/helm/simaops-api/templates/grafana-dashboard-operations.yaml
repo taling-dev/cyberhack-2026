@@ -10,46 +10,77 @@ data:
   simaops-operations.json: |
     {
       "title": "SimaOps — Operations",
+      "uid": "simaops-ops",
       "tags": ["simaops"],
       "timezone": "browser",
       "schemaVersion": 38,
+      "refresh": "30s",
+      "time": {"from": "now-1h", "to": "now"},
       "panels": [
         {
+          "id": 1,
           "type": "stat",
-          "title": "Total lots (all time)",
+          "title": "Total lots created",
           "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
-          "targets": [{"expr": "simaops_lots_total", "legendFormat": "{{`{{status}}`}}"}]
+          "targets": [{"expr": "sum(simaops_api_lots_created_total)", "refId": "A"}],
+          "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}}
         },
         {
+          "id": 2,
           "type": "stat",
-          "title": "Lots awaiting QC",
+          "title": "QC reviews (1h)",
           "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
-          "targets": [{"expr": "simaops_lots_total{status=\"QC_REVIEW\"}"}],
-          "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 5}, {"color": "red", "value": 20}]}}}
+          "targets": [
+            {"expr": "sum(increase(simaops_api_qc_reviewed_total[1h]))", "refId": "A"}
+          ],
+          "fieldConfig": {"defaults": {"unit": "short"}}
         },
         {
+          "id": 3,
           "type": "stat",
-          "title": "Ready for production",
+          "title": "Warehouse assignments",
           "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
-          "targets": [{"expr": "simaops_lots_total{status=\"READY_FOR_PRODUCTION\"}"}]
+          "targets": [{"expr": "sum(simaops_api_warehouse_assignments_total)", "refId": "A"}],
+          "fieldConfig": {"defaults": {"unit": "short"}}
         },
         {
-          "type": "timeseries",
-          "title": "Lot status distribution over time",
-          "gridPos": {"x": 0, "y": 4, "w": 18, "h": 8},
-          "targets": [{"expr": "simaops_lots_total", "legendFormat": "{{`{{status}}`}}"}]
+          "id": 4,
+          "type": "stat",
+          "title": "Idempotency hits",
+          "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "sum(simaops_api_idempotency_total{outcome=\"hit\"})", "refId": "A"}],
+          "fieldConfig": {"defaults": {"unit": "short", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}]}}}
         },
         {
+          "id": 5,
           "type": "timeseries",
-          "title": "Today's intake rate (lots/min)",
-          "gridPos": {"x": 0, "y": 12, "w": 9, "h": 8},
-          "targets": [{"expr": "rate(simaops_lots_created_total[5m])"}]
+          "title": "Lot intake rate (lots/min)",
+          "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+          "targets": [{"expr": "sum(rate(simaops_api_lots_created_total[5m])) * 60", "refId": "A", "legendFormat": "lots/min"}],
+          "fieldConfig": {"defaults": {"unit": "short"}}
         },
         {
+          "id": 6,
           "type": "timeseries",
-          "title": "Warehouse occupancy by zone",
-          "gridPos": {"x": 9, "y": 12, "w": 9, "h": 8},
-          "targets": [{"expr": "simaops_warehouse_occupancy_ratio", "legendFormat": "{{`{{zone}}`}}"}]
+          "title": "QC review decisions over time",
+          "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+          "targets": [{"expr": "sum by (decision) (rate(simaops_api_qc_reviewed_total[5m]))", "refId": "A", "legendFormat": "{{`{{decision}}`}}"}]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "AI recommendations (PASS / REVIEW / FAIL)",
+          "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+          "targets": [{"expr": "sum by (recommendation) (rate(simaops_ai_worker_jobs_total{status=\"completed\"}[5m]))", "refId": "A", "legendFormat": "{{`{{recommendation}}`}}"}]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Service pod readiness",
+          "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "sum by (pod) (kube_pod_status_ready{namespace=\"simaops\",condition=\"true\"})", "refId": "A", "legendFormat": "{{`{{pod}}`}}"}
+          ]
         }
       ]
     }

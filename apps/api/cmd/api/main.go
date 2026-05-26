@@ -11,6 +11,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/auth"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/handler"
@@ -45,9 +46,10 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Health endpoints
+	// Health + metrics endpoints
 	mux.HandleFunc("GET /healthz", handler.Healthz)
 	mux.HandleFunc("GET /readyz", handler.Readyz)
+	mux.Handle("GET /metrics", promhttp.Handler())
 
 	// Connect RPC handlers
 	minioClient, err := storage.NewMinIOClient()
@@ -57,15 +59,17 @@ func main() {
 	handler.RegisterConnectHandlers(mux, dbConn, minioClient)
 
 	// Wrap with middleware (order: outer → inner)
-	// RequestID → Logger → CORS → JWT → RBAC → Idempotency → Audit → handlers
+	// RequestID → Logger → CORS → Metrics → JWT → RBAC → Idempotency → Audit → handlers
 	jwtMw := auth.NewJWTMiddleware()
 	h := middleware.RequestID(
 		middleware.Logger(logger,
 			middleware.CORS(
-				jwtMw.Wrap(
-					auth.RBACMiddleware(
-						middleware.Idempotency(dbConn,
-							middleware.Audit(dbConn, mux),
+				middleware.Metrics(
+					jwtMw.Wrap(
+						auth.RBACMiddleware(
+							middleware.Idempotency(dbConn,
+								middleware.Audit(dbConn, mux),
+							),
 						),
 					),
 				),

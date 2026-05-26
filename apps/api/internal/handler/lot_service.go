@@ -13,6 +13,7 @@ import (
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
 	lotv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1/lotv1connect"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
 )
 
 var _ lotv1connect.LotServiceHandler = (*LotService)(nil)
@@ -62,6 +63,7 @@ func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.C
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
+	middleware.IncLotCreated()
 	return connect.NewResponse(&lotv1.CreateLotResponse{Lot: dbLotToProto(lot)}), nil
 }
 

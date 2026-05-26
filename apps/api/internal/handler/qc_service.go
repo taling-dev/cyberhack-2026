@@ -14,6 +14,7 @@ import (
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
 	qcv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/qc/v1"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/qc/v1/qcv1connect"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/storage"
 )
 
@@ -216,6 +217,17 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 	}
 
 	now := time.Now()
+
+	// Metrics
+	switch msg.Decision {
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED:
+		middleware.IncQCReviewed("approved")
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_REJECTED:
+		middleware.IncQCReviewed("rejected")
+	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK:
+		middleware.IncQCReviewed("recheck")
+	}
+
 	return connect.NewResponse(&qcv1.ReviewQCResponse{
 		QcJobId:    msg.QcJobId,
 		Decision:   msg.Decision,
