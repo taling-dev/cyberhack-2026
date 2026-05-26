@@ -1,9 +1,18 @@
 import { createConnectTransport } from '@connectrpc/connect-web';
+import { browser } from '$app/environment';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+// In production: API is at api.<same-ip>.sslip.io
+// In dev: API is at localhost:8080
+function getApiUrl(): string {
+  if (!browser) return 'http://simaops-api.simaops:8080'; // SSR: internal cluster URL
+  const host = window.location.hostname;
+  if (host.includes('sslip.io')) {
+    return `http://api.${host.replace('app.', '')}`;
+  }
+  return 'http://localhost:8080';
+}
 
 export const transport = createConnectTransport({
-  baseUrl: API_BASE_URL,
-  // Connect protocol over JSON for browser debugging
+  baseUrl: getApiUrl(),
   useBinaryFormat: false
 });

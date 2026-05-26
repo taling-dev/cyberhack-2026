@@ -2,12 +2,11 @@
   import { page } from '$app/stores';
   import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
-  import { createConnectTransport } from '@connectrpc/connect-web';
+  import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
   import { AuditService } from '$lib/gen/simaops/audit/v1/audit_pb';
 
-  const transport = createConnectTransport({ baseUrl: 'http://localhost:8080', useBinaryFormat: false });
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
   const auditClient = createClient(AuditService, transport);
