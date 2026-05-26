@@ -35,7 +35,7 @@
         <tbody class="divide-y">
           {#each logsQuery.data?.logs ?? [] as log}
             <tr class="hover:bg-gray-50">
-              <td class="px-4 py-3 text-xs text-gray-500">{log.createdAt?.toDate().toLocaleString()}</td>
+              <td class="px-4 py-3 text-xs text-gray-500">{log.createdAt ? new Date(Number(log.createdAt.seconds) * 1000).toLocaleString() : ""}</td>
               <td class="px-4 py-3">
                 <span class="text-xs">{log.actorUserId}</span>
                 <span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-gray-100">{log.actorRole}</span>

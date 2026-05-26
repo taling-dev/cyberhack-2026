@@ -95,7 +95,7 @@
               <td class="px-4 py-3">
                 <span class="px-2 py-0.5 rounded text-xs {statusColors[lot.status] ?? ''}">{statusLabels[lot.status] ?? 'Unknown'}</span>
               </td>
-              <td class="px-4 py-3 text-gray-500 text-xs">{lot.createdAt?.toDate().toLocaleDateString()}</td>
+              <td class="px-4 py-3 text-gray-500 text-xs">{lot.createdAt ? new Date(Number(lot.createdAt.seconds) * 1000).toLocaleDateString() : ""}</td>
             </tr>
           {:else}
             <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No lots found</td></tr>

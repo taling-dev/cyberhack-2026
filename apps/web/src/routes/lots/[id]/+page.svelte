@@ -142,7 +142,7 @@
           <div class="flex justify-between"><dt class="text-gray-500">Quantity</dt><dd>{lot.quantity} {lot.unit}</dd></div>
           <div class="flex justify-between"><dt class="text-gray-500">Arrival Date</dt><dd>{lot.arrivalDate}</dd></div>
           <div class="flex justify-between"><dt class="text-gray-500">Created By</dt><dd>{lot.createdBy}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">Created</dt><dd>{lot.createdAt?.toDate().toLocaleString()}</dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">Created</dt><dd>{lot.createdAt ? new Date(Number(lot.createdAt.seconds) * 1000).toLocaleString() : ""}</dd></div>
         </dl>
       </div>
 
@@ -218,7 +218,7 @@
               <div>
                 <span class="font-medium">{entry.action}</span>
                 <span class="text-gray-400 ml-2">by {entry.actorUserId} ({entry.actorRole})</span>
-                <p class="text-xs text-gray-400">{entry.createdAt?.toDate().toLocaleString()}</p>
+                <p class="text-xs text-gray-400">{entry.createdAt ? new Date(Number(entry.createdAt.seconds) * 1000).toLocaleString() : ""}</p>
               </div>
             </div>
           {/each}
