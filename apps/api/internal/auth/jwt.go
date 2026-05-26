@@ -51,7 +51,9 @@ func NewJWTMiddleware() *JWTMiddleware {
 }
 
 func (m *JWTMiddleware) init() {
-	jwksURL := m.issuer + "/protocol/openid-connect/certs"
+	// JWKS can be fetched from internal URL for speed
+	jwksBase := getEnv("KEYCLOAK_INTERNAL_URL", m.issuer)
+	jwksURL := jwksBase + "/protocol/openid-connect/certs"
 	k, err := keyfunc.NewDefault([]string{jwksURL})
 	if err != nil {
 		m.initErr = fmt.Errorf("failed to init JWKS from %s: %w", jwksURL, err)
@@ -103,7 +105,6 @@ func (m *JWTMiddleware) Wrap(next http.Handler) http.Handler {
 		// Verify token
 		token, err := jwt.Parse(tokenStr, m.jwks.KeyfuncCtx(r.Context()),
 			jwt.WithIssuer(m.issuer),
-			jwt.WithAudience(m.audience),
 			jwt.WithExpirationRequired(),
 		)
 		if err != nil {

@@ -7,7 +7,8 @@ import {
   COOKIE_ID,
   COOKIE_PKCE,
   COOKIE_STATE,
-  COOKIE_OPTS
+  COOKIE_OPTS,
+  COOKIE_OPTS_READABLE
 } from '$lib/server/auth';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
@@ -39,7 +40,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   const tokens = await exchangeCode(code, codeVerifier);
 
   // Set session cookies
-  cookies.set(COOKIE_ACCESS, tokens.access_token, { ...COOKIE_OPTS, maxAge: tokens.expires_in });
+  cookies.set(COOKIE_ACCESS, tokens.access_token, { ...COOKIE_OPTS_READABLE, maxAge: tokens.expires_in });
   cookies.set(COOKIE_REFRESH, tokens.refresh_token, { ...COOKIE_OPTS, maxAge: 86400 * 30 });
   cookies.set(COOKIE_ID, tokens.id_token, { ...COOKIE_OPTS, maxAge: tokens.expires_in });
 

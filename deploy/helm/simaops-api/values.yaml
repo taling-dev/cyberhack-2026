@@ -14,11 +14,11 @@ env:
   MINIO_ACCESS_KEY: "simaops"
   MINIO_SECRET_KEY: "simaops-dev-secret"
   NATS_URL: "nats://nats.platform:4222"
-  KEYCLOAK_ISSUER: "http://keycloak.platform:8080/realms/simaops"
+  KEYCLOAK_ISSUER: "http://auth.161.118.244.229.sslip.io/realms/simaops"
+  KEYCLOAK_INTERNAL_URL: "http://keycloak.platform:8080/realms/simaops"
   KEYCLOAK_CLIENT_ID: "simaops-web"
   OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
   OTEL_SERVICE_NAME: "simaops-api"
-  DEMO_MODE: "true"
 
 resources:
   requests:

@@ -1,10 +1,8 @@
 import { createConnectTransport } from '@connectrpc/connect-web';
 import { browser } from '$app/environment';
 
-// In production: API is at api.<same-ip>.sslip.io
-// In dev: API is at localhost:8080
 function getApiUrl(): string {
-  if (!browser) return 'http://simaops-api.simaops:8080'; // SSR: internal cluster URL
+  if (!browser) return 'http://simaops-api.simaops:8080';
   const host = window.location.hostname;
   if (host.includes('sslip.io')) {
     return `http://api.${host.replace('app.', '')}`;
@@ -12,7 +10,22 @@ function getApiUrl(): string {
   return 'http://localhost:8080';
 }
 
+function getCookie(name: string): string | undefined {
+  if (!browser) return undefined;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
 export const transport = createConnectTransport({
   baseUrl: getApiUrl(),
-  useBinaryFormat: false
+  useBinaryFormat: false,
+  interceptors: [
+    (next) => async (req) => {
+      const token = getCookie('sa_access');
+      if (token) {
+        req.header.set('Authorization', `Bearer ${token}`);
+      }
+      return next(req);
+    }
+  ]
 });

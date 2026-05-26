@@ -125,6 +125,14 @@ export const COOKIE_STATE = 'sa_state';
 export const COOKIE_OPTS = {
   path: '/',
   httpOnly: true,
-  secure: false, // set true in production
+  secure: false,
+  sameSite: 'lax' as const
+};
+
+// Access token cookie is readable by browser JS for API calls
+export const COOKIE_OPTS_READABLE = {
+  path: '/',
+  httpOnly: false,
+  secure: false,
   sameSite: 'lax' as const
 };

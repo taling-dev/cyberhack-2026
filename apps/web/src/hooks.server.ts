@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { COOKIE_ACCESS, COOKIE_REFRESH, parseJwtPayload, refreshToken, COOKIE_OPTS } from '$lib/server/auth';
+import { COOKIE_ACCESS, COOKIE_REFRESH, parseJwtPayload, refreshToken, COOKIE_OPTS, COOKIE_OPTS_READABLE } from '$lib/server/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
   const accessToken = event.cookies.get(COOKIE_ACCESS);
@@ -24,7 +24,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       // Token expired — try refresh
       try {
         const tokens = await refreshToken(refreshTokenValue);
-        event.cookies.set(COOKIE_ACCESS, tokens.access_token, { ...COOKIE_OPTS, maxAge: tokens.expires_in });
+        event.cookies.set(COOKIE_ACCESS, tokens.access_token, { ...COOKIE_OPTS_READABLE, maxAge: tokens.expires_in });
         event.cookies.set(COOKIE_REFRESH, tokens.refresh_token, { ...COOKIE_OPTS, maxAge: 86400 * 30 });
 
         const newPayload = parseJwtPayload(tokens.access_token);
