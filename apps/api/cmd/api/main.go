@@ -56,9 +56,22 @@ func main() {
 	}
 	handler.RegisterConnectHandlers(mux, dbConn, minioClient)
 
-	// Wrap with middleware
+	// Wrap with middleware (order: outer → inner)
+	// RequestID → Logger → CORS → JWT → RBAC → Idempotency → Audit → handlers
 	jwtMw := auth.NewJWTMiddleware()
-	h := middleware.RequestID(middleware.Logger(logger, middleware.CORS(jwtMw.Wrap(auth.RBACMiddleware(middleware.Idempotency(dbConn, mux))))))
+	h := middleware.RequestID(
+		middleware.Logger(logger,
+			middleware.CORS(
+				jwtMw.Wrap(
+					auth.RBACMiddleware(
+						middleware.Idempotency(dbConn,
+							middleware.Audit(dbConn, mux),
+						),
+					),
+				),
+			),
+		),
+	)
 
 	port := os.Getenv("PORT")
 	if port == "" {
