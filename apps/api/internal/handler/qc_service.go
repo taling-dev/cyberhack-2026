@@ -102,6 +102,16 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 }
 
 func (s *QCService) GetQCJob(ctx context.Context, req *connect.Request[qcv1.GetQCJobRequest]) (*connect.Response[qcv1.GetQCJobResponse], error) {
+	// If lot_id is provided, find the latest QC job for that lot
+	if req.Msg.LotId != "" && req.Msg.QcJobId == "" {
+		jobs, err := s.q.ListQCJobsByLot(ctx, req.Msg.LotId)
+		if err != nil || len(jobs) == 0 {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no qc jobs for lot"))
+		}
+		// Latest first (sql sorts by created_at DESC)
+		return connect.NewResponse(&qcv1.GetQCJobResponse{Job: dbJobToProto(jobs[0])}), nil
+	}
+
 	job, err := s.q.GetQCJob(ctx, req.Msg.QcJobId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("qc job not found"))

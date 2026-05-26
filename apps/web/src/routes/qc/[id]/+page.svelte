@@ -18,6 +18,19 @@
     queryFn: () => lotClient.getLot({ lotId })
   }));
 
+  // Fetch the latest QC job for this lot
+  const qcJobQuery = createQuery(() => ({
+    queryKey: ['qc-job-for-lot', lotId],
+    queryFn: () => qcClient.getQCJob({ lotId, qcJobId: '' }),
+    enabled: !!lotId
+  }));
+
+  const qcResultQuery = createQuery(() => ({
+    queryKey: ['qc-result', qcJobQuery.data?.job?.id],
+    queryFn: () => qcClient.getQCResult({ qcJobId: qcJobQuery.data!.job!.id }),
+    enabled: !!qcJobQuery.data?.job?.id
+  }));
+
   // Review modal state
   let showModal = $state(false);
   let decision = $state(0); // SupervisorDecision enum value
@@ -26,8 +39,8 @@
   let reviewError = $state('');
   let reviewSuccess = $state('');
 
-  // For now we hardcode the mock job ID — in production this comes from ListQCJobsByLot
-  let qcJobId = $state('');
+  const qcJobId = $derived(qcJobQuery.data?.job?.id ?? '');
+  const aiResult = $derived(qcResultQuery.data?.result);
 
   function openReview(d: number) {
     decision = d;
@@ -38,7 +51,7 @@
 
   async function submitReview() {
     if (!qcJobId) {
-      reviewError = 'QC Job ID not available (needs ListQCJobsByLot RPC)';
+      reviewError = 'No QC job found for this lot';
       return;
     }
     submitting = true;
@@ -53,6 +66,7 @@
       showModal = false;
       reviewSuccess = decision === 1 ? 'Approved' : decision === 2 ? 'Rejected' : 'Recheck requested';
       queryClient.invalidateQueries({ queryKey: ['lot', lotId] });
+      queryClient.invalidateQueries({ queryKey: ['qc-job-for-lot', lotId] });
     } catch (e: any) {
       reviewError = e.message || 'Review failed';
     } finally {
@@ -101,39 +115,52 @@
       <div class="border rounded-lg p-4 space-y-4">
         <h2 class="font-semibold text-sm text-gray-500 uppercase">AI Recommendation</h2>
 
-        <div class="space-y-3">
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-medium">Recommendation:</span>
-            <span class="px-2 py-1 rounded text-xs font-bold bg-yellow-100 text-yellow-800">REVIEW</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-medium">Confidence:</span>
-            <span class="text-sm">82%</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-sm font-medium">Model:</span>
-            <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">mock-v0.1.0</span>
-          </div>
-          <div>
-            <span class="text-sm font-medium">Findings:</span>
-            <div class="mt-2 space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                <span class="text-sm">foreign_matter</span>
-                <span class="text-xs text-gray-400">(bottle, 87%)</span>
-                <span class="px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-600">anomaly</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                <span class="text-sm">ripeness_signal</span>
-                <span class="text-xs text-gray-400">(banana, 92%)</span>
-              </div>
+        {#if qcJobQuery.isLoading || qcResultQuery.isLoading}
+          <p class="text-sm text-gray-400">Loading AI results...</p>
+        {:else if !qcJobId}
+          <p class="text-sm text-gray-500">No QC job found for this lot. Upload an image first from the lot detail page.</p>
+        {:else if !aiResult}
+          <p class="text-sm text-gray-500">AI processing in progress... <span class="text-xs">(refresh in a moment)</span></p>
+        {:else}
+          {@const recLabels = { 0: 'UNSPECIFIED', 1: 'PASS', 2: 'REVIEW', 3: 'FAIL' }}
+          {@const recColors = { 1: 'bg-green-100 text-green-800', 2: 'bg-yellow-100 text-yellow-800', 3: 'bg-red-100 text-red-800' }}
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium">Recommendation:</span>
+              <span class="px-2 py-1 rounded text-xs font-bold {recColors[aiResult.recommendation] ?? 'bg-gray-100'}">
+                {recLabels[aiResult.recommendation] ?? 'UNKNOWN'}
+              </span>
             </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium">Confidence:</span>
+              <span class="text-sm">{Math.round((aiResult.confidence ?? 0) * 100)}%</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium">Model:</span>
+              <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded">{aiResult.modelVersion ?? 'unknown'}</span>
+            </div>
+            {#if aiResult.findings && aiResult.findings.length > 0}
+              <div>
+                <span class="text-sm font-medium">Findings:</span>
+                <div class="mt-2 space-y-1">
+                  {#each aiResult.findings as f}
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full {f.isAnomaly ? 'bg-red-500' : 'bg-green-500'}"></span>
+                      <span class="text-sm">{f.label}</span>
+                      <span class="text-xs text-gray-400">({Math.round((f.confidence ?? 0) * 100)}%)</span>
+                      {#if f.isAnomaly}
+                        <span class="px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-600">anomaly</span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/if}
           </div>
-        </div>
+        {/if}
 
         <!-- Supervisor Actions -->
-        {#if !reviewSuccess}
+        {#if !reviewSuccess && qcJobId}
           <div class="border-t pt-4 space-y-3">
             <h3 class="font-semibold text-sm">Supervisor Decision</h3>
             <div class="flex gap-2">

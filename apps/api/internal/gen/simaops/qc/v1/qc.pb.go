@@ -749,6 +749,7 @@ func (x *CreateQCJobResponse) GetJob() *QCJob {
 type GetQCJobRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	QcJobId       string                 `protobuf:"bytes,1,opt,name=qc_job_id,json=qcJobId,proto3" json:"qc_job_id,omitempty"`
+	LotId         string                 `protobuf:"bytes,2,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"` // alternative — get latest QC job for this lot
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -786,6 +787,13 @@ func (*GetQCJobRequest) Descriptor() ([]byte, []int) {
 func (x *GetQCJobRequest) GetQcJobId() string {
 	if x != nil {
 		return x.QcJobId
+	}
+	return ""
+}
+
+func (x *GetQCJobRequest) GetLotId() string {
+	if x != nil {
+		return x.LotId
 	}
 	return ""
 }
@@ -1219,9 +1227,10 @@ const file_simaops_qc_v1_qc_proto_rawDesc = "" +
 	"\x10image_object_key\x18\x02 \x01(\tR\x0eimageObjectKey\x12'\n" +
 	"\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"=\n" +
 	"\x13CreateQCJobResponse\x12&\n" +
-	"\x03job\x18\x01 \x01(\v2\x14.simaops.qc.v1.QCJobR\x03job\"-\n" +
+	"\x03job\x18\x01 \x01(\v2\x14.simaops.qc.v1.QCJobR\x03job\"D\n" +
 	"\x0fGetQCJobRequest\x12\x1a\n" +
-	"\tqc_job_id\x18\x01 \x01(\tR\aqcJobId\":\n" +
+	"\tqc_job_id\x18\x01 \x01(\tR\aqcJobId\x12\x15\n" +
+	"\x06lot_id\x18\x02 \x01(\tR\x05lotId\":\n" +
 	"\x10GetQCJobResponse\x12&\n" +
 	"\x03job\x18\x01 \x01(\v2\x14.simaops.qc.v1.QCJobR\x03job\"0\n" +
 	"\x12GetQCResultRequest\x12\x1a\n" +

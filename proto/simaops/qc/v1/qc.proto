@@ -105,6 +105,7 @@ message CreateQCJobResponse {
 
 message GetQCJobRequest {
   string qc_job_id = 1;
+  string lot_id = 2;  // alternative — get latest QC job for this lot
 }
 
 message GetQCJobResponse {
