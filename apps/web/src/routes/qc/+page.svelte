@@ -22,9 +22,9 @@
     <span class="text-sm text-gray-500">Showing lots awaiting QC review</span>
   </div>
 
-  {#if $lotsQuery.isLoading}
+  {#if lotsQuery.isLoading}
     <p class="text-gray-500">{$t('common.loading')}</p>
-  {:else if $lotsQuery.isError}
+  {:else if lotsQuery.isError}
     <p class="text-red-500">{$t('common.error')}</p>
   {:else}
     <div class="overflow-x-auto border rounded-lg">
@@ -39,7 +39,7 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          {#each $lotsQuery.data?.lots ?? [] as lot}
+          {#each lotsQuery.data?.lots ?? [] as lot}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3 font-mono text-xs">{lot.lotNumber}</td>
               <td class="px-4 py-3">{lot.materialName}</td>

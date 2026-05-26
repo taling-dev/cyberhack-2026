@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+  import { createQuery, getQueryClientContext } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
@@ -9,7 +9,7 @@
 
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
-  const queryClient = useQueryClient();
+  const queryClient = getQueryClientContext();
 
   const lotId = $derived($page.params.id);
 
@@ -69,10 +69,10 @@
 </script>
 
 <div class="max-w-4xl space-y-6">
-  {#if $lotQuery.isLoading}
+  {#if lotQuery.isLoading}
     <p class="text-gray-500">Loading...</p>
-  {:else if $lotQuery.data?.lot}
-    {@const lot = $lotQuery.data.lot}
+  {:else if lotQuery.data?.lot}
+    {@const lot = lotQuery.data.lot}
 
     <div class="flex items-center justify-between">
       <div>

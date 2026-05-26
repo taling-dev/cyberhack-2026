@@ -16,9 +16,9 @@
 <div class="space-y-4">
   <h1 class="text-2xl font-bold">{$t('nav.audit')}</h1>
 
-  {#if $logsQuery.isLoading}
+  {#if logsQuery.isLoading}
     <p class="text-gray-500">{$t('common.loading')}</p>
-  {:else if $logsQuery.isError}
+  {:else if logsQuery.isError}
     <p class="text-red-500">{$t('common.error')}</p>
   {:else}
     <div class="overflow-x-auto border rounded-lg">
@@ -33,7 +33,7 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          {#each $logsQuery.data?.logs ?? [] as log}
+          {#each logsQuery.data?.logs ?? [] as log}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3 text-xs text-gray-500">{log.createdAt?.toDate().toLocaleString()}</td>
               <td class="px-4 py-3">

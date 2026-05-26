@@ -62,9 +62,9 @@
   </div>
 
   <!-- Table -->
-  {#if $lotsQuery.isLoading}
+  {#if lotsQuery.isLoading}
     <p class="text-gray-500">{$t('common.loading')}</p>
-  {:else if $lotsQuery.isError}
+  {:else if lotsQuery.isError}
     <p class="text-red-500">{$t('common.error')}</p>
   {:else}
     <div class="overflow-x-auto border rounded-lg">
@@ -81,7 +81,7 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          {#each $lotsQuery.data?.lots ?? [] as lot}
+          {#each lotsQuery.data?.lots ?? [] as lot}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3">
                 <a href="/lots/{lot.id}" class="text-blue-600 hover:underline font-mono text-xs">{lot.lotNumber}</a>

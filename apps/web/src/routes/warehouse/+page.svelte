@@ -1,6 +1,6 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
-  import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+  import { createQuery, getQueryClientContext } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
@@ -8,7 +8,7 @@
 
   const lotClient = createClient(LotService, transport);
   const whClient = createClient(WarehouseService, transport);
-  const queryClient = useQueryClient();
+  const queryClient = getQueryClientContext();
 
   // Lots awaiting warehouse assignment (status 5 = QC_APPROVED)
   const lotsQuery = createQuery(() => ({
@@ -74,7 +74,7 @@
     </div>
   {/if}
 
-  {#if $lotsQuery.isLoading}
+  {#if lotsQuery.isLoading}
     <p class="text-gray-500">{$t('common.loading')}</p>
   {:else}
     <div class="overflow-x-auto border rounded-lg">
@@ -88,7 +88,7 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          {#each $lotsQuery.data?.lots ?? [] as lot}
+          {#each lotsQuery.data?.lots ?? [] as lot}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3 font-mono text-xs">{lot.lotNumber}</td>
               <td class="px-4 py-3">{lot.materialName}</td>

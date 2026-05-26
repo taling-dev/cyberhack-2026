@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+  import { createQuery, createMutation, getQueryClientContext } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
@@ -10,7 +10,7 @@
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
   const auditClient = createClient(AuditService, transport);
-  const queryClient = useQueryClient();
+  const queryClient = getQueryClientContext();
 
   const lotId = $derived($page.params.id);
 
@@ -113,17 +113,17 @@
 
   // Upload allowed only in certain statuses
   const uploadAllowed = $derived(
-    [1, 2, 6].includes($lotQuery.data?.lot?.status ?? 0) // DRAFT, PENDING_QC, QC_REJECTED
+    [1, 2, 6].includes(lotQuery.data?.lot?.status ?? 0) // DRAFT, PENDING_QC, QC_REJECTED
   );
 </script>
 
 <div class="max-w-3xl space-y-6">
-  {#if $lotQuery.isLoading}
+  {#if lotQuery.isLoading}
     <p class="text-gray-500">Loading...</p>
-  {:else if $lotQuery.isError}
+  {:else if lotQuery.isError}
     <p class="text-red-500">Failed to load lot</p>
-  {:else if $lotQuery.data?.lot}
-    {@const lot = $lotQuery.data.lot}
+  {:else if lotQuery.data?.lot}
+    {@const lot = lotQuery.data.lot}
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold">{lot.lotNumber}</h1>
@@ -208,11 +208,11 @@
     <!-- Timeline -->
     <div class="border rounded-lg p-4">
       <h2 class="font-semibold text-sm text-gray-500 uppercase mb-3">Timeline</h2>
-      {#if $timelineQuery.isLoading}
+      {#if timelineQuery.isLoading}
         <p class="text-gray-400 text-sm">Loading timeline...</p>
-      {:else if ($timelineQuery.data?.entries?.length ?? 0) > 0}
+      {:else if (timelineQuery.data?.entries?.length ?? 0) > 0}
         <div class="space-y-3">
-          {#each $timelineQuery.data?.entries ?? [] as entry}
+          {#each timelineQuery.data?.entries ?? [] as entry}
             <div class="flex gap-3 text-sm">
               <div class="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
               <div>
