@@ -7,20 +7,20 @@
 
   const client = createClient(DashboardService, transport);
 
-  const opsQuery = createQuery({
+  const opsQuery = createQuery(() => ({
     queryKey: ['dashboard-ops'],
     queryFn: () => client.getOpsDashboard({})
-  });
+  }));
 
-  const qcQuery = createQuery({
+  const qcQuery = createQuery(() => ({
     queryKey: ['dashboard-qc'],
     queryFn: () => client.getQCMetrics({ hours: 24 })
-  });
+  }));
 
-  const whQuery = createQuery({
+  const whQuery = createQuery(() => ({
     queryKey: ['dashboard-warehouse'],
     queryFn: () => client.getWarehouseMetrics({})
-  });
+  }));
 </script>
 
 <div class="space-y-6">

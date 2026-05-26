@@ -7,10 +7,10 @@
 
   const client = createClient(AuditService, transport);
 
-  const logsQuery = createQuery({
+  const logsQuery = createQuery(() => ({
     queryKey: ['audit-logs'],
     queryFn: () => client.listAuditLogs({ pageSize: 50 })
-  });
+  }));
 </script>
 
 <div class="space-y-4">

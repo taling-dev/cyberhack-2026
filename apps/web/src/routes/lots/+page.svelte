@@ -10,14 +10,14 @@
   let statusFilter = $state('');
   let materialFilter = $state('');
 
-  const lotsQuery = createQuery({
+  const lotsQuery = createQuery(() => ({
     queryKey: ['lots', statusFilter, materialFilter],
     queryFn: () => client.listLots({
       pageSize: 50,
       statusFilter: statusFilter ? Number(statusFilter) : 0,
       materialTypeFilter: materialFilter ? Number(materialFilter) : 0
     })
-  });
+  }));
 
   const statusLabels: Record<number, string> = {
     1: 'Draft', 2: 'Pending QC', 3: 'AI Processing', 4: 'QC Review',

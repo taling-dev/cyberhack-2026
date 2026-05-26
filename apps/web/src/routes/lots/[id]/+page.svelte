@@ -14,15 +14,15 @@
 
   const lotId = $derived($page.params.id);
 
-  const lotQuery = createQuery({
+  const lotQuery = createQuery(() => ({
     queryKey: ['lot', lotId],
     queryFn: () => lotClient.getLot({ lotId })
-  });
+  }));
 
-  const timelineQuery = createQuery({
+  const timelineQuery = createQuery(() => ({
     queryKey: ['lot-timeline', lotId],
     queryFn: () => auditClient.getEntityAuditTrail({ entityType: 'lot', entityId: lotId })
-  });
+  }));
 
   // Upload state
   let uploadProgress = $state(0);

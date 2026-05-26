@@ -11,10 +11,10 @@
   const queryClient = useQueryClient();
 
   // Lots awaiting warehouse assignment (status 5 = QC_APPROVED)
-  const lotsQuery = createQuery({
+  const lotsQuery = createQuery(() => ({
     queryKey: ['warehouse-queue'],
     queryFn: () => lotClient.listLots({ pageSize: 50, statusFilter: 5 })
-  });
+  }));
 
   // Assignment modal state
   let showModal = $state(false);

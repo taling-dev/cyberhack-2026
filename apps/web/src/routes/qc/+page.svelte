@@ -8,10 +8,10 @@
   const client = createClient(LotService, transport);
 
   // Status 4 = QC_REVIEW
-  const lotsQuery = createQuery({
+  const lotsQuery = createQuery(() => ({
     queryKey: ['qc-review-lots'],
     queryFn: () => client.listLots({ pageSize: 50, statusFilter: 4 })
-  });
+  }));
 
   const materialLabels: Record<number, string> = { 1: 'Raw Botanical', 2: 'Extract', 3: 'Powder', 4: 'Other' };
 </script>

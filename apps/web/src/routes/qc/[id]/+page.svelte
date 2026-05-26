@@ -13,10 +13,10 @@
 
   const lotId = $derived($page.params.id);
 
-  const lotQuery = createQuery({
+  const lotQuery = createQuery(() => ({
     queryKey: ['lot', lotId],
     queryFn: () => lotClient.getLot({ lotId })
-  });
+  }));
 
   // Review modal state
   let showModal = $state(false);
