@@ -9,7 +9,7 @@ service:
   port: 8080
 
 env:
-  TIDB_DSN: "root:@tcp(tidb-cluster-tidb.platform:4000)/simaops?parseTime=true"
+  TIDB_DSN: "root:@tcp(simaops-tidb.platform:4000)/simaops?parseTime=true"
   MINIO_ENDPOINT: "minio.platform:9000"
   MINIO_ACCESS_KEY: "simaops"
   MINIO_SECRET_KEY: "simaops-dev-secret"

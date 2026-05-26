@@ -10,7 +10,7 @@ service:
 
 env:
   NATS_URL: "nats://nats.platform:4222"
-  TIDB_HOST: "tidb-cluster-tidb.platform"
+  TIDB_HOST: "simaops-tidb.platform"
   TIDB_PORT: "4000"
   TIDB_USER: "root"
   TIDB_DB: "simaops"
