@@ -1,0 +1,59 @@
+{{- if .Values.grafanaDashboards.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simaops-dashboard-ai-worker
+  namespace: {{ .Values.grafanaDashboards.namespace | default "observability" }}
+  labels:
+    grafana_dashboard: "1"
+data:
+  simaops-ai-worker.json: |
+    {
+      "title": "SimaOps — AI Worker",
+      "tags": ["simaops", "ai"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "NATS consumer lag",
+          "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "nats_consumer_num_pending{stream_name=\"SIMAOPS\",consumer_name=\"simaops-ai-worker\"}"}],
+          "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 50}, {"color": "red", "value": 200}]}}}
+        },
+        {
+          "type": "stat",
+          "title": "DLQ depth",
+          "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "nats_consumer_num_pending{subject=\"qc.job.dlq\"}"}]
+        },
+        {
+          "type": "stat",
+          "title": "Jobs/min (5-min avg)",
+          "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "sum(rate(simaops_ai_worker_jobs_total[5m])) * 60"}]
+        },
+        {
+          "type": "stat",
+          "title": "Pass / Review / Fail (24h)",
+          "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "sum by (recommendation) (increase(simaops_ai_worker_jobs_total{status=\"completed\"}[24h]))"}]
+        },
+        {
+          "type": "timeseries",
+          "title": "Inference duration",
+          "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
+          "targets": [
+            {"expr": "histogram_quantile(0.50, sum by (le) (rate(simaops_ai_worker_inference_duration_seconds_bucket[5m])))", "legendFormat": "p50"},
+            {"expr": "histogram_quantile(0.95, sum by (le) (rate(simaops_ai_worker_inference_duration_seconds_bucket[5m])))", "legendFormat": "p95"}
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Recommendation distribution",
+          "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+          "targets": [{"expr": "sum by (recommendation) (rate(simaops_ai_worker_jobs_total{status=\"completed\"}[5m]))", "legendFormat": "{{`{{recommendation}}`}}"}]
+        }
+      ]
+    }
+{{- end }}

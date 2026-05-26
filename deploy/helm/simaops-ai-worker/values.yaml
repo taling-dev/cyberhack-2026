@@ -41,3 +41,6 @@ pdb:
 serviceMonitor:
   enabled: false
   interval: 15s
+
+networkPolicy:
+  enabled: false

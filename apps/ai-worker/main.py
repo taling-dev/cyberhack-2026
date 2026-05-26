@@ -12,11 +12,13 @@ import nats
 import pymysql
 import uvicorn
 from fastapi import FastAPI
-from opentelemetry import trace
+from opentelemetry import trace, context as otel_context
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.propagators.textmap import DefaultGetter
+from opentelemetry.propagate import extract
 
 # ─── OTel Init ────────────────────────────────────────────────────
 
@@ -130,15 +132,28 @@ async def message_handler(msg):
     """Callback for each NATS message — processes one QC job."""
     job_id = "?"
     try:
+        # Extract trace context from NATS headers (traceparent set by outbox-publisher)
+        carrier = {}
+        if msg.headers:
+            for k, v in msg.headers.items():
+                carrier[k.lower()] = v
+        parent_ctx = extract(carrier)
+
         payload = json.loads(msg.data)
         job_id = payload["qc_job_id"]
         lot_id = payload["lot_id"]
         image_key = payload["image_object_key"]
         material_type = payload.get("material_type", "RAW_BOTANICAL")
 
-        with tracer.start_as_current_span("qc.process", attributes={
-            "qc.job_id": job_id, "qc.lot_id": lot_id, "qc.material_type": material_type
-        }):
+        with tracer.start_as_current_span(
+            "qc.process",
+            context=parent_ctx,
+            attributes={
+                "qc.job_id": job_id,
+                "qc.lot_id": lot_id,
+                "qc.material_type": material_type,
+            },
+        ):
             print(f"[worker] processing job={job_id} image={image_key} material={material_type}", flush=True)
 
             # Mark job as PROCESSING (only succeeds if still QUEUED — prevents re-processing)
@@ -157,7 +172,6 @@ async def message_handler(msg):
                 mark_job_failed(job_id, str(e))
         except Exception as inner:
             print(f"[worker] failed to mark job FAILED: {inner}", flush=True)
-        # NAK with delay so NATS retries
         try:
             await msg.nak(delay=10)
         except Exception:
@@ -171,17 +185,27 @@ async def run_consumer():
             nc = await nats.connect(NATS_URL, name="simaops-ai-worker", reconnect_time_wait=2)
             js = nc.jetstream()
 
-            # Subscribe — push consumer with manual ack
+            # Subscribe — push consumer with manual ack and DLQ semantics
+            # max_deliver=4: NATS retries up to 4 times, then drops (consumer DLQ pattern)
+            # ack_wait=60s: long enough for image fetch + inference
+            # The qc.job.dlq subject collects failures via NATS advisory or app-level publish
+            from nats.js.api import ConsumerConfig
             sub = await js.subscribe(
                 "qc.job.created",
                 durable="simaops-ai-worker",
                 stream="SIMAOPS",
                 manual_ack=True,
                 cb=message_handler,
+                config=ConsumerConfig(
+                    max_deliver=4,
+                    ack_wait=60,
+                ),
             )
-            print(f"[worker] subscribed to qc.job.created (strategy={QC_STRATEGY}, model={MODEL_VERSION})", flush=True)
+            print(
+                f"[worker] subscribed (strategy={QC_STRATEGY}, model={MODEL_VERSION}, max_deliver=4, ack_wait=60s)",
+                flush=True,
+            )
 
-            # Wait for shutdown
             await shutdown_event.wait()
 
             await sub.unsubscribe()

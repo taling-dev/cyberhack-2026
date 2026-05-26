@@ -5,7 +5,8 @@ function getApiUrl(): string {
   if (!browser) return 'http://simaops-api.simaops:8080';
   const host = window.location.hostname;
   if (host.includes('sslip.io')) {
-    return `http://api.${host.replace('app.', '')}`;
+    const proto = window.location.protocol; // 'https:' or 'http:'
+    return `${proto}//api.${host.replace('app.', '')}`;
   }
   return 'http://localhost:8080';
 }

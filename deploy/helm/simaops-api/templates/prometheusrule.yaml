@@ -1,0 +1,99 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: simaops-platform
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: simaops
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: simaops.api
+      interval: 30s
+      rules:
+        - alert: SimaopsAPIErrorRateHigh
+          expr: |
+            (
+              sum(rate(http_server_request_duration_seconds_count{job="simaops-api",code=~"5.."}[5m]))
+              /
+              sum(rate(http_server_request_duration_seconds_count{job="simaops-api"}[5m]))
+            ) > 0.02
+          for: 5m
+          labels:
+            severity: critical
+            service: simaops-api
+          annotations:
+            summary: "API 5xx error rate above 2% for 5 minutes"
+            description: "5xx error rate is {{ "{{" }} $value | humanizePercentage {{ "}}" }} on simaops-api."
+
+        - alert: SimaopsAPIp95LatencyHigh
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_server_request_duration_seconds_bucket{job="simaops-api"}[5m])) by (le)
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+            service: simaops-api
+          annotations:
+            summary: "API p95 latency above 1s for 5 minutes"
+            description: "p95 latency is {{ "{{" }} $value {{ "}}" }}s on simaops-api."
+
+    - name: simaops.outbox
+      interval: 60s
+      rules:
+        - alert: SimaopsOutboxBacklog
+          expr: |
+            (time() - max(simaops_outbox_oldest_pending_seconds)) > 300
+          for: 5m
+          labels:
+            severity: warning
+            service: simaops-outbox-publisher
+          annotations:
+            summary: "Outbox events pending for >5 minutes"
+            description: "Oldest pending event in outbox is {{ "{{" }} $value {{ "}}" }}s old."
+
+    - name: simaops.ai-worker
+      interval: 60s
+      rules:
+        - alert: SimaopsNATSConsumerLagHigh
+          expr: |
+            nats_consumer_num_pending{stream_name="SIMAOPS",consumer_name="simaops-ai-worker"} > 100
+          for: 5m
+          labels:
+            severity: warning
+            service: simaops-ai-worker
+          annotations:
+            summary: "AI worker NATS consumer lag above 100 messages"
+            description: "{{ "{{" }} $value {{ "}}" }} messages pending in NATS for the AI worker."
+
+        - alert: SimaopsAIWorkerFailureRateHigh
+          expr: |
+            (
+              sum(rate(simaops_ai_worker_jobs_total{status="failed"}[15m]))
+              /
+              sum(rate(simaops_ai_worker_jobs_total[15m]))
+            ) > 0.10
+          for: 15m
+          labels:
+            severity: warning
+            service: simaops-ai-worker
+          annotations:
+            summary: "AI worker failure rate above 10% for 15 minutes"
+            description: "AI worker is failing on {{ "{{" }} $value | humanizePercentage {{ "}}" }} of jobs."
+
+    - name: simaops.lifecycle
+      interval: 60s
+      rules:
+        - alert: SimaopsLotsStuckInQCReview
+          expr: |
+            max(time() - simaops_qc_review_oldest_age_seconds) > 1800
+          for: 30m
+          labels:
+            severity: info
+            service: simaops-api
+          annotations:
+            summary: "Lots stuck in QC_REVIEW for >30 minutes"
+            description: "Oldest lot in QC_REVIEW is {{ "{{" }} $value | humanizeDuration {{ "}}" }} old."
+{{- end }}

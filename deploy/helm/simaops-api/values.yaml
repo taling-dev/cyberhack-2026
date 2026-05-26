@@ -14,7 +14,7 @@ env:
   MINIO_ACCESS_KEY: "simaops"
   MINIO_SECRET_KEY: "simaops-dev-secret"
   NATS_URL: "nats://nats.platform:4222"
-  KEYCLOAK_ISSUER: "http://auth.161.118.244.229.sslip.io/realms/simaops"
+  KEYCLOAK_ISSUER: "https://auth.161.118.244.229.sslip.io/realms/simaops"
   KEYCLOAK_INTERNAL_URL: "http://keycloak.platform:8080/realms/simaops"
   KEYCLOAK_CLIENT_ID: "simaops-web"
   OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
@@ -41,3 +41,20 @@ pdb:
 serviceMonitor:
   enabled: true
   interval: 15s
+
+networkPolicy:
+  enabled: false
+
+prometheusRule:
+  enabled: false
+
+grafanaDashboards:
+  enabled: false
+  namespace: observability
+
+seedJob:
+  enabled: true
+  dbHost: simaops-tidb.platform
+  dbPort: "4000"
+  dbUser: root
+  dbName: simaops

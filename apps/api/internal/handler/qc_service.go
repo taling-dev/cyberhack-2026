@@ -225,7 +225,61 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 }
 
 func (s *QCService) RetryQCJob(ctx context.Context, req *connect.Request[qcv1.RetryQCJobRequest]) (*connect.Response[qcv1.RetryQCJobResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("implemented in Task 19"))
+	if req.Msg.QcJobId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("qc_job_id required"))
+	}
+
+	// Fetch job
+	job, err := s.q.GetQCJob(ctx, req.Msg.QcJobId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("qc job not found"))
+	}
+
+	// Only FAILED jobs can be retried
+	if job.Status != db.QcJobsStatusFAILED {
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("only FAILED jobs can be retried (current: %s)", job.Status))
+	}
+
+	// Reset job to QUEUED, clear failure_reason
+	if err := s.q.UpdateQCJobStatus(ctx, db.UpdateQCJobStatusParams{
+		Status: db.QcJobsStatusQUEUED,
+		ID:     job.ID,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("reset job: %w", err))
+	}
+
+	// Re-fetch lot for material_type
+	lot, err := s.q.GetLot(ctx, job.LotID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("lot lookup: %w", err))
+	}
+
+	// Re-publish via outbox so the AI worker picks it up again
+	outboxPayload, _ := json.Marshal(map[string]string{
+		"qc_job_id":        job.ID,
+		"lot_id":           job.LotID,
+		"image_object_key": job.ImageObjectKey,
+		"material_type":    string(lot.MaterialType),
+	})
+	if err := s.q.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "qc.job.created",
+		PayloadJson: outboxPayload,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
+	}
+
+	// Lot back to PENDING_QC
+	_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
+		Status: db.LotsStatusPENDINGQC,
+		ID:     job.LotID,
+	})
+
+	freshJob, _ := s.q.GetQCJob(ctx, job.ID)
+	return connect.NewResponse(&qcv1.RetryQCJobResponse{
+		Job: dbJobToProto(freshJob),
+	}), nil
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────

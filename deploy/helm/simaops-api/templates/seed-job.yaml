@@ -1,0 +1,69 @@
+{{- if .Values.seedJob.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-seed-data
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: before-hook-creation
+data:
+  seed-data.sql: |-
+{{ .Files.Get "files/seed-data.sql" | indent 4 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-seed
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: simaops-seed
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: seed-db
+          image: docker.io/mysql:8.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for TiDB to be ready..."
+              for i in $(seq 1 30); do
+                if mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e "SELECT 1" > /dev/null 2>&1; then
+                  echo "TiDB ready"
+                  break
+                fi
+                echo "Attempt $i: TiDB not ready, retrying in 2s..."
+                sleep 2
+              done
+              echo "Running idempotent seed (INSERT IGNORE)..."
+              mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" < /seed/seed-data.sql
+              echo "✓ Seed complete"
+          env:
+            - name: DB_HOST
+              value: {{ .Values.seedJob.dbHost | default "simaops-tidb.platform" | quote }}
+            - name: DB_PORT
+              value: {{ .Values.seedJob.dbPort | default "4000" | quote }}
+            - name: DB_USER
+              value: {{ .Values.seedJob.dbUser | default "root" | quote }}
+            - name: DB_NAME
+              value: {{ .Values.seedJob.dbName | default "simaops" | quote }}
+          volumeMounts:
+            - name: seed-data
+              mountPath: /seed
+      volumes:
+        - name: seed-data
+          configMap:
+            name: {{ .Release.Name }}-seed-data
+{{- end }}

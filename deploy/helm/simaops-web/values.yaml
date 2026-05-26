@@ -9,9 +9,9 @@ service:
   port: 3000
 
 env:
-  KEYCLOAK_ISSUER: "http://auth.161.118.244.229.sslip.io/realms/simaops"
+  KEYCLOAK_ISSUER: "https://auth.161.118.244.229.sslip.io/realms/simaops"
   KEYCLOAK_CLIENT_ID: "simaops-web"
-  PUBLIC_APP_URL: "http://app.161.118.244.229.sslip.io"
+  PUBLIC_APP_URL: "https://app.161.118.244.229.sslip.io"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability:4318"
   OTEL_SERVICE_NAME: "simaops-web"
 
@@ -36,3 +36,6 @@ pdb:
 serviceMonitor:
   enabled: false
   interval: 15s
+
+networkPolicy:
+  enabled: false

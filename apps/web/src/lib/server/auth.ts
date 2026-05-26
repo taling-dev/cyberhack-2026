@@ -122,10 +122,13 @@ export const COOKIE_ID = 'sa_id';
 export const COOKIE_PKCE = 'sa_pkce';
 export const COOKIE_STATE = 'sa_state';
 
+// PUBLIC_APP_URL determines whether cookies should be Secure (https://) or not (http:// for dev)
+const isHttps = APP_URL.startsWith('https://');
+
 export const COOKIE_OPTS = {
   path: '/',
   httpOnly: true,
-  secure: false,
+  secure: isHttps,
   sameSite: 'lax' as const
 };
 
@@ -133,6 +136,6 @@ export const COOKIE_OPTS = {
 export const COOKIE_OPTS_READABLE = {
   path: '/',
   httpOnly: false,
-  secure: false,
+  secure: isHttps,
   sameSite: 'lax' as const
 };

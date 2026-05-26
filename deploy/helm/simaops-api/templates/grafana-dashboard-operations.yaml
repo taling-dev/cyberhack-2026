@@ -1,0 +1,56 @@
+{{- if .Values.grafanaDashboards.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simaops-dashboard-operations
+  namespace: {{ .Values.grafanaDashboards.namespace | default "observability" }}
+  labels:
+    grafana_dashboard: "1"
+data:
+  simaops-operations.json: |
+    {
+      "title": "SimaOps — Operations",
+      "tags": ["simaops"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Total lots (all time)",
+          "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "simaops_lots_total", "legendFormat": "{{`{{status}}`}}"}]
+        },
+        {
+          "type": "stat",
+          "title": "Lots awaiting QC",
+          "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "simaops_lots_total{status=\"QC_REVIEW\"}"}],
+          "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 5}, {"color": "red", "value": 20}]}}}
+        },
+        {
+          "type": "stat",
+          "title": "Ready for production",
+          "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+          "targets": [{"expr": "simaops_lots_total{status=\"READY_FOR_PRODUCTION\"}"}]
+        },
+        {
+          "type": "timeseries",
+          "title": "Lot status distribution over time",
+          "gridPos": {"x": 0, "y": 4, "w": 18, "h": 8},
+          "targets": [{"expr": "simaops_lots_total", "legendFormat": "{{`{{status}}`}}"}]
+        },
+        {
+          "type": "timeseries",
+          "title": "Today's intake rate (lots/min)",
+          "gridPos": {"x": 0, "y": 12, "w": 9, "h": 8},
+          "targets": [{"expr": "rate(simaops_lots_created_total[5m])"}]
+        },
+        {
+          "type": "timeseries",
+          "title": "Warehouse occupancy by zone",
+          "gridPos": {"x": 9, "y": 12, "w": 9, "h": 8},
+          "targets": [{"expr": "simaops_warehouse_occupancy_ratio", "legendFormat": "{{`{{zone}}`}}"}]
+        }
+      ]
+    }
+{{- end }}
