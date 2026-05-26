@@ -1,18 +1,18 @@
 # infra/values/production.yaml — SST stage: production
-gcp:
-  project: taling-cyberhack
-  region: asia-southeast2
-  zone: asia-southeast2-a
+oci:
+  region: ap-singapore-1
 
 cluster:
-  name: simaops-gke
-  systemPool:
-    machineType: e2-standard-4
-    nodeCount: 3
-  appPool:
-    machineType: e2-standard-8
-    minNodes: 3
-    maxNodes: 6
+  name: simaops-prod-oke
+  kubernetesVersion: v1.30.1
+  type: BASIC_CLUSTER
+
+nodePool:
+  shape: VM.Standard.E4.Flex
+  ocpus: 4
+  memoryInGbs: 32
+  baselineOcpuUtilization: BASELINE_1_2  # burstable to 50%
+  size: 3
 
 dns:
   strategy: sslip.io

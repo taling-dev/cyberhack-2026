@@ -54,9 +54,9 @@ SimaOps AI is a single enterprise platform that:
 | AI worker        | Python 3.12, FastAPI, OpenCV, ONNX Runtime CPU, YOLOv8n; switchable strategy (`mock` / `pretrained` / `custom`) |
 | Observability    | `kube-prometheus-stack` + `loki-stack` + `tempo` + `opentelemetry-collector` (single bundle)                  |
 | Secrets          | OpenBao (production); Kubernetes Secrets (dev/staging fallback)                                               |
-| Container reg    | `ghcr.io` (off Google application services)                                                                   |
+| Container reg    | `ghcr.io` (cloud-neutral)                                                                                     |
 | CI/CD            | GitHub Actions: build matrix → `ghcr.io`; `sst deploy --stage staging` on `main`; manual approval → production |
-| Deployment tool  | SST v3 with `gcp` and `kubernetes` providers (Pulumi-backed)                                                  |
+| Deployment tool  | SST v4 with `@pulumi/oci` provider                                                                            |
 | Tests — Go       | `testing` + `testify` + `connectrpc.com/connect` test client                                                  |
 | Tests — TS/Svelte| Vitest (unit) + Playwright (e2e)                                                                              |
 | Tests — Python   | pytest + NATS + MinIO test containers                                                                         |
@@ -67,14 +67,14 @@ SimaOps AI is a single enterprise platform that:
 | #  | Decision                          | Choice                                                                                                                            |
 | -- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | 1  | Repo strategy                     | Wipe Buildpad app artifacts; preserve `.kiro/steering`, `.kiro/skills`, `.vscode/`, `.git/`, `.gitignore`.                         |
-| 2  | Deployment target                 | Cloud-first; GKE Standard via SST on day 1.                                                                                       |
+| 2  | Deployment target                 | Cloud-first; OKE Basic Cluster on Oracle Cloud Infrastructure via SST on day 1.                                                   |
 | 3  | AI realism                        | Switchable strategy. Default `pretrained` (YOLOv8n COCO from MinIO). `mock` for CI/tests. `custom` slot reserved.                  |
-| 4  | GCP / DNS readiness               | User supplies GCP project ID, billing account, region, domain, DNS at execution time. Region default `asia-southeast2`.            |
-| 5  | TiDB                              | Operator with production sizing (3 PD + 3 TiKV + 2 TiDB; PDBs `minAvailable: 2/2/1`; anti-affinity).                              |
+| 4  | OCI / DNS readiness               | OCI tenancy `ap-singapore-1`. User supplies tenancy OCID, user OCID, API key fingerprint, private key, compartment OCID. Domain TBD — sslip.io fallback. |
+| 5  | TiDB                              | Operator with demo sizing initially (1 PD + 1 TiKV + 1 TiDB on free tier); production sizing (3+3+2) when scaling out.            |
 | 6  | Auth model                        | BFF — SvelteKit hooks own OIDC PKCE; HttpOnly Secure SameSite=Lax cookies; SvelteKit server forwards bearer JWT to Go.            |
-| 7  | GPU node pool                     | None. CPU-only ONNX Runtime + YOLOv8n.                                                                                            |
+| 7  | Compute shape                     | `VM.Standard.E4.Flex` burstable (AMD x86_64), 2 OCPU / 16 GB per node, BASELINE_1_8 utilization. No GPU.                          |
 | 8  | Keycloak seeding                  | `simaops-realm.json` checked into git, auto-imported by Helm; 5 demo users (one per role) with passwords from K8s Secret.         |
-| 9  | CI/CD                             | GitHub Actions + `ghcr.io` (registry off Google application services).                                                            |
+| 9  | CI/CD                             | GitHub Actions + `ghcr.io` (registry stays cloud-neutral); OCI API key auth via repo secrets.                                     |
 | 10 | Domain reality                    | Sima Arome — natural extracts manufacturer; both raw botanicals AND extract/powder products; cold-chain to −20 °C; IBC/IPPC drums.|
 | 11 | Demo images                       | User supplies images at runtime; AI worker `findings_map.yaml` is config-driven so vocab swaps without code changes.              |
 | 12 | Observability                     | `kube-prometheus-stack` + `loki-stack` + `tempo` + `opentelemetry-collector` (bundle, not individual charts).                     |
@@ -134,5 +134,6 @@ SimaOps AI is a single enterprise platform that:
 | -------- | ------------ | --------------------------------------------------------------------------- |
 | v1       | 2026-05-25   | Initial 30-task plan from spec + Q&A rounds 1–4.                            |
 | v2       | 2026-05-26   | Sima Arome domain refinements folded into Tasks 5, 7, 12, 26, 27, 28, 30.   |
+| v3       | 2026-05-26   | Cloud target switched from GCP/GKE to OCI/OKE (Singapore, E4.Flex burstable, OCI API key auth). |
 
 **Awaiting:** explicit `go` from the user before Task 1 (monorepo bootstrap) executes.

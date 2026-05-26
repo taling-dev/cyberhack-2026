@@ -267,21 +267,21 @@ App charts ship with `Deployment`, `Service`, `ConfigMap`, `Secret` ref, `Servic
 
 `infra/sst/sst.config.ts` provisions:
 
-- **GCP:** VPC + subnet, GKE Standard cluster (regional control plane), 2 node pools — `system` (`e2-standard-4`, fixed 3) and `app` (`e2-standard-8`, autoscale 3–6); static IP for ingress; Cloud DNS A records for `app|api|auth|grafana|minio.<domain>`.
-- **Kubernetes:** namespaces `platform`, `simaops`, `observability`; all Helm releases above; ConfigMaps + Secret refs; HPAs; PDBs; NetworkPolicies.
+- **OCI:** VCN `10.0.0.0/16`, public subnet, Internet Gateway, Route Table, Security List (ingress 80/443/all egress); OKE Basic Cluster (`v1.30.x`, free control plane); Node Pool — `VM.Standard.E4.Flex` (AMD x86_64) burstable BASELINE_1_8, 2 OCPU / 16 GB per node, 2 nodes; Reserved Public IP for ingress LoadBalancer.
+- **Kubernetes:** namespaces `platform`, `simaops`, `observability`; all Helm releases below; ConfigMaps + Secret refs; HPAs; PDBs; NetworkPolicies.
 
 Stages:
 
-- `dev` — k3d local; no GCP resources.
-- `staging` — full GCP + GKE deploy on push to `main`.
+- `dev` — k3d local; no OCI resources.
+- `staging` — full OCI deploy on push to `main`.
 - `production` — same shape, `protect: true` + `removal: retain`; manual approval gate.
 
-Outputs: `frontend_url`, `api_url`, `keycloak_url`, `minio_console_url`, `grafana_url`, `nats_endpoint_internal`, `tidb_endpoint_internal`, `kubeconfig`, `static_ip`.
+Outputs: `frontend_url`, `api_url`, `keycloak_url`, `minio_console_url`, `grafana_url`, `nats_endpoint_internal`, `tidb_endpoint_internal`, `kubeconfig`, `lb_public_ip`.
 
 ## 10. CI/CD
 
 - `.github/workflows/build.yaml` — matrix on `apps/{web,api,ai-worker,outbox-publisher}`; build, unit-test, push to `ghcr.io/<owner>/simaops-<app>:<sha>` and `:<branch>`.
-- `.github/workflows/deploy-staging.yaml` — on push to `main` after `build` succeeds, runs `sst deploy --stage staging` with image tags pinned to commit SHA.
-- `.github/workflows/deploy-production.yaml` — on `release` tag, requires `environment: production` approval, runs `sst deploy --stage production`.
+- `.github/workflows/deploy-staging.yaml` — on push to `main` after `build` succeeds, configures OCI CLI from repo secrets, fetches OKE kubeconfig, runs `helm upgrade` with image tags pinned to commit SHA.
+- `.github/workflows/deploy-production.yaml` — on `release` tag, requires `environment: production` approval, deploys to production OKE cluster.
 
-GCP auth via Workload Identity Federation (no long-lived service-account keys).
+OCI auth via API key stored as repo secrets (no key files in repo): `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY`, `OCI_REGION`, `OCI_COMPARTMENT_OCID`, `OCI_CLUSTER_OCID`.

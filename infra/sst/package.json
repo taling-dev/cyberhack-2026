@@ -1,0 +1,15 @@
+{
+  "name": "@simaops/infra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "sst deploy",
+    "diff": "sst diff",
+    "remove": "sst remove"
+  },
+  "devDependencies": {
+    "sst": "4.14.3",
+    "@pulumi/oci": "4.12.0",
+    "@pulumi/kubernetes": "4.31.1"
+  }
+}
