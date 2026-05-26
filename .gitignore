@@ -52,3 +52,5 @@ htmlcov/
 # ─── Misc ─────────────────────────────────────────────────────────
 *.log
 tmp/
+apps/outbox-publisher/publisher
+apps/api/api
