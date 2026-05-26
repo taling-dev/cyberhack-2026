@@ -70,7 +70,19 @@ func (m *JWTMiddleware) Wrap(next http.Handler) http.Handler {
 		// Extract bearer token
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			// No token — allow through with nil claims (RBAC will block protected RPCs)
+			// No token — in DEMO_MODE, inject a default operator user
+			if os.Getenv("DEMO_MODE") == "true" {
+				ctx := context.WithValue(r.Context(), ClaimsKey, &Claims{
+					Sub:      "u-operator",
+					Username: "operator",
+					Email:    "operator@simaops.local",
+					Name:     "Budi Operator (Demo)",
+					Roles:    []string{"OPERATOR", "QC_SUPERVISOR", "WAREHOUSE_STAFF", "MANAGER", "ADMIN"},
+				})
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+			// No token and no demo mode — allow through with nil claims (RBAC will block protected RPCs)
 			next.ServeHTTP(w, r)
 			return
 		}

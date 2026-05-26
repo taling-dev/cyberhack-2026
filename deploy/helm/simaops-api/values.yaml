@@ -18,6 +18,7 @@ env:
   KEYCLOAK_CLIENT_ID: "simaops-web"
   OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
   OTEL_SERVICE_NAME: "simaops-api"
+  DEMO_MODE: "true"
 
 resources:
   requests:
