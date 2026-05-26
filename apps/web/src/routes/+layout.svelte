@@ -3,8 +3,11 @@
   import '$lib/i18n';
   import { t, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
+  import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 
   let { children, data } = $props();
+
+  const queryClient = new QueryClient();
 
   const navItems = [
     { href: '/dashboard', icon: '📊', key: 'nav.dashboard' },
@@ -22,6 +25,7 @@
   const user = $derived(data.user);
 </script>
 
+<QueryClientProvider client={queryClient}>
 <div class="flex h-screen bg-gray-50">
   <!-- Sidebar -->
   <aside class="w-64 bg-gray-900 text-white flex flex-col">
@@ -74,3 +78,4 @@
     </main>
   </div>
 </div>
+</QueryClientProvider>
