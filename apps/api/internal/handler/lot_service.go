@@ -51,7 +51,7 @@ func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.C
 		Unit:               msg.Unit,
 		ArrivalDate:        arrivalDate,
 		StorageRequirement: sr,
-		CreatedBy:          "dev-user", // TODO: extract from JWT in Task 15
+		CreatedBy:          userFromCtx(ctx),
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)

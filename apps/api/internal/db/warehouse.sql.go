@@ -40,6 +40,18 @@ func (q *Queries) DecrementLocationCapacity(ctx context.Context, id string) erro
 	return err
 }
 
+const decrementLocationCapacityAtomic = `-- name: DecrementLocationCapacityAtomic :execrows
+UPDATE warehouse_locations SET capacity = capacity - 1 WHERE id = ? AND capacity > 0
+`
+
+func (q *Queries) DecrementLocationCapacityAtomic(ctx context.Context, id string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, decrementLocationCapacityAtomic, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const getWarehouseAssignmentByLot = `-- name: GetWarehouseAssignmentByLot :one
 SELECT id, lot_id, location_id, assigned_by, assigned_at, status FROM warehouse_assignments WHERE lot_id = ? AND status = 'ACTIVE'
 `
@@ -77,6 +89,18 @@ func (q *Queries) GetWarehouseLocation(ctx context.Context, id string) (Warehous
 		&i.CurrentStatus,
 	)
 	return i, err
+}
+
+const incrementLocationCapacity = `-- name: IncrementLocationCapacity :execrows
+UPDATE warehouse_locations SET capacity = capacity + 1 WHERE id = ?
+`
+
+func (q *Queries) IncrementLocationCapacity(ctx context.Context, id string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, incrementLocationCapacity, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const listAvailableLocations = `-- name: ListAvailableLocations :many

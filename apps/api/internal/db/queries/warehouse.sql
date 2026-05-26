@@ -16,6 +16,12 @@ UPDATE warehouse_locations SET current_status = ? WHERE id = ?;
 -- name: DecrementLocationCapacity :exec
 UPDATE warehouse_locations SET capacity = capacity - 1 WHERE id = ? AND capacity > 0;
 
+-- name: DecrementLocationCapacityAtomic :execrows
+UPDATE warehouse_locations SET capacity = capacity - 1 WHERE id = ? AND capacity > 0;
+
+-- name: IncrementLocationCapacity :execrows
+UPDATE warehouse_locations SET capacity = capacity + 1 WHERE id = ?;
+
 -- name: CreateWarehouseAssignment :exec
 INSERT INTO warehouse_assignments (id, lot_id, location_id, assigned_by)
 VALUES (?, ?, ?, ?);

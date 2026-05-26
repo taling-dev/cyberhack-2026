@@ -107,31 +107,40 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("lot must be QC_APPROVED (current: %s)", lot.Status))
 	}
 
-	// Validate location exists and has capacity
+	// Atomic capacity decrement: only succeeds if capacity > 0
+	// Returns rows affected = 1 if successful, 0 if no capacity left
+	rowsAffected, err := s.q.DecrementLocationCapacityAtomic(ctx, msg.LocationId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("capacity check: %w", err))
+	}
+	if rowsAffected == 0 {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("no capacity available at this location"))
+	}
+
+	// Fetch location for response
 	loc, err := s.q.GetWarehouseLocation(ctx, msg.LocationId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("location not found"))
 	}
-	if loc.Capacity <= 0 {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("location has no capacity"))
-	}
 
+	assignedBy := userFromCtx(ctx)
 	assignmentID := uuid.NewString()
 	err = s.q.CreateWarehouseAssignment(ctx, db.CreateWarehouseAssignmentParams{
 		ID:         assignmentID,
 		LotID:      msg.LotId,
 		LocationID: msg.LocationId,
-		AssignedBy: "dev-warehouse", // TODO: from JWT in Task 15
+		AssignedBy: assignedBy,
 	})
 	if err != nil {
+		// Rollback capacity (best effort)
+		_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create assignment: %w", err))
 	}
 
-	// Decrement capacity
-	_ = s.q.DecrementLocationCapacity(ctx, msg.LocationId)
-
-	// Advance lot: WAREHOUSE_ASSIGNED → READY_FOR_PRODUCTION (atomic per spec)
-	_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId})
+	// Advance lot: WAREHOUSE_ASSIGNED → READY_FOR_PRODUCTION
+	if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+	}
 
 	return connect.NewResponse(&whv1.AssignSlotResponse{
 		Assignment: &whv1.WarehouseAssignment{
@@ -139,7 +148,7 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 			LotId:        msg.LotId,
 			LocationId:   msg.LocationId,
 			LocationCode: loc.Code,
-			AssignedBy:   "dev-warehouse",
+			AssignedBy:   assignedBy,
 			AssignedAt:   timestamppb.Now(),
 			Status:       whv1.AssignmentStatus_ASSIGNMENT_STATUS_ACTIVE,
 		},

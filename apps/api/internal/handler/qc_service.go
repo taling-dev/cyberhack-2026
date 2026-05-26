@@ -68,34 +68,44 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id and image_object_key required"))
 	}
 
+	// Fetch lot to get material_type for the AI worker
+	lot, err := s.q.GetLot(ctx, msg.LotId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
+	}
+
 	jobID := uuid.NewString()
 
 	// Create QC job
-	err := s.q.CreateQCJob(ctx, db.CreateQCJobParams{
+	err = s.q.CreateQCJob(ctx, db.CreateQCJobParams{
 		ID:             jobID,
 		LotID:          msg.LotId,
 		ImageObjectKey: msg.ImageObjectKey,
-		RequestedBy:    "dev-user", // TODO: from JWT in Task 15
+		RequestedBy:    userFromCtx(ctx),
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create qc job: %w", err))
 	}
 
-	// Advance lot to PENDING_QC
-	_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: msg.LotId})
+	// Advance lot to PENDING_QC (don't ignore error)
+	if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: msg.LotId}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+	}
 
-	// Write outbox event for async processing (consumed by outbox-publisher → NATS → AI worker)
+	// Write outbox event for async processing
 	outboxPayload, _ := json.Marshal(map[string]string{
 		"qc_job_id":        jobID,
 		"lot_id":           msg.LotId,
 		"image_object_key": msg.ImageObjectKey,
-		"material_type":    "RAW_BOTANICAL", // TODO: fetch from lot
+		"material_type":    string(lot.MaterialType),
 	})
-	_ = s.q.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+	if err := s.q.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
 		ID:          uuid.NewString(),
 		EventType:   "qc.job.created",
 		PayloadJson: outboxPayload,
-	})
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
+	}
 
 	job, _ := s.q.GetQCJob(ctx, jobID)
 	return connect.NewResponse(&qcv1.CreateQCJobResponse{Job: dbJobToProto(job)}), nil
@@ -172,9 +182,10 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 	}
 
 	// Update QC result with supervisor decision
+	reviewer := userFromCtx(ctx)
 	err = s.q.UpdateQCResultReview(ctx, db.UpdateQCResultReviewParams{
 		SupervisorDecision: dbDecision,
-		ReviewedBy:         toNullString("dev-supervisor"), // TODO: from JWT in Task 15
+		ReviewedBy:         toNullString(reviewer),
 		ReviewReason:       toNullString(msg.Reason),
 		QcJobID:            msg.QcJobId,
 	})
@@ -182,24 +193,33 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update review: %w", err))
 	}
 
-	// Advance lot and job status based on decision
+	// Advance lot and job status based on decision (propagate errors)
 	switch msg.Decision {
 	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED:
-		_ = s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusAPPROVED, ID: msg.QcJobId})
-		_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCAPPROVED, ID: job.LotID})
+		if err := s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusAPPROVED, ID: msg.QcJobId}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update qc job: %w", err))
+		}
+		if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCAPPROVED, ID: job.LotID}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+		}
 	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_REJECTED:
-		_ = s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusREJECTED, ID: msg.QcJobId})
-		_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCREJECTED, ID: job.LotID})
+		if err := s.q.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusREJECTED, ID: msg.QcJobId}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update qc job: %w", err))
+		}
+		if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusQCREJECTED, ID: job.LotID}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+		}
 	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK:
-		// Reset to allow re-upload and re-QC
-		_ = s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: job.LotID})
+		if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: job.LotID}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+		}
 	}
 
 	now := time.Now()
 	return connect.NewResponse(&qcv1.ReviewQCResponse{
 		QcJobId:    msg.QcJobId,
 		Decision:   msg.Decision,
-		ReviewedBy: "dev-supervisor",
+		ReviewedBy: reviewer,
 		ReviewedAt: timestamppb.New(now),
 	}), nil
 }

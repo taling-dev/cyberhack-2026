@@ -16,6 +16,7 @@ type Querier interface {
 	CountLotsByStatus(ctx context.Context, status LotsStatus) (int64, error)
 	CountLotsByStatusGroup(ctx context.Context) ([]CountLotsByStatusGroupRow, error)
 	CountQCByRecommendation(ctx context.Context, createdAt time.Time) ([]CountQCByRecommendationRow, error)
+	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) error
 	CreateIdempotencyKey(ctx context.Context, arg CreateIdempotencyKeyParams) error
 	CreateLot(ctx context.Context, arg CreateLotParams) error
@@ -24,14 +25,17 @@ type Querier interface {
 	CreateQCResult(ctx context.Context, arg CreateQCResultParams) error
 	CreateWarehouseAssignment(ctx context.Context, arg CreateWarehouseAssignmentParams) error
 	DecrementLocationCapacity(ctx context.Context, id string) error
+	DecrementLocationCapacityAtomic(ctx context.Context, id string) (int64, error)
 	DeleteExpiredIdempotencyKeys(ctx context.Context) error
 	GetIdempotencyKey(ctx context.Context, keyHash string) (IdempotencyKey, error)
 	GetLot(ctx context.Context, id string) (Lot, error)
 	GetLotByNumber(ctx context.Context, lotNumber string) (Lot, error)
 	GetQCJob(ctx context.Context, id string) (QcJob, error)
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
+	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
 	GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error)
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)
+	IncrementLocationCapacity(ctx context.Context, id string) (int64, error)
 	IncrementOutboxRetry(ctx context.Context, id string) error
 	ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]AuditLog, error)
 	ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByActorParams) ([]AuditLog, error)
@@ -43,6 +47,8 @@ type Querier interface {
 	ListPendingOutboxEvents(ctx context.Context, limit int32) ([]OutboxEvent, error)
 	ListQCJobsByLot(ctx context.Context, lotID string) ([]QcJob, error)
 	ListQCJobsByStatus(ctx context.Context, arg ListQCJobsByStatusParams) ([]QcJob, error)
+	ListRoles(ctx context.Context) ([]Role, error)
+	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
 	ListWarehouseAssignments(ctx context.Context, arg ListWarehouseAssignmentsParams) ([]WarehouseAssignment, error)
 	ListWarehouseLocations(ctx context.Context) ([]WarehouseLocation, error)
 	ListWarehouseLocationsByZone(ctx context.Context, zone string) ([]WarehouseLocation, error)
