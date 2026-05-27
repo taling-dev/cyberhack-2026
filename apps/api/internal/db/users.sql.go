@@ -11,6 +11,20 @@ import (
 	"time"
 )
 
+const assignUserRole = `-- name: AssignUserRole :exec
+INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)
+`
+
+type AssignUserRoleParams struct {
+	UserID string `json:"user_id"`
+	RoleID string `json:"role_id"`
+}
+
+func (q *Queries) AssignUserRole(ctx context.Context, arg AssignUserRoleParams) error {
+	_, err := q.db.ExecContext(ctx, assignUserRole, arg.UserID, arg.RoleID)
+	return err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users_profile
 `
@@ -20,6 +34,17 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const getRoleByName = `-- name: GetRoleByName :one
+SELECT id, name, description FROM roles WHERE name = ?
+`
+
+func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) {
+	row := q.db.QueryRowContext(ctx, getRoleByName, name)
+	var i Role
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
@@ -58,6 +83,33 @@ func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserRoleNames = `-- name: ListUserRoleNames :many
+SELECT r.name FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ? ORDER BY r.name
+`
+
+func (q *Queries) ListUserRoleNames(ctx context.Context, userID string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listUserRoleNames, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -124,4 +176,18 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 		return nil, err
 	}
 	return items, nil
+}
+
+const revokeUserRole = `-- name: RevokeUserRole :exec
+DELETE FROM user_roles WHERE user_id = ? AND role_id = ?
+`
+
+type RevokeUserRoleParams struct {
+	UserID string `json:"user_id"`
+	RoleID string `json:"role_id"`
+}
+
+func (q *Queries) RevokeUserRole(ctx context.Context, arg RevokeUserRoleParams) error {
+	_, err := q.db.ExecContext(ctx, revokeUserRole, arg.UserID, arg.RoleID)
+	return err
 }

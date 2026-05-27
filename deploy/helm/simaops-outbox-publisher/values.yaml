@@ -9,10 +9,14 @@ service:
   port: 8082
 
 env:
-  TIDB_DSN: "root:@tcp(simaops-tidb.platform:4000)/simaops?parseTime=true"
   NATS_URL: "nats://nats.platform:4222"
   OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
   OTEL_SERVICE_NAME: "simaops-outbox-publisher"
+
+# TIDB_DSN comes from the secret
+envFrom:
+  - secretRef:
+      name: simaops-infra-creds
 
 resources:
   requests:

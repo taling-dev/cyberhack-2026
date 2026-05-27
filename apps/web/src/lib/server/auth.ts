@@ -132,10 +132,11 @@ export const COOKIE_OPTS = {
   sameSite: 'lax' as const
 };
 
-// Access token cookie is readable by browser JS for API calls
+// Same options as COOKIE_OPTS (kept for code compat — both cookies HttpOnly now
+// since the BFF proxy forwards the token server-side, browser never reads it).
 export const COOKIE_OPTS_READABLE = {
   path: '/',
-  httpOnly: false,
+  httpOnly: true,
   secure: isHttps,
   sameSite: 'lax' as const
 };

@@ -10,6 +10,7 @@ import (
 )
 
 type Querier interface {
+	AssignUserRole(ctx context.Context, arg AssignUserRoleParams) error
 	AvgQCConfidence(ctx context.Context, createdAt time.Time) (interface{}, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
 	CountLots(ctx context.Context) (int64, error)
@@ -32,6 +33,7 @@ type Querier interface {
 	GetLotByNumber(ctx context.Context, lotNumber string) (Lot, error)
 	GetQCJob(ctx context.Context, id string) (QcJob, error)
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
+	GetRoleByName(ctx context.Context, name string) (Role, error)
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
 	GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error)
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)
@@ -48,12 +50,14 @@ type Querier interface {
 	ListQCJobsByLot(ctx context.Context, lotID string) ([]QcJob, error)
 	ListQCJobsByStatus(ctx context.Context, arg ListQCJobsByStatusParams) ([]QcJob, error)
 	ListRoles(ctx context.Context) ([]Role, error)
+	ListUserRoleNames(ctx context.Context, userID string) ([]string, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error)
 	ListWarehouseAssignments(ctx context.Context, arg ListWarehouseAssignmentsParams) ([]WarehouseAssignment, error)
 	ListWarehouseLocations(ctx context.Context) ([]WarehouseLocation, error)
 	ListWarehouseLocationsByZone(ctx context.Context, zone string) ([]WarehouseLocation, error)
 	MarkOutboxFailed(ctx context.Context, id string) error
 	MarkOutboxPublished(ctx context.Context, id string) error
+	RevokeUserRole(ctx context.Context, arg RevokeUserRoleParams) error
 	UpdateIdempotencyResponse(ctx context.Context, arg UpdateIdempotencyResponseParams) error
 	UpdateLocationStatus(ctx context.Context, arg UpdateLocationStatusParams) error
 	UpdateLotStatus(ctx context.Context, arg UpdateLotStatusParams) error

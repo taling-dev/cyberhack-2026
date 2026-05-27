@@ -64,9 +64,28 @@ func (s *AdminService) AssignRole(ctx context.Context, req *connect.Request[admi
 	if req.Msg.UserId == "" || req.Msg.Role == adminv1.Role_ROLE_UNSPECIFIED {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and role required"))
 	}
-	// Note: full implementation requires Keycloak Admin API sync
+	roleName := protoToRoleName(req.Msg.Role)
+	if roleName == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unknown role"))
+	}
+	role, err := s.q.GetRoleByName(ctx, roleName)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("role %s not found", roleName))
+	}
+	if err := s.q.AssignUserRole(ctx, db.AssignUserRoleParams{
+		UserID: req.Msg.UserId,
+		RoleID: role.ID,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("assign role: %w", err))
+	}
+	// Note: full implementation would also sync to Keycloak via Admin API; deferred for now.
+	roleNames, _ := s.q.ListUserRoleNames(ctx, req.Msg.UserId)
+	roles := make([]adminv1.Role, 0, len(roleNames))
+	for _, rn := range roleNames {
+		roles = append(roles, roleNameToProto(rn))
+	}
 	return connect.NewResponse(&adminv1.AssignRoleResponse{
-		User: &adminv1.User{Id: req.Msg.UserId, Roles: []adminv1.Role{req.Msg.Role}},
+		User: &adminv1.User{Id: req.Msg.UserId, Roles: roles},
 	}), nil
 }
 
@@ -74,8 +93,27 @@ func (s *AdminService) RevokeRole(ctx context.Context, req *connect.Request[admi
 	if req.Msg.UserId == "" || req.Msg.Role == adminv1.Role_ROLE_UNSPECIFIED {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and role required"))
 	}
+	roleName := protoToRoleName(req.Msg.Role)
+	if roleName == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unknown role"))
+	}
+	role, err := s.q.GetRoleByName(ctx, roleName)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("role %s not found", roleName))
+	}
+	if err := s.q.RevokeUserRole(ctx, db.RevokeUserRoleParams{
+		UserID: req.Msg.UserId,
+		RoleID: role.ID,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("revoke role: %w", err))
+	}
+	roleNames, _ := s.q.ListUserRoleNames(ctx, req.Msg.UserId)
+	roles := make([]adminv1.Role, 0, len(roleNames))
+	for _, rn := range roleNames {
+		roles = append(roles, roleNameToProto(rn))
+	}
 	return connect.NewResponse(&adminv1.RevokeRoleResponse{
-		User: &adminv1.User{Id: req.Msg.UserId},
+		User: &adminv1.User{Id: req.Msg.UserId, Roles: roles},
 	}), nil
 }
 
@@ -119,5 +157,22 @@ func roleNameToProto(name string) adminv1.Role {
 		return adminv1.Role_ROLE_ADMIN
 	default:
 		return adminv1.Role_ROLE_UNSPECIFIED
+	}
+}
+
+func protoToRoleName(r adminv1.Role) string {
+	switch r {
+	case adminv1.Role_ROLE_OPERATOR:
+		return "OPERATOR"
+	case adminv1.Role_ROLE_QC_SUPERVISOR:
+		return "QC_SUPERVISOR"
+	case adminv1.Role_ROLE_WAREHOUSE_STAFF:
+		return "WAREHOUSE_STAFF"
+	case adminv1.Role_ROLE_MANAGER:
+		return "MANAGER"
+	case adminv1.Role_ROLE_ADMIN:
+		return "ADMIN"
+	default:
+		return ""
 	}
 }
