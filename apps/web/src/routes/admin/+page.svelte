@@ -17,8 +17,8 @@
     queryFn: () => client.listRoles({})
   }));
 
-  const roleLabels: Record<number, string> = {
-    1: 'Operator', 2: 'QC Supervisor', 3: 'Warehouse Staff', 4: 'Manager', 5: 'Admin'
+  const roleNames: Record<number, string> = {
+    1: 'OPERATOR', 2: 'QC_SUPERVISOR', 3: 'WAREHOUSE_STAFF', 4: 'MANAGER', 5: 'ADMIN'
   };
 </script>
 
@@ -27,19 +27,21 @@
 
   <!-- Users -->
   <div class="border rounded-lg p-4 bg-white space-y-3">
-    <h2 class="font-semibold text-sm text-gray-500 uppercase">Users ({usersQuery.data?.totalCount ?? 0})</h2>
+    <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('admin.users_label')} ({usersQuery.data?.totalCount ?? 0})</h2>
     {#if usersQuery.isLoading}
       <p class="text-gray-400 text-sm">{$t('common.loading')}</p>
+    {:else if usersQuery.isError}
+      <div class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{usersQuery.error?.message || $t('common.error')}</div>
     {:else}
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 border-b">
             <tr>
-              <th class="px-4 py-2 text-left font-medium">Username</th>
-              <th class="px-4 py-2 text-left font-medium">Name</th>
-              <th class="px-4 py-2 text-left font-medium">Email</th>
-              <th class="px-4 py-2 text-left font-medium">Roles</th>
-              <th class="px-4 py-2 text-left font-medium">Status</th>
+              <th class="px-4 py-2 text-left font-medium">{$t('admin.username')}</th>
+              <th class="px-4 py-2 text-left font-medium">{$t('admin.name')}</th>
+              <th class="px-4 py-2 text-left font-medium">{$t('admin.email')}</th>
+              <th class="px-4 py-2 text-left font-medium">{$t('admin.roles_label')}</th>
+              <th class="px-4 py-2 text-left font-medium">{$t('common.status')}</th>
             </tr>
           </thead>
           <tbody class="divide-y">
@@ -50,12 +52,12 @@
                 <td class="px-4 py-2 text-gray-500 text-xs">{user.email}</td>
                 <td class="px-4 py-2">
                   {#each user.roles ?? [] as role}
-                    <span class="inline-block px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 mr-1">{roleLabels[role] ?? role}</span>
+                    <span class="inline-block px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 mr-1 mb-0.5">{roleNames[role] ?? role}</span>
                   {/each}
                 </td>
                 <td class="px-4 py-2">
                   <span class="px-2 py-0.5 rounded text-xs {user.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                    {user.active ? 'Active' : 'Inactive'}
+                    {user.active ? $t('admin.active') : $t('admin.inactive')}
                   </span>
                 </td>
               </tr>
@@ -68,11 +70,11 @@
 
   <!-- Roles -->
   <div class="border rounded-lg p-4 bg-white space-y-3">
-    <h2 class="font-semibold text-sm text-gray-500 uppercase">Roles</h2>
+    <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('admin.roles_label')}</h2>
     {#if rolesQuery.isLoading}
       <p class="text-gray-400 text-sm">{$t('common.loading')}</p>
     {:else}
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         {#each rolesQuery.data?.roles ?? [] as role}
           <div class="border rounded-md p-3">
             <span class="font-medium text-sm">{role.name}</span>

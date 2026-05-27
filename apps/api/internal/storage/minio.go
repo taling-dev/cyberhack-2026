@@ -33,8 +33,9 @@ func NewMinIOClient() (*MinIOClient, error) {
 	useSSL := os.Getenv("MINIO_USE_SSL") == "true"
 
 	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: useSSL,
+		Creds:        credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure:       useSSL,
+		BucketLookup: minio.BucketLookupPath, // ingress-friendly: /bucket/key not bucket.host/key
 	})
 	if err != nil {
 		return nil, fmt.Errorf("minio client: %w", err)
@@ -50,6 +51,15 @@ func (m *MinIOClient) PresignedPutURL(ctx context.Context, bucket, objectKey, co
 	u, err := m.client.PresignedPutObject(ctx, bucket, objectKey, expiry)
 	if err != nil {
 		return "", fmt.Errorf("presigned put: %w", err)
+	}
+	return u.String(), nil
+}
+
+// PresignedGetURL generates a presigned GET URL for viewing an object.
+func (m *MinIOClient) PresignedGetURL(ctx context.Context, bucket, objectKey string, expiry time.Duration) (string, error) {
+	u, err := m.client.PresignedGetObject(ctx, bucket, objectKey, expiry, nil)
+	if err != nil {
+		return "", fmt.Errorf("presigned get: %w", err)
 	}
 	return u.String(), nil
 }

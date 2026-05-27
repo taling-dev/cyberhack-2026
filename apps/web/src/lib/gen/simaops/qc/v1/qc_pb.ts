@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file simaops/qc/v1/qc.proto.
  */
 export const file_simaops_qc_v1_qc: GenFile = /*@__PURE__*/
-  fileDesc("ChZzaW1hb3BzL3FjL3YxL3FjLnByb3RvEg1zaW1hb3BzLnFjLnYxItkCCgVRQ0pvYhIKCgJpZBgBIAEoCRIOCgZsb3RfaWQYAiABKAkSGAoQaW1hZ2Vfb2JqZWN0X2tleRgDIAEoCRIqCgZzdGF0dXMYBCABKA4yGi5zaW1hb3BzLnFjLnYxLlFDSm9iU3RhdHVzEhQKDHJlcXVlc3RlZF9ieRgFIAEoCRIWCg5mYWlsdXJlX3JlYXNvbhgGIAEoCRIuCgpzdGFydGVkX2F0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIwCgxjb21wbGV0ZWRfYXQYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCmNyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCnVwZGF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIl8KCVFDRmluZGluZxISCgpjbGFzc19uYW1lGAEgASgJEhYKDm1hcHBlZF9maW5kaW5nGAIgASgJEhIKCmNvbmZpZGVuY2UYAyABKAESEgoKaXNfYW5vbWFseRgEIAEoCCKzAwoIUUNSZXN1bHQSCgoCaWQYASABKAkSEQoJcWNfam9iX2lkGAIgASgJEg4KBmxvdF9pZBgDIAEoCRI3Cg5yZWNvbW1lbmRhdGlvbhgEIAEoDjIfLnNpbWFvcHMucWMudjEuUUNSZWNvbW1lbmRhdGlvbhISCgpjb25maWRlbmNlGAUgASgBEioKCGZpbmRpbmdzGAYgAygLMhguc2ltYW9wcy5xYy52MS5RQ0ZpbmRpbmcSFQoNbW9kZWxfdmVyc2lvbhgHIAEoCRIbChNhbm5vdGF0ZWRfaW1hZ2Vfa2V5GAggASgJEj4KE3N1cGVydmlzb3JfZGVjaXNpb24YCSABKA4yIS5zaW1hb3BzLnFjLnYxLlN1cGVydmlzb3JEZWNpc2lvbhITCgtyZXZpZXdlZF9ieRgKIAEoCRIVCg1yZXZpZXdfcmVhc29uGAsgASgJEi8KC3Jldmlld2VkX2F0GAwgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgpjcmVhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJrChhDcmVhdGVRQ1VwbG9hZFVybFJlcXVlc3QSDgoGbG90X2lkGAEgASgJEhAKCGZpbGVuYW1lGAIgASgJEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkiXAoZQ3JlYXRlUUNVcGxvYWRVcmxSZXNwb25zZRISCgpvYmplY3Rfa2V5GAEgASgJEhIKCnVwbG9hZF91cmwYAiABKAkSFwoPZXhwaXJlc19hdF91bml4GAMgASgDIlcKEkNyZWF0ZVFDSm9iUmVxdWVzdBIOCgZsb3RfaWQYASABKAkSGAoQaW1hZ2Vfb2JqZWN0X2tleRgCIAEoCRIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiOAoTQ3JlYXRlUUNKb2JSZXNwb25zZRIhCgNqb2IYASABKAsyFC5zaW1hb3BzLnFjLnYxLlFDSm9iIjQKD0dldFFDSm9iUmVxdWVzdBIRCglxY19qb2JfaWQYASABKAkSDgoGbG90X2lkGAIgASgJIjUKEEdldFFDSm9iUmVzcG9uc2USIQoDam9iGAEgASgLMhQuc2ltYW9wcy5xYy52MS5RQ0pvYiInChJHZXRRQ1Jlc3VsdFJlcXVlc3QSEQoJcWNfam9iX2lkGAEgASgJIj4KE0dldFFDUmVzdWx0UmVzcG9uc2USJwoGcmVzdWx0GAEgASgLMhcuc2ltYW9wcy5xYy52MS5RQ1Jlc3VsdCKCAQoPUmV2aWV3UUNSZXF1ZXN0EhEKCXFjX2pvYl9pZBgBIAEoCRIzCghkZWNpc2lvbhgCIAEoDjIhLnNpbWFvcHMucWMudjEuU3VwZXJ2aXNvckRlY2lzaW9uEg4KBnJlYXNvbhgDIAEoCRIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkioAEKEFJldmlld1FDUmVzcG9uc2USEQoJcWNfam9iX2lkGAEgASgJEjMKCGRlY2lzaW9uGAIgASgOMiEuc2ltYW9wcy5xYy52MS5TdXBlcnZpc29yRGVjaXNpb24SEwoLcmV2aWV3ZWRfYnkYAyABKAkSLwoLcmV2aWV3ZWRfYXQYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIjYKEVJldHJ5UUNKb2JSZXF1ZXN0EhEKCXFjX2pvYl9pZBgBIAEoCRIOCgZyZWFzb24YAiABKAkiNwoSUmV0cnlRQ0pvYlJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULnNpbWFvcHMucWMudjEuUUNKb2Iq/AEKC1FDSm9iU3RhdHVzEh0KGVFDX0pPQl9TVEFUVVNfVU5TUEVDSUZJRUQQABIYChRRQ19KT0JfU1RBVFVTX1FVRVVFRBABEhwKGFFDX0pPQl9TVEFUVVNfUFJPQ0VTU0lORxACEh4KGlFDX0pPQl9TVEFUVVNfQUlfQ09NUExFVEVEEAMSJAogUUNfSk9CX1NUQVRVU19ORUVEU19IVU1BTl9SRVZJRVcQBBIaChZRQ19KT0JfU1RBVFVTX0FQUFJPVkVEEAUSGgoWUUNfSk9CX1NUQVRVU19SRUpFQ1RFRBAGEhgKFFFDX0pPQl9TVEFUVVNfRkFJTEVEEAcqiwEKEFFDUmVjb21tZW5kYXRpb24SIQodUUNfUkVDT01NRU5EQVRJT05fVU5TUEVDSUZJRUQQABIaChZRQ19SRUNPTU1FTkRBVElPTl9QQVNTEAESHAoYUUNfUkVDT01NRU5EQVRJT05fUkVWSUVXEAISGgoWUUNfUkVDT01NRU5EQVRJT05fRkFJTBADKp4BChJTdXBlcnZpc29yRGVjaXNpb24SIwofU1VQRVJWSVNPUl9ERUNJU0lPTl9VTlNQRUNJRklFRBAAEiAKHFNVUEVSVklTT1JfREVDSVNJT05fQVBQUk9WRUQQARIgChxTVVBFUlZJU09SX0RFQ0lTSU9OX1JFSkVDVEVEEAISHwobU1VQRVJWSVNPUl9ERUNJU0lPTl9SRUNIRUNLEAMyjAQKCVFDU2VydmljZRJmChFDcmVhdGVRQ1VwbG9hZFVybBInLnNpbWFvcHMucWMudjEuQ3JlYXRlUUNVcGxvYWRVcmxSZXF1ZXN0Giguc2ltYW9wcy5xYy52MS5DcmVhdGVRQ1VwbG9hZFVybFJlc3BvbnNlElQKC0NyZWF0ZVFDSm9iEiEuc2ltYW9wcy5xYy52MS5DcmVhdGVRQ0pvYlJlcXVlc3QaIi5zaW1hb3BzLnFjLnYxLkNyZWF0ZVFDSm9iUmVzcG9uc2USSwoIR2V0UUNKb2ISHi5zaW1hb3BzLnFjLnYxLkdldFFDSm9iUmVxdWVzdBofLnNpbWFvcHMucWMudjEuR2V0UUNKb2JSZXNwb25zZRJUCgtHZXRRQ1Jlc3VsdBIhLnNpbWFvcHMucWMudjEuR2V0UUNSZXN1bHRSZXF1ZXN0GiIuc2ltYW9wcy5xYy52MS5HZXRRQ1Jlc3VsdFJlc3BvbnNlEksKCFJldmlld1FDEh4uc2ltYW9wcy5xYy52MS5SZXZpZXdRQ1JlcXVlc3QaHy5zaW1hb3BzLnFjLnYxLlJldmlld1FDUmVzcG9uc2USUQoKUmV0cnlRQ0pvYhIgLnNpbWFvcHMucWMudjEuUmV0cnlRQ0pvYlJlcXVlc3QaIS5zaW1hb3BzLnFjLnYxLlJldHJ5UUNKb2JSZXNwb25zZULBAQoRY29tLnNpbWFvcHMucWMudjFCB1FjUHJvdG9QAVpNZ2l0aHViLmNvbS90YWxpbmctZGV2L0NZQkVSSEFDSy0yMDI2L2FwcHMvYXBpL2ludGVybmFsL2dlbi9zaW1hb3BzL3FjL3YxO3FjdjGiAgNTUViqAg1TaW1hb3BzLlFjLlYxygINU2ltYW9wc1xRY1xWMeICGVNpbWFvcHNcUWNcVjFcR1BCTWV0YWRhdGHqAg9TaW1hb3BzOjpRYzo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("ChZzaW1hb3BzL3FjL3YxL3FjLnByb3RvEg1zaW1hb3BzLnFjLnYxItkCCgVRQ0pvYhIKCgJpZBgBIAEoCRIOCgZsb3RfaWQYAiABKAkSGAoQaW1hZ2Vfb2JqZWN0X2tleRgDIAEoCRIqCgZzdGF0dXMYBCABKA4yGi5zaW1hb3BzLnFjLnYxLlFDSm9iU3RhdHVzEhQKDHJlcXVlc3RlZF9ieRgFIAEoCRIWCg5mYWlsdXJlX3JlYXNvbhgGIAEoCRIuCgpzdGFydGVkX2F0GAcgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIwCgxjb21wbGV0ZWRfYXQYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCmNyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCnVwZGF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIl8KCVFDRmluZGluZxISCgpjbGFzc19uYW1lGAEgASgJEhYKDm1hcHBlZF9maW5kaW5nGAIgASgJEhIKCmNvbmZpZGVuY2UYAyABKAESEgoKaXNfYW5vbWFseRgEIAEoCCKzAwoIUUNSZXN1bHQSCgoCaWQYASABKAkSEQoJcWNfam9iX2lkGAIgASgJEg4KBmxvdF9pZBgDIAEoCRI3Cg5yZWNvbW1lbmRhdGlvbhgEIAEoDjIfLnNpbWFvcHMucWMudjEuUUNSZWNvbW1lbmRhdGlvbhISCgpjb25maWRlbmNlGAUgASgBEioKCGZpbmRpbmdzGAYgAygLMhguc2ltYW9wcy5xYy52MS5RQ0ZpbmRpbmcSFQoNbW9kZWxfdmVyc2lvbhgHIAEoCRIbChNhbm5vdGF0ZWRfaW1hZ2Vfa2V5GAggASgJEj4KE3N1cGVydmlzb3JfZGVjaXNpb24YCSABKA4yIS5zaW1hb3BzLnFjLnYxLlN1cGVydmlzb3JEZWNpc2lvbhITCgtyZXZpZXdlZF9ieRgKIAEoCRIVCg1yZXZpZXdfcmVhc29uGAsgASgJEi8KC3Jldmlld2VkX2F0GAwgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgpjcmVhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJrChhDcmVhdGVRQ1VwbG9hZFVybFJlcXVlc3QSDgoGbG90X2lkGAEgASgJEhAKCGZpbGVuYW1lGAIgASgJEhQKDGNvbnRlbnRfdHlwZRgDIAEoCRIXCg9pZGVtcG90ZW5jeV9rZXkYBCABKAkiXAoZQ3JlYXRlUUNVcGxvYWRVcmxSZXNwb25zZRISCgpvYmplY3Rfa2V5GAEgASgJEhIKCnVwbG9hZF91cmwYAiABKAkSFwoPZXhwaXJlc19hdF91bml4GAMgASgDIiwKFkNyZWF0ZVFDVmlld1VybFJlcXVlc3QSEgoKb2JqZWN0X2tleRgBIAEoCSJEChdDcmVhdGVRQ1ZpZXdVcmxSZXNwb25zZRIQCgh2aWV3X3VybBgBIAEoCRIXCg9leHBpcmVzX2F0X3VuaXgYAiABKAMiVwoSQ3JlYXRlUUNKb2JSZXF1ZXN0Eg4KBmxvdF9pZBgBIAEoCRIYChBpbWFnZV9vYmplY3Rfa2V5GAIgASgJEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSI4ChNDcmVhdGVRQ0pvYlJlc3BvbnNlEiEKA2pvYhgBIAEoCzIULnNpbWFvcHMucWMudjEuUUNKb2IiNAoPR2V0UUNKb2JSZXF1ZXN0EhEKCXFjX2pvYl9pZBgBIAEoCRIOCgZsb3RfaWQYAiABKAkiNQoQR2V0UUNKb2JSZXNwb25zZRIhCgNqb2IYASABKAsyFC5zaW1hb3BzLnFjLnYxLlFDSm9iIicKEkdldFFDUmVzdWx0UmVxdWVzdBIRCglxY19qb2JfaWQYASABKAkiPgoTR2V0UUNSZXN1bHRSZXNwb25zZRInCgZyZXN1bHQYASABKAsyFy5zaW1hb3BzLnFjLnYxLlFDUmVzdWx0IoIBCg9SZXZpZXdRQ1JlcXVlc3QSEQoJcWNfam9iX2lkGAEgASgJEjMKCGRlY2lzaW9uGAIgASgOMiEuc2ltYW9wcy5xYy52MS5TdXBlcnZpc29yRGVjaXNpb24SDgoGcmVhc29uGAMgASgJEhcKD2lkZW1wb3RlbmN5X2tleRgEIAEoCSKgAQoQUmV2aWV3UUNSZXNwb25zZRIRCglxY19qb2JfaWQYASABKAkSMwoIZGVjaXNpb24YAiABKA4yIS5zaW1hb3BzLnFjLnYxLlN1cGVydmlzb3JEZWNpc2lvbhITCgtyZXZpZXdlZF9ieRgDIAEoCRIvCgtyZXZpZXdlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiNgoRUmV0cnlRQ0pvYlJlcXVlc3QSEQoJcWNfam9iX2lkGAEgASgJEg4KBnJlYXNvbhgCIAEoCSI3ChJSZXRyeVFDSm9iUmVzcG9uc2USIQoDam9iGAEgASgLMhQuc2ltYW9wcy5xYy52MS5RQ0pvYir8AQoLUUNKb2JTdGF0dXMSHQoZUUNfSk9CX1NUQVRVU19VTlNQRUNJRklFRBAAEhgKFFFDX0pPQl9TVEFUVVNfUVVFVUVEEAESHAoYUUNfSk9CX1NUQVRVU19QUk9DRVNTSU5HEAISHgoaUUNfSk9CX1NUQVRVU19BSV9DT01QTEVURUQQAxIkCiBRQ19KT0JfU1RBVFVTX05FRURTX0hVTUFOX1JFVklFVxAEEhoKFlFDX0pPQl9TVEFUVVNfQVBQUk9WRUQQBRIaChZRQ19KT0JfU1RBVFVTX1JFSkVDVEVEEAYSGAoUUUNfSk9CX1NUQVRVU19GQUlMRUQQByqLAQoQUUNSZWNvbW1lbmRhdGlvbhIhCh1RQ19SRUNPTU1FTkRBVElPTl9VTlNQRUNJRklFRBAAEhoKFlFDX1JFQ09NTUVOREFUSU9OX1BBU1MQARIcChhRQ19SRUNPTU1FTkRBVElPTl9SRVZJRVcQAhIaChZRQ19SRUNPTU1FTkRBVElPTl9GQUlMEAMqngEKElN1cGVydmlzb3JEZWNpc2lvbhIjCh9TVVBFUlZJU09SX0RFQ0lTSU9OX1VOU1BFQ0lGSUVEEAASIAocU1VQRVJWSVNPUl9ERUNJU0lPTl9BUFBST1ZFRBABEiAKHFNVUEVSVklTT1JfREVDSVNJT05fUkVKRUNURUQQAhIfChtTVVBFUlZJU09SX0RFQ0lTSU9OX1JFQ0hFQ0sQAzLuBAoJUUNTZXJ2aWNlEmYKEUNyZWF0ZVFDVXBsb2FkVXJsEicuc2ltYW9wcy5xYy52MS5DcmVhdGVRQ1VwbG9hZFVybFJlcXVlc3QaKC5zaW1hb3BzLnFjLnYxLkNyZWF0ZVFDVXBsb2FkVXJsUmVzcG9uc2USYAoPQ3JlYXRlUUNWaWV3VXJsEiUuc2ltYW9wcy5xYy52MS5DcmVhdGVRQ1ZpZXdVcmxSZXF1ZXN0GiYuc2ltYW9wcy5xYy52MS5DcmVhdGVRQ1ZpZXdVcmxSZXNwb25zZRJUCgtDcmVhdGVRQ0pvYhIhLnNpbWFvcHMucWMudjEuQ3JlYXRlUUNKb2JSZXF1ZXN0GiIuc2ltYW9wcy5xYy52MS5DcmVhdGVRQ0pvYlJlc3BvbnNlEksKCEdldFFDSm9iEh4uc2ltYW9wcy5xYy52MS5HZXRRQ0pvYlJlcXVlc3QaHy5zaW1hb3BzLnFjLnYxLkdldFFDSm9iUmVzcG9uc2USVAoLR2V0UUNSZXN1bHQSIS5zaW1hb3BzLnFjLnYxLkdldFFDUmVzdWx0UmVxdWVzdBoiLnNpbWFvcHMucWMudjEuR2V0UUNSZXN1bHRSZXNwb25zZRJLCghSZXZpZXdRQxIeLnNpbWFvcHMucWMudjEuUmV2aWV3UUNSZXF1ZXN0Gh8uc2ltYW9wcy5xYy52MS5SZXZpZXdRQ1Jlc3BvbnNlElEKClJldHJ5UUNKb2ISIC5zaW1hb3BzLnFjLnYxLlJldHJ5UUNKb2JSZXF1ZXN0GiEuc2ltYW9wcy5xYy52MS5SZXRyeVFDSm9iUmVzcG9uc2VCwQEKEWNvbS5zaW1hb3BzLnFjLnYxQgdRY1Byb3RvUAFaTWdpdGh1Yi5jb20vdGFsaW5nLWRldi9DWUJFUkhBQ0stMjAyNi9hcHBzL2FwaS9pbnRlcm5hbC9nZW4vc2ltYW9wcy9xYy92MTtxY3YxogIDU1FYqgINU2ltYW9wcy5RYy5WMcoCDVNpbWFvcHNcUWNcVjHiAhlTaW1hb3BzXFFjXFYxXEdQQk1ldGFkYXRh6gIPU2ltYW9wczo6UWM6OlYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message simaops.qc.v1.QCJob
@@ -245,6 +245,45 @@ export const CreateQCUploadUrlResponseSchema: GenMessage<CreateQCUploadUrlRespon
   messageDesc(file_simaops_qc_v1_qc, 4);
 
 /**
+ * @generated from message simaops.qc.v1.CreateQCViewUrlRequest
+ */
+export type CreateQCViewUrlRequest = Message<"simaops.qc.v1.CreateQCViewUrlRequest"> & {
+  /**
+   * @generated from field: string object_key = 1;
+   */
+  objectKey: string;
+};
+
+/**
+ * Describes the message simaops.qc.v1.CreateQCViewUrlRequest.
+ * Use `create(CreateQCViewUrlRequestSchema)` to create a new message.
+ */
+export const CreateQCViewUrlRequestSchema: GenMessage<CreateQCViewUrlRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_qc_v1_qc, 5);
+
+/**
+ * @generated from message simaops.qc.v1.CreateQCViewUrlResponse
+ */
+export type CreateQCViewUrlResponse = Message<"simaops.qc.v1.CreateQCViewUrlResponse"> & {
+  /**
+   * @generated from field: string view_url = 1;
+   */
+  viewUrl: string;
+
+  /**
+   * @generated from field: int64 expires_at_unix = 2;
+   */
+  expiresAtUnix: bigint;
+};
+
+/**
+ * Describes the message simaops.qc.v1.CreateQCViewUrlResponse.
+ * Use `create(CreateQCViewUrlResponseSchema)` to create a new message.
+ */
+export const CreateQCViewUrlResponseSchema: GenMessage<CreateQCViewUrlResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_qc_v1_qc, 6);
+
+/**
  * @generated from message simaops.qc.v1.CreateQCJobRequest
  */
 export type CreateQCJobRequest = Message<"simaops.qc.v1.CreateQCJobRequest"> & {
@@ -269,7 +308,7 @@ export type CreateQCJobRequest = Message<"simaops.qc.v1.CreateQCJobRequest"> & {
  * Use `create(CreateQCJobRequestSchema)` to create a new message.
  */
 export const CreateQCJobRequestSchema: GenMessage<CreateQCJobRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 5);
+  messageDesc(file_simaops_qc_v1_qc, 7);
 
 /**
  * @generated from message simaops.qc.v1.CreateQCJobResponse
@@ -286,7 +325,7 @@ export type CreateQCJobResponse = Message<"simaops.qc.v1.CreateQCJobResponse"> &
  * Use `create(CreateQCJobResponseSchema)` to create a new message.
  */
 export const CreateQCJobResponseSchema: GenMessage<CreateQCJobResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 6);
+  messageDesc(file_simaops_qc_v1_qc, 8);
 
 /**
  * @generated from message simaops.qc.v1.GetQCJobRequest
@@ -310,7 +349,7 @@ export type GetQCJobRequest = Message<"simaops.qc.v1.GetQCJobRequest"> & {
  * Use `create(GetQCJobRequestSchema)` to create a new message.
  */
 export const GetQCJobRequestSchema: GenMessage<GetQCJobRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 7);
+  messageDesc(file_simaops_qc_v1_qc, 9);
 
 /**
  * @generated from message simaops.qc.v1.GetQCJobResponse
@@ -327,7 +366,7 @@ export type GetQCJobResponse = Message<"simaops.qc.v1.GetQCJobResponse"> & {
  * Use `create(GetQCJobResponseSchema)` to create a new message.
  */
 export const GetQCJobResponseSchema: GenMessage<GetQCJobResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 8);
+  messageDesc(file_simaops_qc_v1_qc, 10);
 
 /**
  * @generated from message simaops.qc.v1.GetQCResultRequest
@@ -344,7 +383,7 @@ export type GetQCResultRequest = Message<"simaops.qc.v1.GetQCResultRequest"> & {
  * Use `create(GetQCResultRequestSchema)` to create a new message.
  */
 export const GetQCResultRequestSchema: GenMessage<GetQCResultRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 9);
+  messageDesc(file_simaops_qc_v1_qc, 11);
 
 /**
  * @generated from message simaops.qc.v1.GetQCResultResponse
@@ -361,7 +400,7 @@ export type GetQCResultResponse = Message<"simaops.qc.v1.GetQCResultResponse"> &
  * Use `create(GetQCResultResponseSchema)` to create a new message.
  */
 export const GetQCResultResponseSchema: GenMessage<GetQCResultResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 10);
+  messageDesc(file_simaops_qc_v1_qc, 12);
 
 /**
  * @generated from message simaops.qc.v1.ReviewQCRequest
@@ -393,7 +432,7 @@ export type ReviewQCRequest = Message<"simaops.qc.v1.ReviewQCRequest"> & {
  * Use `create(ReviewQCRequestSchema)` to create a new message.
  */
 export const ReviewQCRequestSchema: GenMessage<ReviewQCRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 11);
+  messageDesc(file_simaops_qc_v1_qc, 13);
 
 /**
  * @generated from message simaops.qc.v1.ReviewQCResponse
@@ -425,7 +464,7 @@ export type ReviewQCResponse = Message<"simaops.qc.v1.ReviewQCResponse"> & {
  * Use `create(ReviewQCResponseSchema)` to create a new message.
  */
 export const ReviewQCResponseSchema: GenMessage<ReviewQCResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 12);
+  messageDesc(file_simaops_qc_v1_qc, 14);
 
 /**
  * @generated from message simaops.qc.v1.RetryQCJobRequest
@@ -447,7 +486,7 @@ export type RetryQCJobRequest = Message<"simaops.qc.v1.RetryQCJobRequest"> & {
  * Use `create(RetryQCJobRequestSchema)` to create a new message.
  */
 export const RetryQCJobRequestSchema: GenMessage<RetryQCJobRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 13);
+  messageDesc(file_simaops_qc_v1_qc, 15);
 
 /**
  * @generated from message simaops.qc.v1.RetryQCJobResponse
@@ -464,7 +503,7 @@ export type RetryQCJobResponse = Message<"simaops.qc.v1.RetryQCJobResponse"> & {
  * Use `create(RetryQCJobResponseSchema)` to create a new message.
  */
 export const RetryQCJobResponseSchema: GenMessage<RetryQCJobResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_qc_v1_qc, 14);
+  messageDesc(file_simaops_qc_v1_qc, 16);
 
 /**
  * @generated from enum simaops.qc.v1.QCJobStatus
@@ -590,6 +629,14 @@ export const QCService: GenService<{
     methodKind: "unary";
     input: typeof CreateQCUploadUrlRequestSchema;
     output: typeof CreateQCUploadUrlResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.qc.v1.QCService.CreateQCViewUrl
+   */
+  createQCViewUrl: {
+    methodKind: "unary";
+    input: typeof CreateQCViewUrlRequestSchema;
+    output: typeof CreateQCViewUrlResponseSchema;
   },
   /**
    * @generated from rpc simaops.qc.v1.QCService.CreateQCJob

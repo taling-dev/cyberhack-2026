@@ -36,6 +36,9 @@ const (
 	// QCServiceCreateQCUploadUrlProcedure is the fully-qualified name of the QCService's
 	// CreateQCUploadUrl RPC.
 	QCServiceCreateQCUploadUrlProcedure = "/simaops.qc.v1.QCService/CreateQCUploadUrl"
+	// QCServiceCreateQCViewUrlProcedure is the fully-qualified name of the QCService's CreateQCViewUrl
+	// RPC.
+	QCServiceCreateQCViewUrlProcedure = "/simaops.qc.v1.QCService/CreateQCViewUrl"
 	// QCServiceCreateQCJobProcedure is the fully-qualified name of the QCService's CreateQCJob RPC.
 	QCServiceCreateQCJobProcedure = "/simaops.qc.v1.QCService/CreateQCJob"
 	// QCServiceGetQCJobProcedure is the fully-qualified name of the QCService's GetQCJob RPC.
@@ -51,6 +54,7 @@ const (
 // QCServiceClient is a client for the simaops.qc.v1.QCService service.
 type QCServiceClient interface {
 	CreateQCUploadUrl(context.Context, *connect.Request[v1.CreateQCUploadUrlRequest]) (*connect.Response[v1.CreateQCUploadUrlResponse], error)
+	CreateQCViewUrl(context.Context, *connect.Request[v1.CreateQCViewUrlRequest]) (*connect.Response[v1.CreateQCViewUrlResponse], error)
 	CreateQCJob(context.Context, *connect.Request[v1.CreateQCJobRequest]) (*connect.Response[v1.CreateQCJobResponse], error)
 	GetQCJob(context.Context, *connect.Request[v1.GetQCJobRequest]) (*connect.Response[v1.GetQCJobResponse], error)
 	GetQCResult(context.Context, *connect.Request[v1.GetQCResultRequest]) (*connect.Response[v1.GetQCResultResponse], error)
@@ -73,6 +77,12 @@ func NewQCServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			httpClient,
 			baseURL+QCServiceCreateQCUploadUrlProcedure,
 			connect.WithSchema(qCServiceMethods.ByName("CreateQCUploadUrl")),
+			connect.WithClientOptions(opts...),
+		),
+		createQCViewUrl: connect.NewClient[v1.CreateQCViewUrlRequest, v1.CreateQCViewUrlResponse](
+			httpClient,
+			baseURL+QCServiceCreateQCViewUrlProcedure,
+			connect.WithSchema(qCServiceMethods.ByName("CreateQCViewUrl")),
 			connect.WithClientOptions(opts...),
 		),
 		createQCJob: connect.NewClient[v1.CreateQCJobRequest, v1.CreateQCJobResponse](
@@ -111,6 +121,7 @@ func NewQCServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 // qCServiceClient implements QCServiceClient.
 type qCServiceClient struct {
 	createQCUploadUrl *connect.Client[v1.CreateQCUploadUrlRequest, v1.CreateQCUploadUrlResponse]
+	createQCViewUrl   *connect.Client[v1.CreateQCViewUrlRequest, v1.CreateQCViewUrlResponse]
 	createQCJob       *connect.Client[v1.CreateQCJobRequest, v1.CreateQCJobResponse]
 	getQCJob          *connect.Client[v1.GetQCJobRequest, v1.GetQCJobResponse]
 	getQCResult       *connect.Client[v1.GetQCResultRequest, v1.GetQCResultResponse]
@@ -121,6 +132,11 @@ type qCServiceClient struct {
 // CreateQCUploadUrl calls simaops.qc.v1.QCService.CreateQCUploadUrl.
 func (c *qCServiceClient) CreateQCUploadUrl(ctx context.Context, req *connect.Request[v1.CreateQCUploadUrlRequest]) (*connect.Response[v1.CreateQCUploadUrlResponse], error) {
 	return c.createQCUploadUrl.CallUnary(ctx, req)
+}
+
+// CreateQCViewUrl calls simaops.qc.v1.QCService.CreateQCViewUrl.
+func (c *qCServiceClient) CreateQCViewUrl(ctx context.Context, req *connect.Request[v1.CreateQCViewUrlRequest]) (*connect.Response[v1.CreateQCViewUrlResponse], error) {
+	return c.createQCViewUrl.CallUnary(ctx, req)
 }
 
 // CreateQCJob calls simaops.qc.v1.QCService.CreateQCJob.
@@ -151,6 +167,7 @@ func (c *qCServiceClient) RetryQCJob(ctx context.Context, req *connect.Request[v
 // QCServiceHandler is an implementation of the simaops.qc.v1.QCService service.
 type QCServiceHandler interface {
 	CreateQCUploadUrl(context.Context, *connect.Request[v1.CreateQCUploadUrlRequest]) (*connect.Response[v1.CreateQCUploadUrlResponse], error)
+	CreateQCViewUrl(context.Context, *connect.Request[v1.CreateQCViewUrlRequest]) (*connect.Response[v1.CreateQCViewUrlResponse], error)
 	CreateQCJob(context.Context, *connect.Request[v1.CreateQCJobRequest]) (*connect.Response[v1.CreateQCJobResponse], error)
 	GetQCJob(context.Context, *connect.Request[v1.GetQCJobRequest]) (*connect.Response[v1.GetQCJobResponse], error)
 	GetQCResult(context.Context, *connect.Request[v1.GetQCResultRequest]) (*connect.Response[v1.GetQCResultResponse], error)
@@ -169,6 +186,12 @@ func NewQCServiceHandler(svc QCServiceHandler, opts ...connect.HandlerOption) (s
 		QCServiceCreateQCUploadUrlProcedure,
 		svc.CreateQCUploadUrl,
 		connect.WithSchema(qCServiceMethods.ByName("CreateQCUploadUrl")),
+		connect.WithHandlerOptions(opts...),
+	)
+	qCServiceCreateQCViewUrlHandler := connect.NewUnaryHandler(
+		QCServiceCreateQCViewUrlProcedure,
+		svc.CreateQCViewUrl,
+		connect.WithSchema(qCServiceMethods.ByName("CreateQCViewUrl")),
 		connect.WithHandlerOptions(opts...),
 	)
 	qCServiceCreateQCJobHandler := connect.NewUnaryHandler(
@@ -205,6 +228,8 @@ func NewQCServiceHandler(svc QCServiceHandler, opts ...connect.HandlerOption) (s
 		switch r.URL.Path {
 		case QCServiceCreateQCUploadUrlProcedure:
 			qCServiceCreateQCUploadUrlHandler.ServeHTTP(w, r)
+		case QCServiceCreateQCViewUrlProcedure:
+			qCServiceCreateQCViewUrlHandler.ServeHTTP(w, r)
 		case QCServiceCreateQCJobProcedure:
 			qCServiceCreateQCJobHandler.ServeHTTP(w, r)
 		case QCServiceGetQCJobProcedure:
@@ -226,6 +251,10 @@ type UnimplementedQCServiceHandler struct{}
 
 func (UnimplementedQCServiceHandler) CreateQCUploadUrl(context.Context, *connect.Request[v1.CreateQCUploadUrlRequest]) (*connect.Response[v1.CreateQCUploadUrlResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.qc.v1.QCService.CreateQCUploadUrl is not implemented"))
+}
+
+func (UnimplementedQCServiceHandler) CreateQCViewUrl(context.Context, *connect.Request[v1.CreateQCViewUrlRequest]) (*connect.Response[v1.CreateQCViewUrlResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.qc.v1.QCService.CreateQCViewUrl is not implemented"))
 }
 
 func (UnimplementedQCServiceHandler) CreateQCJob(context.Context, *connect.Request[v1.CreateQCJobRequest]) (*connect.Response[v1.CreateQCJobResponse], error) {

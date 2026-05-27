@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 
 service QCService {
   rpc CreateQCUploadUrl(CreateQCUploadUrlRequest) returns (CreateQCUploadUrlResponse);
+  rpc CreateQCViewUrl(CreateQCViewUrlRequest) returns (CreateQCViewUrlResponse);
   rpc CreateQCJob(CreateQCJobRequest) returns (CreateQCJobResponse);
   rpc GetQCJob(GetQCJobRequest) returns (GetQCJobResponse);
   rpc GetQCResult(GetQCResultRequest) returns (GetQCResultResponse);
@@ -91,6 +92,15 @@ message CreateQCUploadUrlResponse {
   string object_key = 1;
   string upload_url = 2;
   int64 expires_at_unix = 3;
+}
+
+message CreateQCViewUrlRequest {
+  string object_key = 1;
+}
+
+message CreateQCViewUrlResponse {
+  string view_url = 1;
+  int64 expires_at_unix = 2;
 }
 
 message CreateQCJobRequest {

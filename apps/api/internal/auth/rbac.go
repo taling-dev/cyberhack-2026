@@ -17,6 +17,7 @@ var rpcRoles = map[string][]string{
 
 	// QCService — OPERATOR uploads/creates; QC_SUPERVISOR reviews
 	"/simaops.qc.v1.QCService/CreateQCUploadUrl": {"OPERATOR", "ADMIN"},
+	"/simaops.qc.v1.QCService/CreateQCViewUrl":   {},
 	"/simaops.qc.v1.QCService/CreateQCJob":       {"OPERATOR", "ADMIN"},
 	"/simaops.qc.v1.QCService/GetQCJob":          {},
 	"/simaops.qc.v1.QCService/GetQCResult":       {},

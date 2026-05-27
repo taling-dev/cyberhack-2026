@@ -19,6 +19,11 @@ class QCServiceStub(object):
                 request_serializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCUploadUrlRequest.SerializeToString,
                 response_deserializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCUploadUrlResponse.FromString,
                 _registered_method=True)
+        self.CreateQCViewUrl = channel.unary_unary(
+                '/simaops.qc.v1.QCService/CreateQCViewUrl',
+                request_serializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCViewUrlRequest.SerializeToString,
+                response_deserializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCViewUrlResponse.FromString,
+                _registered_method=True)
         self.CreateQCJob = channel.unary_unary(
                 '/simaops.qc.v1.QCService/CreateQCJob',
                 request_serializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCJobRequest.SerializeToString,
@@ -50,6 +55,12 @@ class QCServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def CreateQCUploadUrl(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateQCViewUrl(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -92,6 +103,11 @@ def add_QCServiceServicer_to_server(servicer, server):
                     servicer.CreateQCUploadUrl,
                     request_deserializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCUploadUrlRequest.FromString,
                     response_serializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCUploadUrlResponse.SerializeToString,
+            ),
+            'CreateQCViewUrl': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateQCViewUrl,
+                    request_deserializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCViewUrlRequest.FromString,
+                    response_serializer=simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCViewUrlResponse.SerializeToString,
             ),
             'CreateQCJob': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateQCJob,
@@ -146,6 +162,33 @@ class QCService(object):
             '/simaops.qc.v1.QCService/CreateQCUploadUrl',
             simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCUploadUrlRequest.SerializeToString,
             simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCUploadUrlResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateQCViewUrl(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.qc.v1.QCService/CreateQCViewUrl',
+            simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCViewUrlRequest.SerializeToString,
+            simaops_dot_qc_dot_v1_dot_qc__pb2.CreateQCViewUrlResponse.FromString,
             options,
             channel_credentials,
             insecure,

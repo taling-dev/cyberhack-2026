@@ -10,13 +10,13 @@
   const whClient = createClient(WarehouseService, transport);
   const queryClient = getQueryClientContext();
 
-  // Lots awaiting warehouse assignment (status 5 = QC_APPROVED)
+  // Status 5 = QC_APPROVED
   const lotsQuery = createQuery(() => ({
     queryKey: ['warehouse-queue'],
-    queryFn: () => lotClient.listLots({ pageSize: 50, statusFilter: 5 })
+    queryFn: () => lotClient.listLots({ pageSize: 50, statusFilter: 5 }),
+    refetchInterval: 15_000,
   }));
 
-  // Assignment modal state
   let showModal = $state(false);
   let selectedLotId = $state('');
   let selectedLotNumber = $state('');
@@ -25,6 +25,10 @@
   let assigning = $state(false);
   let assignError = $state('');
   let assignSuccess = $state('');
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (showModal && e.key === 'Escape') showModal = false;
+  }
 
   async function openAssign(lotId: string, lotNumber: string) {
     selectedLotId = lotId;
@@ -60,42 +64,48 @@
       assigning = false;
     }
   }
+
+  const lots = $derived(lotsQuery.data?.lots ?? []);
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <div class="space-y-4">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">{$t('nav.warehouse')}</h1>
-    <span class="text-sm text-gray-500">QC-approved lots awaiting slot assignment</span>
+    <span class="text-sm text-gray-500">{$t('warehouse.subtitle')} · {lots.length}</span>
   </div>
 
   {#if assignSuccess}
-    <div class="p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
-      ✓ Assigned: {assignSuccess} — lot is now READY_FOR_PRODUCTION
+    <div class="p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm" role="status">
+      ✓ {$t('warehouse.assigned_msg')}: {assignSuccess}
     </div>
   {/if}
 
   {#if lotsQuery.isLoading}
     <p class="text-gray-500">{$t('common.loading')}</p>
+  {:else if lotsQuery.isError}
+    <div class="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{lotsQuery.error?.message || $t('common.error')}</div>
   {:else}
-    <div class="overflow-x-auto border rounded-lg">
+    <div class="overflow-x-auto border rounded-lg bg-white">
       <table class="w-full text-sm">
         <thead class="bg-gray-50 border-b">
           <tr>
-            <th class="px-4 py-3 text-left font-medium">Lot #</th>
-            <th class="px-4 py-3 text-left font-medium">Material</th>
-            <th class="px-4 py-3 text-left font-medium">Storage Req</th>
+            <th class="px-4 py-3 text-left font-medium">{$t('lot.lot_number')}</th>
+            <th class="px-4 py-3 text-left font-medium">{$t('lot.material')}</th>
+            <th class="px-4 py-3 text-left font-medium">{$t('warehouse.storage_req')}</th>
             <th class="px-4 py-3 text-left font-medium">{$t('common.actions')}</th>
           </tr>
         </thead>
         <tbody class="divide-y">
-          {#each lotsQuery.data?.lots ?? [] as lot}
+          {#each lots as lot}
             <tr class="hover:bg-gray-50">
               <td class="px-4 py-3 font-mono text-xs">{lot.lotNumber}</td>
               <td class="px-4 py-3">{lot.materialName}</td>
               <td class="px-4 py-3 text-xs text-gray-600">
-                {lot.storageRequirement?.temperatureRange === 1 ? '🌡️ Ambient' :
-                 lot.storageRequirement?.temperatureRange === 2 ? '❄️ Cold' :
-                 lot.storageRequirement?.temperatureRange === 3 ? '🧊 Deep Freeze' : '—'}
+                {lot.storageRequirement?.temperatureRange === 1 ? '🌡️ ' :
+                 lot.storageRequirement?.temperatureRange === 2 ? '❄️ ' :
+                 lot.storageRequirement?.temperatureRange === 3 ? '🧊 ' : ''}{$t(`temp_range.${lot.storageRequirement?.temperatureRange ?? 0}`).split(' (')[0]}
                 {lot.storageRequirement?.hazardClass === 2 ? ' + IBC' :
                  lot.storageRequirement?.hazardClass === 3 ? ' + IPPC' : ''}
               </td>
@@ -104,12 +114,12 @@
                   onclick={() => openAssign(lot.id, lot.lotNumber)}
                   class="px-3 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium hover:bg-purple-200"
                 >
-                  Assign Slot →
+                  {$t('warehouse.assign_button')}
                 </button>
               </td>
             </tr>
           {:else}
-            <tr><td colspan="4" class="px-4 py-8 text-center text-gray-400">No lots awaiting assignment</td></tr>
+            <tr><td colspan="4" class="px-4 py-12 text-center text-gray-400">{$t('warehouse.no_queue')}</td></tr>
           {/each}
         </tbody>
       </table>
@@ -119,17 +129,23 @@
 
 <!-- Assignment Modal -->
 {#if showModal}
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 w-full max-w-lg space-y-4">
-      <h2 class="text-lg font-bold">Assign Slot: {selectedLotNumber}</h2>
+  <div
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="assign-title"
+    onclick={(e) => { if (e.target === e.currentTarget) showModal = false; }}
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg space-y-4 shadow-xl">
+      <h2 id="assign-title" class="text-lg font-bold">{$t('warehouse.assign_modal_title')}: {selectedLotNumber}</h2>
 
       {#if loadingRecs}
-        <p class="text-gray-500 text-sm">Loading recommendations...</p>
+        <p class="text-gray-500 text-sm">{$t('warehouse.loading_recs')}</p>
       {:else if recommendations.length === 0}
-        <p class="text-red-600 text-sm">No compatible slots found for this lot's storage requirements.</p>
+        <p class="text-red-600 text-sm">{$t('warehouse.no_recs')}</p>
       {:else}
         <div class="space-y-2">
-          <p class="text-sm text-gray-500">Recommended slots (sorted by capacity):</p>
+          <p class="text-sm text-gray-500">{$t('warehouse.recs_label')}</p>
           {#each recommendations as rec}
             <div class="border rounded-md p-3 flex items-center justify-between hover:bg-gray-50">
               <div>
@@ -142,7 +158,7 @@
                 disabled={assigning}
                 class="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 disabled:opacity-50"
               >
-                {assigning ? '...' : 'Assign'}
+                {assigning ? $t('warehouse.assigning') : 'Assign'}
               </button>
             </div>
           {/each}
@@ -150,11 +166,11 @@
       {/if}
 
       {#if assignError}
-        <p class="text-sm text-red-600">{assignError}</p>
+        <p class="text-sm text-red-600" role="alert">{assignError}</p>
       {/if}
 
       <div class="flex justify-end">
-        <button onclick={() => showModal = false} class="px-4 py-2 border rounded-md text-sm">Cancel</button>
+        <button onclick={() => showModal = false} class="px-4 py-2 border rounded-md text-sm">{$t('common.cancel')}</button>
       </div>
     </div>
   </div>

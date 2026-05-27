@@ -642,6 +642,102 @@ func (x *CreateQCUploadUrlResponse) GetExpiresAtUnix() int64 {
 	return 0
 }
 
+type CreateQCViewUrlRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ObjectKey     string                 `protobuf:"bytes,1,opt,name=object_key,json=objectKey,proto3" json:"object_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateQCViewUrlRequest) Reset() {
+	*x = CreateQCViewUrlRequest{}
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateQCViewUrlRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateQCViewUrlRequest) ProtoMessage() {}
+
+func (x *CreateQCViewUrlRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateQCViewUrlRequest.ProtoReflect.Descriptor instead.
+func (*CreateQCViewUrlRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateQCViewUrlRequest) GetObjectKey() string {
+	if x != nil {
+		return x.ObjectKey
+	}
+	return ""
+}
+
+type CreateQCViewUrlResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ViewUrl       string                 `protobuf:"bytes,1,opt,name=view_url,json=viewUrl,proto3" json:"view_url,omitempty"`
+	ExpiresAtUnix int64                  `protobuf:"varint,2,opt,name=expires_at_unix,json=expiresAtUnix,proto3" json:"expires_at_unix,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateQCViewUrlResponse) Reset() {
+	*x = CreateQCViewUrlResponse{}
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateQCViewUrlResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateQCViewUrlResponse) ProtoMessage() {}
+
+func (x *CreateQCViewUrlResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateQCViewUrlResponse.ProtoReflect.Descriptor instead.
+func (*CreateQCViewUrlResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CreateQCViewUrlResponse) GetViewUrl() string {
+	if x != nil {
+		return x.ViewUrl
+	}
+	return ""
+}
+
+func (x *CreateQCViewUrlResponse) GetExpiresAtUnix() int64 {
+	if x != nil {
+		return x.ExpiresAtUnix
+	}
+	return 0
+}
+
 type CreateQCJobRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	LotId          string                 `protobuf:"bytes,1,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"`
@@ -653,7 +749,7 @@ type CreateQCJobRequest struct {
 
 func (x *CreateQCJobRequest) Reset() {
 	*x = CreateQCJobRequest{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[5]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -665,7 +761,7 @@ func (x *CreateQCJobRequest) String() string {
 func (*CreateQCJobRequest) ProtoMessage() {}
 
 func (x *CreateQCJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[5]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -678,7 +774,7 @@ func (x *CreateQCJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateQCJobRequest.ProtoReflect.Descriptor instead.
 func (*CreateQCJobRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{5}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *CreateQCJobRequest) GetLotId() string {
@@ -711,7 +807,7 @@ type CreateQCJobResponse struct {
 
 func (x *CreateQCJobResponse) Reset() {
 	*x = CreateQCJobResponse{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[6]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -723,7 +819,7 @@ func (x *CreateQCJobResponse) String() string {
 func (*CreateQCJobResponse) ProtoMessage() {}
 
 func (x *CreateQCJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[6]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -736,7 +832,7 @@ func (x *CreateQCJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateQCJobResponse.ProtoReflect.Descriptor instead.
 func (*CreateQCJobResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{6}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateQCJobResponse) GetJob() *QCJob {
@@ -756,7 +852,7 @@ type GetQCJobRequest struct {
 
 func (x *GetQCJobRequest) Reset() {
 	*x = GetQCJobRequest{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[7]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -768,7 +864,7 @@ func (x *GetQCJobRequest) String() string {
 func (*GetQCJobRequest) ProtoMessage() {}
 
 func (x *GetQCJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[7]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -781,7 +877,7 @@ func (x *GetQCJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetQCJobRequest.ProtoReflect.Descriptor instead.
 func (*GetQCJobRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{7}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetQCJobRequest) GetQcJobId() string {
@@ -807,7 +903,7 @@ type GetQCJobResponse struct {
 
 func (x *GetQCJobResponse) Reset() {
 	*x = GetQCJobResponse{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[8]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -819,7 +915,7 @@ func (x *GetQCJobResponse) String() string {
 func (*GetQCJobResponse) ProtoMessage() {}
 
 func (x *GetQCJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[8]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -832,7 +928,7 @@ func (x *GetQCJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetQCJobResponse.ProtoReflect.Descriptor instead.
 func (*GetQCJobResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{8}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetQCJobResponse) GetJob() *QCJob {
@@ -851,7 +947,7 @@ type GetQCResultRequest struct {
 
 func (x *GetQCResultRequest) Reset() {
 	*x = GetQCResultRequest{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[9]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -863,7 +959,7 @@ func (x *GetQCResultRequest) String() string {
 func (*GetQCResultRequest) ProtoMessage() {}
 
 func (x *GetQCResultRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[9]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -876,7 +972,7 @@ func (x *GetQCResultRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetQCResultRequest.ProtoReflect.Descriptor instead.
 func (*GetQCResultRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{9}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetQCResultRequest) GetQcJobId() string {
@@ -895,7 +991,7 @@ type GetQCResultResponse struct {
 
 func (x *GetQCResultResponse) Reset() {
 	*x = GetQCResultResponse{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[10]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -907,7 +1003,7 @@ func (x *GetQCResultResponse) String() string {
 func (*GetQCResultResponse) ProtoMessage() {}
 
 func (x *GetQCResultResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[10]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -920,7 +1016,7 @@ func (x *GetQCResultResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetQCResultResponse.ProtoReflect.Descriptor instead.
 func (*GetQCResultResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{10}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetQCResultResponse) GetResult() *QCResult {
@@ -942,7 +1038,7 @@ type ReviewQCRequest struct {
 
 func (x *ReviewQCRequest) Reset() {
 	*x = ReviewQCRequest{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[11]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -954,7 +1050,7 @@ func (x *ReviewQCRequest) String() string {
 func (*ReviewQCRequest) ProtoMessage() {}
 
 func (x *ReviewQCRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[11]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -967,7 +1063,7 @@ func (x *ReviewQCRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReviewQCRequest.ProtoReflect.Descriptor instead.
 func (*ReviewQCRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{11}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ReviewQCRequest) GetQcJobId() string {
@@ -1010,7 +1106,7 @@ type ReviewQCResponse struct {
 
 func (x *ReviewQCResponse) Reset() {
 	*x = ReviewQCResponse{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[12]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1022,7 +1118,7 @@ func (x *ReviewQCResponse) String() string {
 func (*ReviewQCResponse) ProtoMessage() {}
 
 func (x *ReviewQCResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[12]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1035,7 +1131,7 @@ func (x *ReviewQCResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReviewQCResponse.ProtoReflect.Descriptor instead.
 func (*ReviewQCResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{12}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ReviewQCResponse) GetQcJobId() string {
@@ -1076,7 +1172,7 @@ type RetryQCJobRequest struct {
 
 func (x *RetryQCJobRequest) Reset() {
 	*x = RetryQCJobRequest{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[13]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1088,7 +1184,7 @@ func (x *RetryQCJobRequest) String() string {
 func (*RetryQCJobRequest) ProtoMessage() {}
 
 func (x *RetryQCJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[13]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1101,7 +1197,7 @@ func (x *RetryQCJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryQCJobRequest.ProtoReflect.Descriptor instead.
 func (*RetryQCJobRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{13}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *RetryQCJobRequest) GetQcJobId() string {
@@ -1127,7 +1223,7 @@ type RetryQCJobResponse struct {
 
 func (x *RetryQCJobResponse) Reset() {
 	*x = RetryQCJobResponse{}
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[14]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1139,7 +1235,7 @@ func (x *RetryQCJobResponse) String() string {
 func (*RetryQCJobResponse) ProtoMessage() {}
 
 func (x *RetryQCJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_qc_v1_qc_proto_msgTypes[14]
+	mi := &file_simaops_qc_v1_qc_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1152,7 +1248,7 @@ func (x *RetryQCJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryQCJobResponse.ProtoReflect.Descriptor instead.
 func (*RetryQCJobResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{14}
+	return file_simaops_qc_v1_qc_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *RetryQCJobResponse) GetJob() *QCJob {
@@ -1221,7 +1317,13 @@ const file_simaops_qc_v1_qc_proto_rawDesc = "" +
 	"object_key\x18\x01 \x01(\tR\tobjectKey\x12\x1d\n" +
 	"\n" +
 	"upload_url\x18\x02 \x01(\tR\tuploadUrl\x12&\n" +
-	"\x0fexpires_at_unix\x18\x03 \x01(\x03R\rexpiresAtUnix\"~\n" +
+	"\x0fexpires_at_unix\x18\x03 \x01(\x03R\rexpiresAtUnix\"7\n" +
+	"\x16CreateQCViewUrlRequest\x12\x1d\n" +
+	"\n" +
+	"object_key\x18\x01 \x01(\tR\tobjectKey\"\\\n" +
+	"\x17CreateQCViewUrlResponse\x12\x19\n" +
+	"\bview_url\x18\x01 \x01(\tR\aviewUrl\x12&\n" +
+	"\x0fexpires_at_unix\x18\x02 \x01(\x03R\rexpiresAtUnix\"~\n" +
 	"\x12CreateQCJobRequest\x12\x15\n" +
 	"\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12(\n" +
 	"\x10image_object_key\x18\x02 \x01(\tR\x0eimageObjectKey\x12'\n" +
@@ -1272,9 +1374,10 @@ const file_simaops_qc_v1_qc_proto_rawDesc = "" +
 	"\x1fSUPERVISOR_DECISION_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cSUPERVISOR_DECISION_APPROVED\x10\x01\x12 \n" +
 	"\x1cSUPERVISOR_DECISION_REJECTED\x10\x02\x12\x1f\n" +
-	"\x1bSUPERVISOR_DECISION_RECHECK\x10\x032\x8c\x04\n" +
+	"\x1bSUPERVISOR_DECISION_RECHECK\x10\x032\xee\x04\n" +
 	"\tQCService\x12f\n" +
-	"\x11CreateQCUploadUrl\x12'.simaops.qc.v1.CreateQCUploadUrlRequest\x1a(.simaops.qc.v1.CreateQCUploadUrlResponse\x12T\n" +
+	"\x11CreateQCUploadUrl\x12'.simaops.qc.v1.CreateQCUploadUrlRequest\x1a(.simaops.qc.v1.CreateQCUploadUrlResponse\x12`\n" +
+	"\x0fCreateQCViewUrl\x12%.simaops.qc.v1.CreateQCViewUrlRequest\x1a&.simaops.qc.v1.CreateQCViewUrlResponse\x12T\n" +
 	"\vCreateQCJob\x12!.simaops.qc.v1.CreateQCJobRequest\x1a\".simaops.qc.v1.CreateQCJobResponse\x12K\n" +
 	"\bGetQCJob\x12\x1e.simaops.qc.v1.GetQCJobRequest\x1a\x1f.simaops.qc.v1.GetQCJobResponse\x12T\n" +
 	"\vGetQCResult\x12!.simaops.qc.v1.GetQCResultRequest\x1a\".simaops.qc.v1.GetQCResultResponse\x12K\n" +
@@ -1296,7 +1399,7 @@ func file_simaops_qc_v1_qc_proto_rawDescGZIP() []byte {
 }
 
 var file_simaops_qc_v1_qc_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_simaops_qc_v1_qc_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_simaops_qc_v1_qc_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_simaops_qc_v1_qc_proto_goTypes = []any{
 	(QCJobStatus)(0),                  // 0: simaops.qc.v1.QCJobStatus
 	(QCRecommendation)(0),             // 1: simaops.qc.v1.QCRecommendation
@@ -1306,50 +1409,54 @@ var file_simaops_qc_v1_qc_proto_goTypes = []any{
 	(*QCResult)(nil),                  // 5: simaops.qc.v1.QCResult
 	(*CreateQCUploadUrlRequest)(nil),  // 6: simaops.qc.v1.CreateQCUploadUrlRequest
 	(*CreateQCUploadUrlResponse)(nil), // 7: simaops.qc.v1.CreateQCUploadUrlResponse
-	(*CreateQCJobRequest)(nil),        // 8: simaops.qc.v1.CreateQCJobRequest
-	(*CreateQCJobResponse)(nil),       // 9: simaops.qc.v1.CreateQCJobResponse
-	(*GetQCJobRequest)(nil),           // 10: simaops.qc.v1.GetQCJobRequest
-	(*GetQCJobResponse)(nil),          // 11: simaops.qc.v1.GetQCJobResponse
-	(*GetQCResultRequest)(nil),        // 12: simaops.qc.v1.GetQCResultRequest
-	(*GetQCResultResponse)(nil),       // 13: simaops.qc.v1.GetQCResultResponse
-	(*ReviewQCRequest)(nil),           // 14: simaops.qc.v1.ReviewQCRequest
-	(*ReviewQCResponse)(nil),          // 15: simaops.qc.v1.ReviewQCResponse
-	(*RetryQCJobRequest)(nil),         // 16: simaops.qc.v1.RetryQCJobRequest
-	(*RetryQCJobResponse)(nil),        // 17: simaops.qc.v1.RetryQCJobResponse
-	(*timestamppb.Timestamp)(nil),     // 18: google.protobuf.Timestamp
+	(*CreateQCViewUrlRequest)(nil),    // 8: simaops.qc.v1.CreateQCViewUrlRequest
+	(*CreateQCViewUrlResponse)(nil),   // 9: simaops.qc.v1.CreateQCViewUrlResponse
+	(*CreateQCJobRequest)(nil),        // 10: simaops.qc.v1.CreateQCJobRequest
+	(*CreateQCJobResponse)(nil),       // 11: simaops.qc.v1.CreateQCJobResponse
+	(*GetQCJobRequest)(nil),           // 12: simaops.qc.v1.GetQCJobRequest
+	(*GetQCJobResponse)(nil),          // 13: simaops.qc.v1.GetQCJobResponse
+	(*GetQCResultRequest)(nil),        // 14: simaops.qc.v1.GetQCResultRequest
+	(*GetQCResultResponse)(nil),       // 15: simaops.qc.v1.GetQCResultResponse
+	(*ReviewQCRequest)(nil),           // 16: simaops.qc.v1.ReviewQCRequest
+	(*ReviewQCResponse)(nil),          // 17: simaops.qc.v1.ReviewQCResponse
+	(*RetryQCJobRequest)(nil),         // 18: simaops.qc.v1.RetryQCJobRequest
+	(*RetryQCJobResponse)(nil),        // 19: simaops.qc.v1.RetryQCJobResponse
+	(*timestamppb.Timestamp)(nil),     // 20: google.protobuf.Timestamp
 }
 var file_simaops_qc_v1_qc_proto_depIdxs = []int32{
 	0,  // 0: simaops.qc.v1.QCJob.status:type_name -> simaops.qc.v1.QCJobStatus
-	18, // 1: simaops.qc.v1.QCJob.started_at:type_name -> google.protobuf.Timestamp
-	18, // 2: simaops.qc.v1.QCJob.completed_at:type_name -> google.protobuf.Timestamp
-	18, // 3: simaops.qc.v1.QCJob.created_at:type_name -> google.protobuf.Timestamp
-	18, // 4: simaops.qc.v1.QCJob.updated_at:type_name -> google.protobuf.Timestamp
+	20, // 1: simaops.qc.v1.QCJob.started_at:type_name -> google.protobuf.Timestamp
+	20, // 2: simaops.qc.v1.QCJob.completed_at:type_name -> google.protobuf.Timestamp
+	20, // 3: simaops.qc.v1.QCJob.created_at:type_name -> google.protobuf.Timestamp
+	20, // 4: simaops.qc.v1.QCJob.updated_at:type_name -> google.protobuf.Timestamp
 	1,  // 5: simaops.qc.v1.QCResult.recommendation:type_name -> simaops.qc.v1.QCRecommendation
 	4,  // 6: simaops.qc.v1.QCResult.findings:type_name -> simaops.qc.v1.QCFinding
 	2,  // 7: simaops.qc.v1.QCResult.supervisor_decision:type_name -> simaops.qc.v1.SupervisorDecision
-	18, // 8: simaops.qc.v1.QCResult.reviewed_at:type_name -> google.protobuf.Timestamp
-	18, // 9: simaops.qc.v1.QCResult.created_at:type_name -> google.protobuf.Timestamp
+	20, // 8: simaops.qc.v1.QCResult.reviewed_at:type_name -> google.protobuf.Timestamp
+	20, // 9: simaops.qc.v1.QCResult.created_at:type_name -> google.protobuf.Timestamp
 	3,  // 10: simaops.qc.v1.CreateQCJobResponse.job:type_name -> simaops.qc.v1.QCJob
 	3,  // 11: simaops.qc.v1.GetQCJobResponse.job:type_name -> simaops.qc.v1.QCJob
 	5,  // 12: simaops.qc.v1.GetQCResultResponse.result:type_name -> simaops.qc.v1.QCResult
 	2,  // 13: simaops.qc.v1.ReviewQCRequest.decision:type_name -> simaops.qc.v1.SupervisorDecision
 	2,  // 14: simaops.qc.v1.ReviewQCResponse.decision:type_name -> simaops.qc.v1.SupervisorDecision
-	18, // 15: simaops.qc.v1.ReviewQCResponse.reviewed_at:type_name -> google.protobuf.Timestamp
+	20, // 15: simaops.qc.v1.ReviewQCResponse.reviewed_at:type_name -> google.protobuf.Timestamp
 	3,  // 16: simaops.qc.v1.RetryQCJobResponse.job:type_name -> simaops.qc.v1.QCJob
 	6,  // 17: simaops.qc.v1.QCService.CreateQCUploadUrl:input_type -> simaops.qc.v1.CreateQCUploadUrlRequest
-	8,  // 18: simaops.qc.v1.QCService.CreateQCJob:input_type -> simaops.qc.v1.CreateQCJobRequest
-	10, // 19: simaops.qc.v1.QCService.GetQCJob:input_type -> simaops.qc.v1.GetQCJobRequest
-	12, // 20: simaops.qc.v1.QCService.GetQCResult:input_type -> simaops.qc.v1.GetQCResultRequest
-	14, // 21: simaops.qc.v1.QCService.ReviewQC:input_type -> simaops.qc.v1.ReviewQCRequest
-	16, // 22: simaops.qc.v1.QCService.RetryQCJob:input_type -> simaops.qc.v1.RetryQCJobRequest
-	7,  // 23: simaops.qc.v1.QCService.CreateQCUploadUrl:output_type -> simaops.qc.v1.CreateQCUploadUrlResponse
-	9,  // 24: simaops.qc.v1.QCService.CreateQCJob:output_type -> simaops.qc.v1.CreateQCJobResponse
-	11, // 25: simaops.qc.v1.QCService.GetQCJob:output_type -> simaops.qc.v1.GetQCJobResponse
-	13, // 26: simaops.qc.v1.QCService.GetQCResult:output_type -> simaops.qc.v1.GetQCResultResponse
-	15, // 27: simaops.qc.v1.QCService.ReviewQC:output_type -> simaops.qc.v1.ReviewQCResponse
-	17, // 28: simaops.qc.v1.QCService.RetryQCJob:output_type -> simaops.qc.v1.RetryQCJobResponse
-	23, // [23:29] is the sub-list for method output_type
-	17, // [17:23] is the sub-list for method input_type
+	8,  // 18: simaops.qc.v1.QCService.CreateQCViewUrl:input_type -> simaops.qc.v1.CreateQCViewUrlRequest
+	10, // 19: simaops.qc.v1.QCService.CreateQCJob:input_type -> simaops.qc.v1.CreateQCJobRequest
+	12, // 20: simaops.qc.v1.QCService.GetQCJob:input_type -> simaops.qc.v1.GetQCJobRequest
+	14, // 21: simaops.qc.v1.QCService.GetQCResult:input_type -> simaops.qc.v1.GetQCResultRequest
+	16, // 22: simaops.qc.v1.QCService.ReviewQC:input_type -> simaops.qc.v1.ReviewQCRequest
+	18, // 23: simaops.qc.v1.QCService.RetryQCJob:input_type -> simaops.qc.v1.RetryQCJobRequest
+	7,  // 24: simaops.qc.v1.QCService.CreateQCUploadUrl:output_type -> simaops.qc.v1.CreateQCUploadUrlResponse
+	9,  // 25: simaops.qc.v1.QCService.CreateQCViewUrl:output_type -> simaops.qc.v1.CreateQCViewUrlResponse
+	11, // 26: simaops.qc.v1.QCService.CreateQCJob:output_type -> simaops.qc.v1.CreateQCJobResponse
+	13, // 27: simaops.qc.v1.QCService.GetQCJob:output_type -> simaops.qc.v1.GetQCJobResponse
+	15, // 28: simaops.qc.v1.QCService.GetQCResult:output_type -> simaops.qc.v1.GetQCResultResponse
+	17, // 29: simaops.qc.v1.QCService.ReviewQC:output_type -> simaops.qc.v1.ReviewQCResponse
+	19, // 30: simaops.qc.v1.QCService.RetryQCJob:output_type -> simaops.qc.v1.RetryQCJobResponse
+	24, // [24:31] is the sub-list for method output_type
+	17, // [17:24] is the sub-list for method input_type
 	17, // [17:17] is the sub-list for extension type_name
 	17, // [17:17] is the sub-list for extension extendee
 	0,  // [0:17] is the sub-list for field type_name
@@ -1366,7 +1473,7 @@ func file_simaops_qc_v1_qc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_simaops_qc_v1_qc_proto_rawDesc), len(file_simaops_qc_v1_qc_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

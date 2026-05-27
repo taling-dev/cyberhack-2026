@@ -63,6 +63,21 @@ func (s *QCService) CreateQCUploadUrl(ctx context.Context, req *connect.Request[
 	}), nil
 }
 
+func (s *QCService) CreateQCViewUrl(ctx context.Context, req *connect.Request[qcv1.CreateQCViewUrlRequest]) (*connect.Response[qcv1.CreateQCViewUrlResponse], error) {
+	if req.Msg.ObjectKey == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("object_key required"))
+	}
+	expiry := 15 * time.Minute
+	url, err := s.minio.PresignedGetURL(ctx, storage.QCImagesBucket, req.Msg.ObjectKey, expiry)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("presign get: %w", err))
+	}
+	return connect.NewResponse(&qcv1.CreateQCViewUrlResponse{
+		ViewUrl:       url,
+		ExpiresAtUnix: time.Now().Add(expiry).Unix(),
+	}), nil
+}
+
 func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.CreateQCJobRequest]) (*connect.Response[qcv1.CreateQCJobResponse], error) {
 	msg := req.Msg
 	if msg.LotId == "" || msg.ImageObjectKey == "" {
