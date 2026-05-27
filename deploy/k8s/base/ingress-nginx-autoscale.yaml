@@ -41,12 +41,12 @@ spec:
         target:
           type: Utilization
           averageUtilization: 60
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 75
+    # NOTE: memory metric intentionally omitted. The upstream ingress-nginx
+    # Helm chart sets memory request to 90Mi but real baseline usage is
+    # ~100-130Mi (nginx workers + buffers), so a memory-utilization HPA
+    # would scale to maxReplicas at idle. CPU is the right signal for
+    # SSE / request-volume driven load. Raise the chart's memory request
+    # if you want memory-based autoscaling.
   behavior:
     # Scale up quickly when SSE connection pressure builds.
     scaleUp:
