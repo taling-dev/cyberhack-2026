@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Realtime row-highlight effect.
+ *
+ * Applied by the `highlightOnChange` Svelte action when an SSE event with a
+ * matching resource_id arrives. The yellow flash + 1s fade is removed for
+ * users who prefer reduced motion (still flashes briefly so the change is
+ * observable, just without the transition). */
+.simaops-highlight {
+  background-color: rgb(254 252 232); /* tailwind yellow-50 */
+  transition: background-color 1s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .simaops-highlight {
+    transition: none;
+  }
+}

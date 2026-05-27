@@ -285,3 +285,60 @@ Outputs: `frontend_url`, `api_url`, `keycloak_url`, `minio_console_url`, `grafan
 - `.github/workflows/deploy-production.yaml` — on `release` tag, requires `environment: production` approval, deploys to production OKE cluster.
 
 OCI auth via API key stored as repo secrets (no key files in repo): `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY`, `OCI_REGION`, `OCI_COMPARTMENT_OCID`, `OCI_CLUSTER_OCID`.
+
+## Realtime architecture (added in plan v5)
+
+```
+┌─ TiDB outbox_events ─┐  ┌── NATS JetStream ──┐  ┌── API pod (×N) ──────────┐
+│ INSERT envelope JSON │→ │ qc.> lot.>          │→ │ nc.Subscribe (core, no  │
+│ in same tx as domain │  │ warehouse.> audit.> │  │ JS consumer state)      │
+│ writes (atomic)      │  │ stream "SIMAOPS"    │  │  ↓ Hub.Dispatch          │
+└─ outbox-publisher ───┘  └─────────────────────┘  │  → role + owner filter   │
+                                                   │  → per-client chan(64)   │
+                                                   │  → /events SSE handler   │
+                                                   └────────┬─────────────────┘
+                                                            ↓
+┌─ Browser ──────────────────────────────────────────────────────────────────┐
+│  EventSource('/api/v1/events')                                             │
+│   ├ connection-info → schedule reconnect at exp-60s on browser clock       │
+│   ├ heartbeat fetch /auth/heartbeat every 60s (rotates HttpOnly cookie)    │
+│   ├ on 401 → Tier 0 (force refresh) → Tier 1 (silent renew) → Tier 2 modal │
+│   ├ TanStack Query invalidation per subject                                │
+│   ├ simaops:highlight CustomEvent → row-flash action                       │
+│   └ Toaster (role-targeted, localStorage event_id 30s dedup)               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Standardized envelope
+
+All outbox events serialize as a uniform envelope (`apps/api/internal/events/envelope.go`):
+`event_id, event_type, occurred_at, actor_id, owner_user_id, resource_id, payload`. The
+outbox publisher writes the envelope as the NATS message body unchanged. The AI worker
+parses the envelope on receive and re-emits envelope-formatted events for the
+qc.job.completed / needs_human_review / failed lifecycle.
+
+### Role + owner filter
+
+Outer filter (subject vs role):
+```go
+"OPERATOR":        {"lot.>", "warehouse.slot_assigned", "qc.job.failed", "qc.job.completed"},
+"QC_SUPERVISOR":   {"lot.>", "qc.>"},
+"WAREHOUSE_STAFF": {"lot.>", "warehouse.>", "qc.job.approved", "qc.job.completed"},
+"MANAGER":         {">"},
+"ADMIN":           {">"},
+```
+
+Inner filter (owner): if user's only role is OPERATOR, drop unless `envelope.owner_user_id == JWT.preferred_username`.
+
+### Three-tier auth recovery
+
+Tier 0 (Force refresh) → `GET /auth/heartbeat?force=true` rotates the HttpOnly access cookie.
+Tier 1 (Silent renew) → invisible iframe to `/auth/login?silent=1` (prompt=none); succeeds if Keycloak SSO session still alive.
+Tier 2 (Popup login) → user-initiated; parent window keeps state, popup posts `login-complete`, parent reconnects.
+Tier 3 (Full redirect) → only if popup blocked; preserves return_to via OAuth state param.
+
+### Stale-role propagation
+
+Role changes via `AdminService.AssignRole` / `RevokeRole` automatically call `hub.KickUser(sub)`
+so the user's open SSE streams disconnect immediately; their next reconnect carries the new
+role list. Without admin action, role changes propagate naturally on the next ~5min token refresh.

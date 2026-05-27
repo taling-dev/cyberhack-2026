@@ -3,8 +3,18 @@
   import '$lib/i18n';
   import { t, locale } from 'svelte-i18n';
   import { page } from '$app/stores';
-  import { QueryClient } from '@tanstack/svelte-query';
+  import { browser } from '$app/environment';
+  import { onMount, onDestroy, untrack } from 'svelte';
+  import { QueryClient, createQuery } from '@tanstack/svelte-query';
   import { setQueryClientContext } from '@tanstack/svelte-query';
+  import { createClient } from '@connectrpc/connect';
+  import { transport } from '$lib/connect';
+  import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import Toaster, { pushToast } from '$lib/components/Toaster.svelte';
+  import SessionExpiredModal from '$lib/components/SessionExpiredModal.svelte';
+  import { connectRealtime, type RealtimeHandle } from '$lib/realtime.svelte';
+  import { dispatchToast } from '$lib/realtime/toastDispatch';
+  import { sweepOldDrafts } from '$lib/forms/draft.svelte';
 
   let { children, data } = $props();
 
@@ -38,6 +48,146 @@
   const navItems = $derived(
     allNavItems.filter(item => userRoles.some((r: string) => item.roles.includes(r)))
   );
+
+  // ─── Live nav badges ────────────────────────────────────────────
+  const lotClient = createClient(LotService, transport);
+
+  // QC review badge — pending QC supervisor decision (lot status QC_REVIEW = 4).
+  // Only shown to users who have access to /qc.
+  const qcBadgeEnabled = $derived(
+    !!user && userRoles.some((r: string) => ['QC_SUPERVISOR', 'MANAGER', 'ADMIN'].includes(r)),
+  );
+  const qcBadgeQuery = createQuery(() => ({
+    queryKey: ['nav-badges', 'qc-review'],
+    queryFn: () => lotClient.listLots({ pageSize: 100, statusFilter: 4 }),
+    enabled: qcBadgeEnabled,
+    staleTime: 30_000,
+  }));
+  const qcBadgeCount = $derived(qcBadgeQuery.data?.lots?.length ?? 0);
+
+  // Warehouse pending badge — lots in QC_APPROVED (=5) waiting to be slotted.
+  const whBadgeEnabled = $derived(
+    !!user && userRoles.some((r: string) => ['WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'].includes(r)),
+  );
+  const whBadgeQuery = createQuery(() => ({
+    queryKey: ['nav-badges', 'warehouse-pending'],
+    queryFn: () => lotClient.listLots({ pageSize: 100, statusFilter: 5 }),
+    enabled: whBadgeEnabled,
+    staleTime: 30_000,
+  }));
+  const whBadgeCount = $derived(whBadgeQuery.data?.lots?.length ?? 0);
+
+  function badgeFor(href: string): number {
+    if (href === '/qc') return qcBadgeCount;
+    if (href === '/warehouse') return whBadgeCount;
+    return 0;
+  }
+
+  // ─── Realtime store ──────────────────────────────────────────────
+  let realtime = $state<RealtimeHandle | null>(null);
+  let realtimeStatus = $derived(realtime?.state.status ?? 'idle');
+
+  function statusLabelKey(status: string): string {
+    switch (status) {
+      case 'live':
+        return 'realtime.live';
+      case 'reconnecting':
+      case 'connecting':
+        return 'realtime.reconnecting';
+      case 're-authenticating':
+        return 'realtime.re_authenticating';
+      case 'session-expired':
+        return 'realtime.session_expired';
+      default:
+        return 'realtime.live';
+    }
+  }
+
+  function statusDotClass(status: string): string {
+    switch (status) {
+      case 'live':
+        return 'bg-green-500';
+      case 'reconnecting':
+      case 'connecting':
+        return 'bg-blue-500 animate-pulse';
+      case 're-authenticating':
+        return 'bg-amber-500 animate-pulse';
+      case 'session-expired':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-400';
+    }
+  }
+
+  // Translator wrapper that resolves to a plain string.
+  function translateFn(key: string, opts?: { values?: Record<string, any> }) {
+    let out = '';
+    const unsubscribe = t.subscribe((fn) => {
+      out = fn(key, opts);
+    });
+    unsubscribe();
+    return out;
+  }
+
+  onMount(() => {
+    if (!browser) return;
+    sweepOldDrafts();
+  });
+
+  // (Re)open the realtime stream when the user becomes authenticated; close
+  // when they log out.
+  $effect(() => {
+    const u = user;
+    untrack(() => {
+      // Close any prior handle before opening a new one.
+      realtime?.disconnect();
+      realtime = null;
+      if (!browser || !u) return;
+      realtime = connectRealtime(queryClient, {
+        onEvent: (e) => {
+          dispatchToast(e, {
+            userSub: u.sub,
+            roles: u.roles ?? [],
+            t: translateFn,
+          });
+        },
+        onSessionEnding: () => {
+          pushToast({
+            title: translateFn('auth.session_ending_soon.title'),
+            body: translateFn('auth.session_ending_soon.body'),
+            variant: 'warning',
+            timeoutMs: 0, // sticky
+          });
+        },
+      });
+    });
+  });
+
+  onDestroy(() => {
+    realtime?.disconnect();
+    realtime = null;
+  });
+
+  function reconnectRealtime() {
+    if (!user || !browser) return;
+    realtime?.disconnect();
+    realtime = connectRealtime(queryClient, {
+      onEvent: (e) =>
+        dispatchToast(e, {
+          userSub: user.sub,
+          roles: user.roles ?? [],
+          t: translateFn,
+        }),
+      onSessionEnding: () => {
+        pushToast({
+          title: translateFn('auth.session_ending_soon.title'),
+          body: translateFn('auth.session_ending_soon.body'),
+          variant: 'warning',
+          timeoutMs: 0,
+        });
+      },
+    });
+  }
 </script>
 
 <svelte:head>
@@ -61,7 +211,13 @@
               {$page.url.pathname.startsWith(item.href) ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}"
           >
             <span aria-hidden="true">{item.icon}</span>
-            <span>{$t(item.key)}</span>
+            <span class="flex-1">{$t(item.key)}</span>
+            {#if badgeFor(item.href) > 0}
+              <span
+                class="ml-auto text-xs bg-blue-600 text-white rounded-full px-2 py-0.5 min-w-[1.25rem] text-center"
+                aria-label="{badgeFor(item.href)} pending"
+              >{badgeFor(item.href)}</span>
+            {/if}
           </a>
         {/each}
       {:else}
@@ -88,6 +244,15 @@
         {$t('app.name')}
       </div>
       <div class="flex items-center gap-3">
+        {#if user && realtimeStatus !== 'idle'}
+          <span class="flex items-center gap-1.5 text-xs text-gray-500" aria-live="polite">
+            <span
+              class="inline-block w-2 h-2 rounded-full {statusDotClass(realtimeStatus)}"
+              aria-hidden="true"
+            ></span>
+            {$t(statusLabelKey(realtimeStatus))}
+          </span>
+        {/if}
         <button
           onclick={toggleLocale}
           class="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition-colors"
@@ -125,3 +290,10 @@
     </main>
   </div>
 </div>
+
+<!-- Realtime UX overlays -->
+<Toaster />
+<SessionExpiredModal
+  open={realtimeStatus === 'session-expired'}
+  onSignedIn={reconnectRealtime}
+/>

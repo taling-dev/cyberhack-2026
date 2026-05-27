@@ -4,6 +4,7 @@
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
 
   const client = createClient(LotService, transport);
 
@@ -126,7 +127,7 @@
         </thead>
         <tbody class="divide-y">
           {#each lots as lot}
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={lot.id}>
               <td class="px-4 py-3">
                 <a href="/lots/{lot.id}" class="text-blue-600 hover:underline font-mono text-xs">{lot.lotNumber}</a>
               </td>

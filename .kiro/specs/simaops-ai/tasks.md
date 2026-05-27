@@ -239,3 +239,34 @@ Each task is a vertical, demoable increment. No big jumps in complexity; no orph
 | Date         | Status                                                              |
 | ------------ | ------------------------------------------------------------------- |
 | 2026-05-26   | Plan v2 saved to `.kiro/specs/simaops-ai/`. Awaiting `go` from user. |
+
+## Plan v5: Realtime Web UI (added 2026-05-27)
+
+All 23 tasks complete; deployed via tag (build/push/helm-upgrade) and verified
+end-to-end with `scripts/e2e-realtime.sh`.
+
+| # | Task | Status |
+|---|------|--------|
+| 1 | Standardize outbox event envelope (envelope.go + qc/lot/warehouse callers + AI worker) | ✓ |
+| 2 | API event hub + core NATS subscriptions + filter (in-process fan-out) | ✓ |
+| 3 | GET /events SSE handler (connection-info + heartbeats + drain frame) | ✓ |
+| 4 | BFF SSE pass-through (forward Accept, Last-Event-ID, X-Refresh-Expires-At, AbortSignal) | ✓ |
+| 5 | /auth/heartbeat endpoint + transient/permanent refresh distinction | ✓ |
+| 5b | Silent OIDC renew + popup login flows (postMessage HTML callbacks) | ✓ |
+| 5c | SessionExpiredModal component | ✓ |
+| 6 | Realtime client store + state machine + tier dispatch | ✓ |
+| 6b | Form draft persistence (useDraft + sweepOldDrafts) | ✓ |
+| 7 | JWT middleware leeway + structured 401 reasons (X-Auth-Failure-Reason) | ✓ |
+| 8 | Clock-skew startup probe + fatal /readyz sub-check (3-poll hysteresis) | ✓ |
+| 9 | Wire realtime invalidation to all data pages | ✓ |
+| 10 | Subtle highlight on changed/new rows (highlightOnChange action) | ✓ |
+| 11 | Toaster + role-targeted dispatch + localStorage event_id dedup | ✓ |
+| 12 | Live nav badges in sidebar | ✓ |
+| 13 | Observability: SSE metrics, Grafana row, alerts | ✓ |
+| 14 | Helm tuning: ingress, terminationGracePeriod, preStop, startupProbe, MAX_SSE_PER_USER | ✓ |
+| 15 | NTP cloud-init for OKE node template | ✓ |
+| 16 | Admin SSE kick endpoint + role-change auto-kick | ✓ |
+| 17 | Realm bootstrap: SSO timeouts + refresh rotation | ✓ |
+| 18 | scripts/e2e-realtime.sh (full pipeline + 5-user filter assertions) | ✓ |
+| 19 | scripts/e2e-token-refresh.sh (4-min rotation resilience) | ✓ |
+| 20 | Documentation + spec update | ✓ |

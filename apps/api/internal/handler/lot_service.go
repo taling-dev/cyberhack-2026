@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/events"
 	lotv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1/lotv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
@@ -20,11 +22,12 @@ import (
 var _ lotv1connect.LotServiceHandler = (*LotService)(nil)
 
 type LotService struct {
-	q *db.Queries
+	q   *db.Queries
+	dbx *sql.DB
 }
 
-func NewLotService(q *db.Queries) *LotService {
-	return &LotService{q: q}
+func NewLotService(q *db.Queries, dbx *sql.DB) *LotService {
+	return &LotService{q: q, dbx: dbx}
 }
 
 func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.CreateLotRequest]) (*connect.Response[lotv1.CreateLotResponse], error) {
@@ -68,8 +71,19 @@ func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.C
 
 	id := uuid.NewString()
 	arrivalDate, _ := time.Parse("2006-01-02", msg.ArrivalDate)
+	createdBy := userFromCtx(ctx)
 
-	err := s.q.CreateLot(ctx, db.CreateLotParams{
+	// Wrap lot insert + outbox event in a transaction so a downstream consumer
+	// (SSE / AI worker) never sees a lot that doesn't exist, and we never lose
+	// a lot.created event after writing the row.
+	tx, err := s.dbx.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+	defer func() { _ = tx.Rollback() }()
+	qtx := s.q.WithTx(tx)
+
+	if err := qtx.CreateLot(ctx, db.CreateLotParams{
 		ID:                 id,
 		LotNumber:          lotNumber,
 		SupplierName:       msg.SupplierName,
@@ -79,10 +93,41 @@ func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.C
 		Unit:               msg.Unit,
 		ArrivalDate:        arrivalDate,
 		StorageRequirement: sr,
-		CreatedBy:          userFromCtx(ctx),
-	})
-	if err != nil {
+		CreatedBy:          createdBy,
+	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	envelope, err := events.NewEnvelope(
+		"lot.created",
+		createdBy,
+		createdBy, // owner == creator for new lots
+		id,
+		map[string]any{
+			"lot_id":         id,
+			"lot_number":     lotNumber,
+			"supplier_name":  msg.SupplierName,
+			"material_name":  msg.MaterialName,
+			"material_type":  string(materialTypeToDB(msg.MaterialType)),
+			"quantity":       msg.Quantity,
+			"unit":           msg.Unit,
+			"arrival_date":   msg.ArrivalDate,
+			"created_by":     createdBy,
+		},
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build envelope: %w", err))
+	}
+	if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "lot.created",
+		PayloadJson: envelope,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
 	}
 
 	lot, err := s.q.GetLot(ctx, id)
@@ -205,22 +250,67 @@ func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[l
 	}
 	currentStatus := lotStatusFromDB(string(current.Status))
 
-	// Same-state is idempotent: succeed without mutation.
-	if currentStatus != req.Msg.NewStatus {
-		allowed, ok := allowedTransitions[currentStatus]
-		if !ok || !allowed[req.Msg.NewStatus] {
-			return nil, connect.NewError(connect.CodeFailedPrecondition,
-				fmt.Errorf("invalid lot status transition: %s → %s",
-					currentStatus, req.Msg.NewStatus))
-		}
+	// Same-state is idempotent: succeed without mutation. Skip both the DB write
+	// and the outbox event so we don't spam consumers with no-op updates.
+	if currentStatus == req.Msg.NewStatus {
+		return connect.NewResponse(&lotv1.UpdateLotStatusResponse{Lot: dbLotToProto(current)}), nil
 	}
 
-	if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
+	allowed, ok := allowedTransitions[currentStatus]
+	if !ok || !allowed[req.Msg.NewStatus] {
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("invalid lot status transition: %s → %s",
+				currentStatus, req.Msg.NewStatus))
+	}
+
+	actor := userFromCtx(ctx)
+
+	// Wrap status update + outbox event in a transaction so SSE consumers never
+	// see a status they can't reconcile against the DB.
+	tx, err := s.dbx.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+	defer func() { _ = tx.Rollback() }()
+	qtx := s.q.WithTx(tx)
+
+	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
 		Status: db.LotsStatus(lotStatusToDB(req.Msg.NewStatus)),
 		ID:     req.Msg.LotId,
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
+
+	envelope, err := events.NewEnvelope(
+		"lot.status_changed",
+		actor,
+		current.CreatedBy, // owner is always the lot creator regardless of who changes status
+		req.Msg.LotId,
+		map[string]any{
+			"lot_id":     req.Msg.LotId,
+			"lot_number": current.LotNumber,
+			"from":       lotStatusToDB(currentStatus),
+			"to":         lotStatusToDB(req.Msg.NewStatus),
+			"reason":     req.Msg.Reason,
+			"created_by": current.CreatedBy,
+			"actor_id":   actor,
+		},
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build envelope: %w", err))
+	}
+	if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "lot.status_changed",
+		PayloadJson: envelope,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
+	}
+
 	lot, err := s.q.GetLot(ctx, req.Msg.LotId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))

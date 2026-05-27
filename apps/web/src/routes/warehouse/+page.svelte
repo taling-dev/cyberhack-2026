@@ -5,6 +5,7 @@
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { WarehouseService } from '$lib/gen/simaops/warehouse/v1/warehouse_pb';
+  import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
 
   const lotClient = createClient(LotService, transport);
   const whClient = createClient(WarehouseService, transport);
@@ -99,7 +100,7 @@
         </thead>
         <tbody class="divide-y">
           {#each lots as lot}
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={lot.id}>
               <td class="px-4 py-3 font-mono text-xs">{lot.lotNumber}</td>
               <td class="px-4 py-3">{lot.materialName}</td>
               <td class="px-4 py-3 text-xs text-gray-600">

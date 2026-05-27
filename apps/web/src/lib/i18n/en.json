@@ -16,7 +16,42 @@
   },
   "auth": {
     "required_title": "Authentication required",
-    "required_body": "You must be logged in to access SimaOps."
+    "required_body": "You must be logged in to access SimaOps.",
+    "session_expired": {
+      "title": "Session expired",
+      "body": "Sign in to continue where you left off. Your unsaved work is preserved.",
+      "sign_in": "Sign in",
+      "sign_out": "Sign out"
+    },
+    "session_ending_soon": {
+      "title": "Session ending soon",
+      "body": "Your session will end in 5 minutes. Stay signed in to continue working.",
+      "stay_signed_in": "Stay signed in"
+    }
+  },
+  "realtime": {
+    "live": "Live",
+    "reconnecting": "Reconnecting…",
+    "re_authenticating": "Re-authenticating…",
+    "session_expired": "Session expired"
+  },
+  "toast": {
+    "qc_needs_review": {
+      "title": "QC needs review",
+      "body": "Lot {lot} requires supervisor decision."
+    },
+    "qc_approved": {
+      "title": "Lot approved",
+      "body": "Lot {lot} is ready for warehouse assignment."
+    },
+    "qc_failed": {
+      "title": "QC job failed",
+      "body": "Lot {lot} requires retry or attention."
+    },
+    "warehouse_assigned": {
+      "title": "Warehouse slot assigned",
+      "body": "Lot {lot} assigned to slot {slot}."
+    }
   },
   "common": {
     "loading": "Loading...",

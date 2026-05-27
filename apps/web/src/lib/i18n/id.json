@@ -16,7 +16,42 @@
   },
   "auth": {
     "required_title": "Otentikasi diperlukan",
-    "required_body": "Anda harus masuk untuk mengakses SimaOps."
+    "required_body": "Anda harus masuk untuk mengakses SimaOps.",
+    "session_expired": {
+      "title": "Sesi berakhir",
+      "body": "Masuk untuk melanjutkan dari posisi terakhir. Pekerjaan yang belum disimpan tetap aman.",
+      "sign_in": "Masuk",
+      "sign_out": "Keluar"
+    },
+    "session_ending_soon": {
+      "title": "Sesi akan segera berakhir",
+      "body": "Sesi Anda akan berakhir dalam 5 menit. Tetap masuk untuk melanjutkan bekerja.",
+      "stay_signed_in": "Tetap masuk"
+    }
+  },
+  "realtime": {
+    "live": "Langsung",
+    "reconnecting": "Menyambung kembali…",
+    "re_authenticating": "Otentikasi ulang…",
+    "session_expired": "Sesi berakhir"
+  },
+  "toast": {
+    "qc_needs_review": {
+      "title": "QC perlu ditinjau",
+      "body": "Lot {lot} memerlukan keputusan supervisor."
+    },
+    "qc_approved": {
+      "title": "Lot disetujui",
+      "body": "Lot {lot} siap untuk penugasan gudang."
+    },
+    "qc_failed": {
+      "title": "Pekerjaan QC gagal",
+      "body": "Lot {lot} perlu pengulangan atau perhatian."
+    },
+    "warehouse_assigned": {
+      "title": "Slot gudang ditetapkan",
+      "body": "Lot {lot} ditetapkan ke slot {slot}."
+    }
   },
   "common": {
     "loading": "Memuat...",

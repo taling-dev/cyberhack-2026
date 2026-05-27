@@ -118,6 +118,9 @@ func (r *responseRecorder) Write(b []byte) (int, error) {
 	return r.ResponseWriter.Write(b)
 }
 
+// Unwrap exposes the underlying writer for http.NewResponseController.
+func (r *responseRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
+
 // IsIdempotentRPC checks if a path is a mutation RPC (for use in other middleware).
 func IsIdempotentRPC(path string) bool {
 	return idempotentRPCs[path] || strings.Contains(path, "Create") || strings.Contains(path, "Update") || strings.Contains(path, "Assign") || strings.Contains(path, "Revoke") || strings.Contains(path, "Review")

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/events"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1/adminv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/audit/v1/auditv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/dashboard/v1/dashboardv1connect"
@@ -15,11 +16,12 @@ import (
 )
 
 // RegisterConnectHandlers mounts Connect RPC service handlers on the mux.
-func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.MinIOClient) {
+// hub is optional — pass nil if SSE/event integration is not wired (eg in tests).
+func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.MinIOClient, hub *events.Hub) {
 	queries := db.New(dbConn)
 
 	// LotService
-	lotPath, lotHandler := lotv1connect.NewLotServiceHandler(NewLotService(queries))
+	lotPath, lotHandler := lotv1connect.NewLotServiceHandler(NewLotService(queries, dbConn))
 	mux.Handle(lotPath, lotHandler)
 
 	// QCService
@@ -38,7 +40,9 @@ func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.
 	dashPath, dashHandler := dashboardv1connect.NewDashboardServiceHandler(NewDashboardService(queries))
 	mux.Handle(dashPath, dashHandler)
 
-	// AdminService
-	adminPath, adminHandler := adminv1connect.NewAdminServiceHandler(NewAdminService(queries))
+	// AdminService — receives the hub so AssignRole / RevokeRole can kick the
+	// affected user's open SSE connections, forcing reconnect with the new
+	// role list.
+	adminPath, adminHandler := adminv1connect.NewAdminServiceHandler(NewAdminService(queries, hub))
 	mux.Handle(adminPath, adminHandler)
 }

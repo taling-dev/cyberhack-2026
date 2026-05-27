@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/events"
 	whv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1/warehousev1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
@@ -164,6 +165,63 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 
 	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+	}
+
+	// Emit warehouse.slot_assigned for SSE fan-out. Owner is the lot creator so
+	// operators get a "your lot was slotted" toast even though the action was
+	// performed by warehouse staff.
+	whEnvelope, err := events.NewEnvelope(
+		"warehouse.slot_assigned",
+		assignedBy,
+		lot.CreatedBy,
+		msg.LotId,
+		map[string]any{
+			"assignment_id":   assignmentID,
+			"lot_id":          msg.LotId,
+			"lot_number":      lot.LotNumber,
+			"lot_created_by":  lot.CreatedBy,
+			"location_id":     msg.LocationId,
+			"location_code":   loc.Code,
+			"assigned_by":     assignedBy,
+		},
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build envelope: %w", err))
+	}
+	if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "warehouse.slot_assigned",
+		PayloadJson: whEnvelope,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
+	}
+
+	// Also emit lot.status_changed so subscribers tracking only lot.* see the
+	// final transition to READY_FOR_PRODUCTION.
+	statusEnvelope, err := events.NewEnvelope(
+		"lot.status_changed",
+		assignedBy,
+		lot.CreatedBy,
+		msg.LotId,
+		map[string]any{
+			"lot_id":     msg.LotId,
+			"lot_number": lot.LotNumber,
+			"from":       "QC_APPROVED",
+			"to":         "READY_FOR_PRODUCTION",
+			"reason":     "warehouse-assigned",
+			"created_by": lot.CreatedBy,
+			"actor_id":   assignedBy,
+		},
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build status envelope: %w", err))
+	}
+	if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "lot.status_changed",
+		PayloadJson: statusEnvelope,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create lot status outbox event: %w", err))
 	}
 
 	if err := tx.Commit(); err != nil {

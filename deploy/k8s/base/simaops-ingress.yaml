@@ -1,0 +1,61 @@
+# SimaOps app + API ingress with TLS + SSE-friendly nginx annotations.
+#
+# Apply with: kubectl apply -f deploy/k8s/base/simaops-ingress.yaml
+#
+# Notes:
+#   - nginx.ingress.kubernetes.io/proxy-buffering: "off" — required for SSE so
+#     the API's chunked text/event-stream reaches the browser without
+#     accumulating in nginx buffers.
+#   - proxy-read-timeout / proxy-send-timeout: "3600" — SSE connections live
+#     for up to ~5 minutes (until the access token rotates), then reconnect.
+#     The default 60s read timeout would kill them prematurely.
+#   - cors-allow-headers includes the SSE-related Last-Event-ID header.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simaops-ingress
+  namespace: simaops
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: >-
+      Content-Type, Connect-Protocol-Version, Connect-Timeout-Ms,
+      Authorization, X-Request-Id, Idempotency-Key, Last-Event-ID, Accept
+    nginx.ingress.kubernetes.io/cors-allow-methods: GET, POST, PUT, DELETE, OPTIONS
+    nginx.ingress.kubernetes.io/cors-allow-origin: https://app.161.118.244.229.sslip.io
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    # SSE / long-lived stream support
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - app.161.118.244.229.sslip.io
+        - api.161.118.244.229.sslip.io
+      secretName: simaops-tls
+  rules:
+    - host: app.161.118.244.229.sslip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: simaops-web
+                port:
+                  number: 3000
+    - host: api.161.118.244.229.sslip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: simaops-api
+                port:
+                  number: 8080
