@@ -1,0 +1,89 @@
+# Autoscaling + availability for the platform NGINX Ingress Controller.
+#
+# Why this exists:
+#   SimaOps holds many long-lived SSE connections (3600s timeout) at the
+#   ingress layer. A single controller pod can become a bottleneck under
+#   load, and a single-replica controller is a SPOF — any restart drops
+#   every active SSE stream.
+#
+# Assumptions:
+#   - Controller is installed via the `ingress-nginx` Helm chart (v4.15.1)
+#     into the `platform` namespace on this OKE cluster.
+#   - metrics-server is running (verified — `kubectl top` works).
+#
+# Apply with:
+#   kubectl apply -f deploy/k8s/base/ingress-nginx-autoscale.yaml
+#
+# Verify:
+#   kubectl get hpa -n platform
+#   kubectl get pdb -n platform
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ingress-nginx-controller
+  namespace: platform
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/part-of: simaops
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ingress-nginx-controller
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+  behavior:
+    # Scale up quickly when SSE connection pressure builds.
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 2
+          periodSeconds: 30
+      selectPolicy: Max
+    # Scale down conservatively — long-lived SSE clients are still attached
+    # to draining pods for up to 5 minutes (token rotation cycle).
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120
+      selectPolicy: Min
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ingress-nginx-controller
+  namespace: platform
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/part-of: simaops
+spec:
+  # Keep at least 1 controller pod available during voluntary disruptions
+  # (node drains, rolling updates). With minReplicas=2 this guarantees
+  # zero-downtime upgrades.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ingress-nginx
+      app.kubernetes.io/component: controller
