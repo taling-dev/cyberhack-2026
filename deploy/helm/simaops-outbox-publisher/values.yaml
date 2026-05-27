@@ -33,7 +33,7 @@ pdb:
   enabled: false
 
 serviceMonitor:
-  enabled: false
+  enabled: true
   interval: 15s
 
 networkPolicy:

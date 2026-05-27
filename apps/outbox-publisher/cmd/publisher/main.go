@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -148,10 +149,12 @@ func runWithLeaderElection(ctx context.Context, db *sql.DB, js jetstream.JetStre
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(leaderCtx context.Context) {
 				slog.Info("became leader, starting poll loop", "identity", identity)
+				outboxIsLeader.Set(1)
 				pollLoop(leaderCtx, db, js)
 			},
 			OnStoppedLeading: func() {
 				slog.Info("lost leadership", "identity", identity)
+				outboxIsLeader.Set(0)
 			},
 			OnNewLeader: func(leader string) {
 				if leader != identity {
@@ -172,9 +175,23 @@ func pollLoop(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			outboxPollCyclesTotal.Inc()
+			updateBacklogGauge(ctx, db)
 			publishPending(ctx, db, js)
 		}
 	}
+}
+
+// updateBacklogGauge samples the outbox table once per poll for the
+// `simaops_outbox_backlog_size` gauge. This drives the OutboxBacklog alert.
+func updateBacklogGauge(ctx context.Context, db *sql.DB) {
+	var n float64
+	if err := db.QueryRowContext(ctx,
+		"SELECT COUNT(*) FROM outbox_events WHERE status = 'PENDING'").Scan(&n); err != nil {
+		// On error, leave gauge at last known value rather than zeroing.
+		return
+	}
+	outboxBacklogSize.Set(n)
 }
 
 func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
@@ -207,6 +224,7 @@ func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
 		if p.retryCount >= maxRetries {
 			_, _ = db.ExecContext(ctx,
 				"UPDATE outbox_events SET status = 'FAILED' WHERE id = ?", p.id)
+			outboxEventsFailedTotal.WithLabelValues(p.eventType).Inc()
 			slog.Warn("event marked FAILED after max retries", "id", p.id, "retry_count", p.retryCount)
 			continue
 		}
@@ -227,7 +245,9 @@ func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
 			Header:  header,
 		}
 
+		publishStart := time.Now()
 		_, err := js.PublishMsg(pubCtx, msg, jetstream.WithMsgID(p.id))
+		outboxPublishDurationSeconds.WithLabelValues(p.eventType).Observe(time.Since(publishStart).Seconds())
 		if err != nil {
 			slog.Warn("publish failed, will retry", "id", p.id, "err", err)
 			_, _ = db.ExecContext(pubCtx,
@@ -244,6 +264,7 @@ func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
 			slog.Error("failed to mark published", "id", p.id, "err", err)
 			span.RecordError(err)
 		} else {
+			outboxEventsPublishedTotal.WithLabelValues(p.eventType).Inc()
 			slog.Info("published",
 				"id", p.id,
 				"subject", p.eventType,
@@ -292,14 +313,16 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-// startHealthServer exposes /healthz on port 8082 for Kubernetes probes.
-// /healthz returns 200 if the process is alive (not necessarily the leader).
+// startHealthServer exposes /healthz and /metrics on port 8082.
+//   /healthz — 200 if the process is alive (not necessarily the leader)
+//   /metrics — Prometheus exposition for the simaops_outbox_* metric family
 func startHealthServer(ctx context.Context) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
+	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := &http.Server{Addr: ":8082", Handler: mux, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second}
 	go func() {

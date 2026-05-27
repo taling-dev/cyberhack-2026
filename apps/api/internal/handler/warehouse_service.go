@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -18,11 +19,12 @@ import (
 var _ warehousev1connect.WarehouseServiceHandler = (*WarehouseService)(nil)
 
 type WarehouseService struct {
-	q *db.Queries
+	q   *db.Queries
+	dbx *sql.DB
 }
 
-func NewWarehouseService(q *db.Queries) *WarehouseService {
-	return &WarehouseService{q: q}
+func NewWarehouseService(q *db.Queries, dbx *sql.DB) *WarehouseService {
+	return &WarehouseService{q: q, dbx: dbx}
 }
 
 func (s *WarehouseService) ListLocations(ctx context.Context, req *connect.Request[whv1.ListLocationsRequest]) (*connect.Response[whv1.ListLocationsResponse], error) {
@@ -109,7 +111,10 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 	}
 
 	// Atomic capacity decrement: only succeeds if capacity > 0
-	// Returns rows affected = 1 if successful, 0 if no capacity left
+	// Returns rows affected = 1 if successful, 0 if no capacity left.
+	// Note: this commits before the tx below — that's intentional. The atomic
+	// decrement is the contention point; once it succeeds we own a unit of capacity
+	// and the rest of the work is a simple two-row insert/update.
 	rowsAffected, err := s.q.DecrementLocationCapacityAtomic(ctx, msg.LocationId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("capacity check: %w", err))
@@ -118,30 +123,53 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("no capacity available at this location"))
 	}
 
-	// Fetch location for response
+	// Fetch location for response (read-only)
 	loc, err := s.q.GetWarehouseLocation(ctx, msg.LocationId)
 	if err != nil {
+		// Roll back the capacity reservation we just took.
+		_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("location not found"))
 	}
 
 	assignedBy := userFromCtx(ctx)
 	assignmentID := uuid.NewString()
-	err = s.q.CreateWarehouseAssignment(ctx, db.CreateWarehouseAssignmentParams{
+
+	// Wrap assignment insert + lot status advance in a tx. If either fails we roll
+	// both back AND give the capacity unit back. This guarantees we never have
+	// (capacity_consumed && no assignment row) or (assignment row && lot not advanced).
+	tx, err := s.dbx.BeginTx(ctx, nil)
+	if err != nil {
+		_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+	committed := false
+	defer func() {
+		_ = tx.Rollback()
+		if !committed {
+			// tx rolled back — restore capacity
+			_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
+		}
+	}()
+
+	qtx := s.q.WithTx(tx)
+
+	if err := qtx.CreateWarehouseAssignment(ctx, db.CreateWarehouseAssignmentParams{
 		ID:         assignmentID,
 		LotID:      msg.LotId,
 		LocationID: msg.LocationId,
 		AssignedBy: assignedBy,
-	})
-	if err != nil {
-		// Rollback capacity (best effort)
-		_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
+	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create assignment: %w", err))
 	}
 
-	// Advance lot: WAREHOUSE_ASSIGNED → READY_FOR_PRODUCTION
-	if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId}); err != nil {
+	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
 	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
+	}
+	committed = true
 
 	middleware.IncWarehouseAssignment()
 

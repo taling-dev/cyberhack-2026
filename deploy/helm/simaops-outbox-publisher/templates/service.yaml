@@ -2,10 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
 spec:
   selector:
     app: {{ .Release.Name }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+    # Named port `http-metrics` so the ServiceMonitor below can reference it
+    # by name instead of by number (matches kube-prometheus-stack convention).
+    - name: http-metrics
+      port: {{ .Values.service.port }}
+      targetPort: 8082
       protocol: TCP

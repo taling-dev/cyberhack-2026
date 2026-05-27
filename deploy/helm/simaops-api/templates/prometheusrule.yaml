@@ -79,4 +79,65 @@ spec:
           labels: {severity: critical, service: simaops}
           annotations:
             summary: "Pod {{ "{{" }} $labels.pod {{ "}}" }} not ready for 10m"
+
+    - name: simaops.outbox
+      interval: 30s
+      rules:
+        # OutboxBacklog — fires when the outbox publisher falls behind. Backlog
+        # should be < 10 in steady state; > 50 sustained 5m means publishing
+        # cannot keep up with mutation rate (NATS down, leader lapse, slow DB).
+        - alert: SimaopsOutboxBacklog
+          expr: simaops_outbox_backlog_size > 50
+          for: 5m
+          labels: {severity: warning, service: simaops-outbox-publisher}
+          annotations:
+            summary: "Outbox backlog above 50 events for 5 minutes"
+            description: "{{ "{{" }} $value {{ "}}" }} pending events. Check outbox publisher logs and NATS connectivity."
+
+        # OutboxNoLeader — sum of `simaops_outbox_is_leader` across all pods
+        # should always equal 1. If it's 0 for >2 minutes the lease has lapsed
+        # and no events will publish.
+        - alert: SimaopsOutboxNoLeader
+          expr: sum(simaops_outbox_is_leader) < 1
+          for: 2m
+          labels: {severity: critical, service: simaops-outbox-publisher}
+          annotations:
+            summary: "No outbox publisher leader for 2 minutes"
+            description: "Lease lapsed or all outbox-publisher pods down. Events will accumulate."
+
+        # OutboxFailureRate — rate of FAILED events (max retries exceeded).
+        # Should be ~0; any non-zero rate indicates a real problem.
+        - alert: SimaopsOutboxFailureRate
+          expr: rate(simaops_outbox_events_failed_total[10m]) > 0
+          for: 10m
+          labels: {severity: warning, service: simaops-outbox-publisher}
+          annotations:
+            summary: "Outbox events being marked FAILED"
+            description: "{{ "{{" }} $value {{ "}}" }} events/sec are exhausting retries. Check NATS reachability and event payloads."
+
+    - name: simaops.business
+      interval: 60s
+      rules:
+        # LotsStuckInQCReview — lots stuck waiting for human reviewer for >24h.
+        # Indicates a workflow bottleneck (no supervisor working, missed handoff).
+        # Driven by the simaops_api_lots_by_status gauge exported by the dashboard
+        # service. We use the `awaiting_review` label.
+        - alert: SimaopsLotsStuckInQCReview
+          expr: simaops_api_lots_by_status{status="AWAITING_REVIEW"} > 0
+          for: 24h
+          labels: {severity: warning, service: simaops-api, business: qc}
+          annotations:
+            summary: "Lots stuck in AWAITING_REVIEW for over 24h"
+            description: "{{ "{{" }} $value {{ "}}" }} lot(s) have been waiting for QC supervisor review longer than 24h. Assign a reviewer or escalate."
+
+        # LotsStuckInAIProcessing — lots stuck in AI_PROCESSING for >15min,
+        # which is well beyond expected end-to-end latency (~5s mock, ~30s real).
+        # Indicates an AI worker stall or NATS consumer lapse.
+        - alert: SimaopsLotsStuckInAIProcessing
+          expr: simaops_api_lots_by_status{status="AI_PROCESSING"} > 0
+          for: 15m
+          labels: {severity: warning, service: simaops-api, business: qc}
+          annotations:
+            summary: "Lots stuck in AI_PROCESSING for over 15 minutes"
+            description: "{{ "{{" }} $value {{ "}}" }} lot(s) have been processing for over 15m. AI worker may be stalled or unable to upload results."
 {{- end }}

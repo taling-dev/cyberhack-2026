@@ -3,12 +3,23 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Release.Name }}
+  # `release: kube-prometheus-stack` label is required so Prometheus picks up
+  # this ServiceMonitor (matches the operator's serviceMonitorSelector).
+  labels:
+    app: {{ .Release.Name }}
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}
+  # Watch the chart's own namespace; Prometheus runs in `observability` and
+  # needs explicit namespaceSelector to scrape across namespaces.
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
   endpoints:
-    - port: "{{ .Values.service.port }}"
+    - port: http-metrics
       interval: {{ .Values.serviceMonitor.interval }}
       path: /metrics
+      scheme: http
 {{- end }}

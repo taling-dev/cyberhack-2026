@@ -59,6 +59,10 @@ func main() {
 
 	handler.RegisterConnectHandlers(mux, dbConn, minioClient)
 
+	// Background goroutine: every 30s, sample lot counts by status and update
+	// the simaops_api_lots_by_status gauge. Drives the LotsStuckIn* alerts.
+	go startLotsByStatusUpdater(dbConn)
+
 	// Wrap with middleware (order: outer → inner)
 	// RequestID → Logger → BodyLimit → CORS → Metrics → JWT → RBAC → Idempotency → Audit → handlers
 	jwtMw := auth.NewJWTMiddleware()
@@ -109,4 +113,42 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(ctx)
+}
+
+// startLotsByStatusUpdater polls the lots table every 30s and updates the
+// simaops_api_lots_by_status gauge. Runs for the lifetime of the process.
+//
+// Failures are logged but non-fatal — the gauge will simply hold its last
+// value if the DB is briefly unavailable. This is more useful than zeroing
+// the gauge during a transient outage (avoids spurious alert resolves).
+func startLotsByStatusUpdater(db *sql.DB) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	tick := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		rows, err := db.QueryContext(ctx,
+			"SELECT status, COUNT(*) FROM lots GROUP BY status")
+		if err != nil {
+			slog.Warn("lots_by_status query failed", "err", err)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var status string
+			var count float64
+			if err := rows.Scan(&status, &count); err != nil {
+				continue
+			}
+			middleware.SetLotsByStatus(status, count)
+		}
+	}
+
+	tick() // immediate seed so the gauge isn't empty for 30s
+	for range ticker.C {
+		tick()
+	}
 }

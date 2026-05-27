@@ -23,11 +23,11 @@ func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.
 	mux.Handle(lotPath, lotHandler)
 
 	// QCService
-	qcPath, qcHandler := qcv1connect.NewQCServiceHandler(NewQCService(queries, minio))
+	qcPath, qcHandler := qcv1connect.NewQCServiceHandler(NewQCService(queries, dbConn, minio))
 	mux.Handle(qcPath, qcHandler)
 
 	// WarehouseService
-	whPath, whHandler := warehousev1connect.NewWarehouseServiceHandler(NewWarehouseService(queries))
+	whPath, whHandler := warehousev1connect.NewWarehouseServiceHandler(NewWarehouseService(queries, dbConn))
 	mux.Handle(whPath, whHandler)
 
 	// AuditService

@@ -69,7 +69,28 @@ var (
 			Help:      "Total warehouse slot assignments",
 		},
 	)
+
+	// lotsByStatus — gauge of current lot count per status. Updated by a
+	// background goroutine in main.go (StartLotsByStatusUpdater). Used by
+	// the SimaopsLotsStuckInQCReview and SimaopsLotsStuckInAIProcessing
+	// PrometheusRule alerts.
+	lotsByStatus = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "simaops",
+			Subsystem: "api",
+			Name:      "lots_by_status",
+			Help:      "Current number of lots per status (sampled every 30s).",
+		},
+		[]string{"status"},
+	)
 )
+
+// SetLotsByStatus sets the gauge for one status label. Called by the
+// background updater that polls CountLotsByStatusGroup. Status names
+// match the LotsStatus enum (e.g. "AWAITING_REVIEW", "AI_PROCESSING").
+func SetLotsByStatus(status string, count float64) {
+	lotsByStatus.WithLabelValues(status).Set(count)
+}
 
 // IncIdempotencyHit increments the idempotency hit counter (called from idempotency middleware).
 func IncIdempotencyHit(outcome string) {
