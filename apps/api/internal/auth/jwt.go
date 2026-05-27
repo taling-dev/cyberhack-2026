@@ -35,77 +35,68 @@ func GetClaims(ctx context.Context) *Claims {
 }
 
 // JWTMiddleware verifies the Authorization: Bearer <token> header against Keycloak JWKS.
+// SECURITY: This middleware FAILS CLOSED — if JWKS cannot be fetched or a token cannot
+// be cryptographically verified, requests are rejected. There is no fallback to
+// unverified token parsing in any mode.
 type JWTMiddleware struct {
-	jwks     keyfunc.Keyfunc
-	issuer   string
-	audience string
-	mu       sync.Once
-	initErr  error
+	jwks    keyfunc.Keyfunc
+	issuer  string
+	jwksURL string
+	mu      sync.Once
+	initErr error
 }
 
 func NewJWTMiddleware() *JWTMiddleware {
+	issuer := getEnv("KEYCLOAK_ISSUER", "http://localhost:8080/realms/simaops")
+	jwksBase := getEnv("KEYCLOAK_INTERNAL_URL", issuer)
 	return &JWTMiddleware{
-		issuer:   getEnv("KEYCLOAK_ISSUER", "http://localhost:8080/realms/simaops"),
-		audience: getEnv("KEYCLOAK_CLIENT_ID", "simaops-web"),
+		issuer:  issuer,
+		jwksURL: jwksBase + "/protocol/openid-connect/certs",
 	}
 }
 
 func (m *JWTMiddleware) init() {
-	// JWKS can be fetched from internal URL for speed
-	jwksBase := getEnv("KEYCLOAK_INTERNAL_URL", m.issuer)
-	jwksURL := jwksBase + "/protocol/openid-connect/certs"
-	k, err := keyfunc.NewDefault([]string{jwksURL})
+	k, err := keyfunc.NewDefault([]string{m.jwksURL})
 	if err != nil {
-		m.initErr = fmt.Errorf("failed to init JWKS from %s: %w", jwksURL, err)
-		slog.Warn("JWKS init failed (auth disabled)", "err", m.initErr)
+		m.initErr = fmt.Errorf("init JWKS from %s: %w", m.jwksURL, err)
+		slog.Error("JWKS init failed", "url", m.jwksURL, "err", err)
 		return
 	}
 	m.jwks = k
+	slog.Info("JWKS initialized", "url", m.jwksURL, "issuer", m.issuer)
 }
 
 // Wrap returns middleware that verifies JWT and injects claims into context.
-// If JWKS is unavailable (dev mode), it passes through with a dev claims fallback.
+// Endpoints not requiring auth (health/metrics) bypass the middleware via the RBAC table.
 func (m *JWTMiddleware) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.mu.Do(m.init)
 
-		// Extract bearer token
+		// Skip auth for health/metrics paths — they are gated by lack of /simaops. prefix in RBAC.
+		if !strings.Contains(r.URL.Path, "/simaops.") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Fail-closed: if JWKS init failed, reject all RPC requests with 503.
+		if m.initErr != nil {
+			http.Error(w, `{"code":"unavailable","message":"identity provider unreachable"}`, http.StatusServiceUnavailable)
+			return
+		}
+
+		// Extract bearer token. RBAC handles the case of missing/invalid token (returns 401).
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			// No token — in DEMO_MODE, inject a default operator user
-			if os.Getenv("DEMO_MODE") == "true" {
-				ctx := context.WithValue(r.Context(), ClaimsKey, &Claims{
-					Sub:      "u-operator",
-					Username: "operator",
-					Email:    "operator@simaops.local",
-					Name:     "Budi Operator (Demo)",
-					Roles:    []string{"OPERATOR", "QC_SUPERVISOR", "WAREHOUSE_STAFF", "MANAGER", "ADMIN"},
-				})
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-			// No token and no demo mode — allow through with nil claims (RBAC will block protected RPCs)
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(w, r) // RBAC will reject with 401
 			return
 		}
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// If JWKS failed to init, use dev fallback (parse without verification)
-		if m.initErr != nil {
-			claims := parseUnverified(tokenStr)
-			if claims != nil {
-				ctx := context.WithValue(r.Context(), ClaimsKey, claims)
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Verify token
+		// Cryptographically verify the token. NEVER fall back to parseUnverified.
 		token, err := jwt.Parse(tokenStr, m.jwks.KeyfuncCtx(r.Context()),
 			jwt.WithIssuer(m.issuer),
 			jwt.WithExpirationRequired(),
+			jwt.WithValidMethods([]string{"RS256", "RS384", "RS512", "ES256", "ES384"}),
 		)
 		if err != nil {
 			http.Error(w, `{"code":"unauthenticated","message":"invalid token"}`, http.StatusUnauthorized)
@@ -113,7 +104,7 @@ func (m *JWTMiddleware) Wrap(next http.Handler) http.Handler {
 		}
 
 		mapClaims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
+		if !ok || !token.Valid {
 			http.Error(w, `{"code":"unauthenticated"}`, http.StatusUnauthorized)
 			return
 		}
@@ -131,7 +122,6 @@ func extractClaims(m jwt.MapClaims) *Claims {
 		Email:    getString(m, "email"),
 		Name:     getString(m, "name"),
 	}
-	// Extract roles from realm_access.roles
 	if ra, ok := m["realm_access"].(map[string]interface{}); ok {
 		if roles, ok := ra["roles"].([]interface{}); ok {
 			for _, r := range roles {
@@ -142,18 +132,6 @@ func extractClaims(m jwt.MapClaims) *Claims {
 		}
 	}
 	return c
-}
-
-func parseUnverified(tokenStr string) *Claims {
-	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
-	token, _, err := parser.ParseUnverified(tokenStr, jwt.MapClaims{})
-	if err != nil {
-		return nil
-	}
-	if m, ok := token.Claims.(jwt.MapClaims); ok {
-		return extractClaims(m)
-	}
-	return nil
 }
 
 func getString(m jwt.MapClaims, key string) string {

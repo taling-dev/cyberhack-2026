@@ -6,10 +6,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
-	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/auth"
 )
@@ -85,9 +87,14 @@ func Audit(dbConn *sql.DB, next http.Handler) http.Handler {
 			}
 		}
 
-		// Write audit log (best-effort, don't block response)
-		go func(ctx context.Context) {
-			_ = createAuditLog(ctx, dbConn, auditLogEntry{
+		// Write audit log with bounded timeout, propagating trace context.
+		// Detached from the request context (which is being completed) but with a
+		// 5s deadline to prevent hung goroutines.
+		traceCtx := trace.ContextWithSpanContext(context.Background(), trace.SpanContextFromContext(r.Context()))
+		writeCtx, cancel := context.WithTimeout(traceCtx, 5*time.Second)
+		go func() {
+			defer cancel()
+			if err := createAuditLog(writeCtx, dbConn, auditLogEntry{
 				ID:          uuid.NewString(),
 				ActorUserID: actorUserID,
 				ActorRole:   actorRole,
@@ -97,8 +104,16 @@ func Audit(dbConn *sql.DB, next http.Handler) http.Handler {
 				BeforeJSON:  nil,
 				AfterJSON:   body,
 				RequestID:   requestID,
-			})
-		}(context.Background())
+			}); err != nil {
+				// Don't fail the request — log and continue. Operators can detect
+				// audit gaps via the simaops_audit_failures_total metric.
+				slog.Default().Warn("audit log write failed",
+					"action", auditCfg.Action,
+					"err", err,
+					"trace_id", trace.SpanFromContext(traceCtx).SpanContext().TraceID().String(),
+				)
+			}
+		}()
 	})
 }
 
@@ -207,6 +222,3 @@ func (r *auditResponseRecorder) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
 }
-
-// Avoid lint warning about unused
-var _ = strings.Contains

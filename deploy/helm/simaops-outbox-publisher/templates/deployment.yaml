@@ -19,10 +19,20 @@ spec:
       serviceAccountName: simaops-outbox-publisher
       imagePullSecrets:
         - name: ghcr-secret
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: publisher
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8082
+              name: health
+              protocol: TCP
           env:
             - name: POD_NAME
               valueFrom:
@@ -36,5 +46,11 @@ spec:
             - name: {{ $key }}
               value: {{ $val | quote }}
             {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 30
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

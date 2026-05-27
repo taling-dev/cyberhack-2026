@@ -30,6 +30,9 @@ func NewQCService(q *db.Queries, minio *storage.MinIOClient) *QCService {
 }
 
 func (s *QCService) CreateQCUploadUrl(ctx context.Context, req *connect.Request[qcv1.CreateQCUploadUrlRequest]) (*connect.Response[qcv1.CreateQCUploadUrlResponse], error) {
+	if s.minio == nil {
+		return nil, connect.NewError(connect.CodeUnavailable, fmt.Errorf("object storage unavailable"))
+	}
 	msg := req.Msg
 
 	if msg.LotId == "" || msg.Filename == "" {
@@ -64,6 +67,9 @@ func (s *QCService) CreateQCUploadUrl(ctx context.Context, req *connect.Request[
 }
 
 func (s *QCService) CreateQCViewUrl(ctx context.Context, req *connect.Request[qcv1.CreateQCViewUrlRequest]) (*connect.Response[qcv1.CreateQCViewUrlResponse], error) {
+	if s.minio == nil {
+		return nil, connect.NewError(connect.CodeUnavailable, fmt.Errorf("object storage unavailable"))
+	}
 	if req.Msg.ObjectKey == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("object_key required"))
 	}

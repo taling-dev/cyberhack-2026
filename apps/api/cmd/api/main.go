@@ -46,29 +46,32 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Health + metrics endpoints
-	mux.HandleFunc("GET /healthz", handler.Healthz)
-	mux.HandleFunc("GET /readyz", handler.Readyz)
-	mux.Handle("GET /metrics", promhttp.Handler())
-
 	// Connect RPC handlers
 	minioClient, err := storage.NewMinIOClient()
 	if err != nil {
 		slog.Warn("MinIO client init failed (non-fatal for dev)", "err", err)
 	}
+
+	// Health + metrics endpoints
+	mux.HandleFunc("GET /healthz", handler.Healthz)
+	mux.HandleFunc("GET /readyz", handler.ReadyzHandler(dbConn, minioClient))
+	mux.Handle("GET /metrics", promhttp.Handler())
+
 	handler.RegisterConnectHandlers(mux, dbConn, minioClient)
 
 	// Wrap with middleware (order: outer → inner)
-	// RequestID → Logger → CORS → Metrics → JWT → RBAC → Idempotency → Audit → handlers
+	// RequestID → Logger → BodyLimit → CORS → Metrics → JWT → RBAC → Idempotency → Audit → handlers
 	jwtMw := auth.NewJWTMiddleware()
 	h := middleware.RequestID(
 		middleware.Logger(logger,
-			middleware.CORS(
-				middleware.Metrics(
-					jwtMw.Wrap(
-						auth.RBACMiddleware(
-							middleware.Idempotency(dbConn,
-								middleware.Audit(dbConn, mux),
+			middleware.BodyLimit(
+				middleware.CORS(
+					middleware.Metrics(
+						jwtMw.Wrap(
+							auth.RBACMiddleware(
+								middleware.Idempotency(dbConn,
+									middleware.Audit(dbConn, mux),
+								),
 							),
 						),
 					),

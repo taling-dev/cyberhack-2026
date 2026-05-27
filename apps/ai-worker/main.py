@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 import nats
 import pymysql
+from dbutils.pooled_db import PooledDB
 import uvicorn
 from fastapi import FastAPI, Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
@@ -93,11 +94,25 @@ def get_strategy() -> QCStrategy:
 # ─── Database ─────────────────────────────────────────────────────
 
 
+# Pooled DB — created once at module load, shared across all handlers.
+# mincached=2 keeps idle connections; maxconnections=20 caps total concurrent connections.
+_db_pool = PooledDB(
+    creator=pymysql,
+    maxconnections=20,
+    mincached=2,
+    maxcached=5,
+    blocking=True,
+    host=TIDB_HOST,
+    port=TIDB_PORT,
+    user=TIDB_USER,
+    password=TIDB_PASSWORD,
+    database=TIDB_DB,
+    autocommit=True,
+)
+
+
 def get_db():
-    return pymysql.connect(
-        host=TIDB_HOST, port=TIDB_PORT, user=TIDB_USER,
-        password=TIDB_PASSWORD, database=TIDB_DB, autocommit=True,
-    )
+    return _db_pool.connection()
 
 
 def mark_job_processing(job_id: str):
@@ -226,7 +241,7 @@ async def run_consumer():
                 cb=message_handler,
                 config=ConsumerConfig(
                     max_deliver=4,
-                    ack_wait=60,
+                    ack_wait=120,
                 ),
             )
             print(

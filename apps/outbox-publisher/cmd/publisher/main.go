@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -134,6 +135,9 @@ func runWithLeaderElection(ctx context.Context, db *sql.DB, js jetstream.JetStre
 		"namespace", namespace,
 		"identity", identity,
 	)
+
+	// Health server — separate goroutine, reports leadership status.
+	go startHealthServer(ctx)
 
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock:            lock,
@@ -286,4 +290,25 @@ func getEnv(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// startHealthServer exposes /healthz on port 8082 for Kubernetes probes.
+// /healthz returns 200 if the process is alive (not necessarily the leader).
+func startHealthServer(ctx context.Context) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
+	srv := &http.Server{Addr: ":8082", Handler: mux, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("health server error", "err", err)
+		}
+	}()
+	<-ctx.Done()
+	shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = srv.Shutdown(shutCtx)
 }

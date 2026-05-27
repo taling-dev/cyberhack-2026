@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"connectrpc.com/connect"
@@ -29,9 +30,35 @@ func NewLotService(q *db.Queries) *LotService {
 func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.CreateLotRequest]) (*connect.Response[lotv1.CreateLotResponse], error) {
 	msg := req.Msg
 
-	// Generate lot number: LOT-YYYY-MMDD-XXX
+	// Validate inputs
+	if strings.TrimSpace(msg.SupplierName) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("supplier_name is required"))
+	}
+	if strings.TrimSpace(msg.MaterialName) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("material_name is required"))
+	}
+	if msg.Quantity <= 0 {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("quantity must be > 0"))
+	}
+	if msg.MaterialType == lotv1.MaterialType_MATERIAL_TYPE_UNSPECIFIED {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("material_type is required"))
+	}
+	if msg.StorageRequirement == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("storage_requirement is required"))
+	}
+	if strings.TrimSpace(msg.Unit) == "" {
+		msg.Unit = "kg"
+	}
+	if strings.TrimSpace(msg.ArrivalDate) == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("arrival_date is required"))
+	}
+
+	// Generate lot number with collision retry: LOT-YYYY-MM-DD-XXXXXX (6 random chars)
 	now := time.Now()
-	lotNumber := fmt.Sprintf("LOT-%s-%03d", now.Format("2006-0102"), now.UnixMilli()%1000)
+	lotNumber := fmt.Sprintf("LOT-%s-%s",
+		now.Format("2006-01-02"),
+		strings.ToUpper(uuid.NewString()[:6]),
+	)
 
 	// Marshal storage requirement
 	sr, _ := json.Marshal(map[string]interface{}{
@@ -121,12 +148,77 @@ func (s *LotService) ListLots(ctx context.Context, req *connect.Request[lotv1.Li
 	}), nil
 }
 
+// allowedTransitions maps each lot status to the set of statuses it can transition to.
+// BLOCKED is reachable from any state. Other transitions follow the workflow FSM.
+var allowedTransitions = map[lotv1.LotStatus]map[lotv1.LotStatus]bool{
+	lotv1.LotStatus_LOT_STATUS_DRAFT: {
+		lotv1.LotStatus_LOT_STATUS_PENDING_QC: true,
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:    true,
+	},
+	lotv1.LotStatus_LOT_STATUS_PENDING_QC: {
+		lotv1.LotStatus_LOT_STATUS_AI_PROCESSING: true,
+		lotv1.LotStatus_LOT_STATUS_QC_REVIEW:     true,
+		lotv1.LotStatus_LOT_STATUS_DRAFT:         true,
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:       true,
+	},
+	lotv1.LotStatus_LOT_STATUS_AI_PROCESSING: {
+		lotv1.LotStatus_LOT_STATUS_QC_REVIEW: true,
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:   true,
+	},
+	lotv1.LotStatus_LOT_STATUS_QC_REVIEW: {
+		lotv1.LotStatus_LOT_STATUS_QC_APPROVED: true,
+		lotv1.LotStatus_LOT_STATUS_QC_REJECTED: true,
+		lotv1.LotStatus_LOT_STATUS_PENDING_QC:  true, // recheck
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:     true,
+	},
+	lotv1.LotStatus_LOT_STATUS_QC_APPROVED: {
+		lotv1.LotStatus_LOT_STATUS_WAREHOUSE_ASSIGNED:   true,
+		lotv1.LotStatus_LOT_STATUS_READY_FOR_PRODUCTION: true, // direct assignment
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:              true,
+	},
+	lotv1.LotStatus_LOT_STATUS_QC_REJECTED: {
+		lotv1.LotStatus_LOT_STATUS_PENDING_QC: true, // re-upload + retry
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:    true,
+	},
+	lotv1.LotStatus_LOT_STATUS_WAREHOUSE_ASSIGNED: {
+		lotv1.LotStatus_LOT_STATUS_READY_FOR_PRODUCTION: true,
+		lotv1.LotStatus_LOT_STATUS_BLOCKED:              true,
+	},
+	lotv1.LotStatus_LOT_STATUS_READY_FOR_PRODUCTION: {
+		lotv1.LotStatus_LOT_STATUS_BLOCKED: true,
+	},
+	lotv1.LotStatus_LOT_STATUS_BLOCKED: {}, // terminal
+}
+
 func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[lotv1.UpdateLotStatusRequest]) (*connect.Response[lotv1.UpdateLotStatusResponse], error) {
-	err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
+	if req.Msg.LotId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id is required"))
+	}
+	if req.Msg.NewStatus == lotv1.LotStatus_LOT_STATUS_UNSPECIFIED {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("new_status is required"))
+	}
+
+	// Fetch current state to validate the transition.
+	current, err := s.q.GetLot(ctx, req.Msg.LotId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
+	}
+	currentStatus := lotStatusFromDB(string(current.Status))
+
+	// Same-state is idempotent: succeed without mutation.
+	if currentStatus != req.Msg.NewStatus {
+		allowed, ok := allowedTransitions[currentStatus]
+		if !ok || !allowed[req.Msg.NewStatus] {
+			return nil, connect.NewError(connect.CodeFailedPrecondition,
+				fmt.Errorf("invalid lot status transition: %s → %s",
+					currentStatus, req.Msg.NewStatus))
+		}
+	}
+
+	if err := s.q.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
 		Status: db.LotsStatus(lotStatusToDB(req.Msg.NewStatus)),
 		ID:     req.Msg.LotId,
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	lot, err := s.q.GetLot(ctx, req.Msg.LotId)
@@ -137,8 +229,27 @@ func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[l
 }
 
 func (s *LotService) GetLotTimeline(ctx context.Context, req *connect.Request[lotv1.GetLotTimelineRequest]) (*connect.Response[lotv1.GetLotTimelineResponse], error) {
-	// Implemented in Task 13 (audit middleware)
-	return connect.NewResponse(&lotv1.GetLotTimelineResponse{}), nil
+	if req.Msg.LotId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id is required"))
+	}
+	logs, err := s.q.ListAuditLogsByEntity(ctx, db.ListAuditLogsByEntityParams{
+		EntityType: "lot",
+		EntityID:   req.Msg.LotId,
+	})
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("list audit logs: %w", err))
+	}
+	entries := make([]*lotv1.TimelineEntry, 0, len(logs))
+	for _, l := range logs {
+		entries = append(entries, &lotv1.TimelineEntry{
+			Id:          l.ID,
+			Action:      l.Action,
+			ActorUserId: l.ActorUserID,
+			ActorRole:   l.ActorRole,
+			CreatedAt:   timestamppb.New(l.CreatedAt),
+		})
+	}
+	return connect.NewResponse(&lotv1.GetLotTimelineResponse{Entries: entries}), nil
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
