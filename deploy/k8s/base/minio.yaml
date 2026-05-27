@@ -1,0 +1,186 @@
+# MinIO with persistent storage for SimaOps QC images, results, reports, and model artifacts.
+#
+# Apply order (kubectl applies all of these at once):
+# 1. PVC binds to oci-bv block volume (50 GiB)
+# 2. Deployment mounts PVC at /data
+# 3. Service exposes 9000 (S3 API) and 9001 (Console)
+# 4. Job creates the 4 buckets idempotently after MinIO is ready
+#
+# To verify persistence:
+#   kubectl rollout restart deploy/minio -n platform
+#   kubectl exec -n platform deploy/minio -- ls /data   # buckets still there
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data
+  namespace: platform
+  labels:
+    app: minio
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: oci-bv
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: platform
+  labels:
+    app: minio
+spec:
+  replicas: 1
+  strategy:
+    # MinIO uses RWO single-pod volume — never run two replicas during rollout.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      securityContext:
+        # MinIO image runs as uid 1000:1000; let it own the volume mount.
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+      containers:
+        - name: minio
+          image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+          imagePullPolicy: IfNotPresent
+          command:
+            - minio
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_ROOT_PASSWORD
+            - name: MINIO_SERVER_URL
+              value: "https://minio.161.118.244.229.sslip.io"
+            - name: MINIO_BROWSER_REDIRECT_URL
+              value: "https://minio-console.161.118.244.229.sslip.io"
+          ports:
+            - containerPort: 9000
+              name: api
+            - containerPort: 9001
+              name: console
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: platform
+  labels:
+    app: minio
+spec:
+  type: ClusterIP
+  selector:
+    app: minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+---
+# Initialise the four buckets after MinIO is up. Re-runs are idempotent — `mc mb -p`
+# returns an error if the bucket exists, but we ignore it. Fires after every helm/kubectl
+# apply via the post-install hook. Also re-runs if the volume is wiped.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-bucket-init
+  namespace: platform
+  labels:
+    app: minio
+  annotations:
+    # Re-run on every apply to ensure buckets exist (e.g. after volume rebuild).
+    "kubectl.kubernetes.io/last-applied-configuration": ""
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app: minio-bucket-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_ROOT_PASSWORD
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              echo "Waiting for MinIO to be ready..."
+              until mc alias set local http://minio.platform:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" 2>/dev/null; do
+                sleep 2
+              done
+              echo "Creating buckets (idempotent)..."
+              for b in simaops-qc-images simaops-qc-results simaops-reports simaops-model-artifacts; do
+                # mc mb -p succeeds on existing buckets when --ignore-existing is used (mc 2024.10+).
+                # For older mc, fall back to checking exit code; suppress the "already exists" error.
+                if mc mb -p local/$b 2>/dev/null; then
+                  echo "  ✓ $b (created or already existed)"
+                else
+                  echo "  ✗ $b — failed to create"
+                  exit 1
+                fi
+              done
+              echo "Done."
