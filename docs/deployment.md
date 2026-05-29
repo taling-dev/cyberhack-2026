@@ -144,17 +144,24 @@ URLs (using sslip.io):
 
 ### Required GitHub Secrets
 
-| Secret | Value |
-|---|---|
-| `OCI_TENANCY_OCID` | Your tenancy OCID |
-| `OCI_USER_OCID` | Your user OCID |
-| `OCI_FINGERPRINT` | API key fingerprint |
-| `OCI_PRIVATE_KEY` | Contents of `~/.oci/oci_api_key.pem` |
-| `OCI_REGION` | `ap-singapore-1` |
-| `OCI_COMPARTMENT_OCID` | Target compartment OCID |
-| `OCI_CLUSTER_OCID` | OKE cluster OCID (after first `sst deploy`) |
-| `OCI_PRIVATE_KEY_PROD` | Production API key (separate from staging) |
-| `OCI_CLUSTER_OCID_PROD` | Production OKE cluster OCID |
+The deploy workflows authenticate to OCI via the standard `OCI_CLI_*`
+environment variables consumed by the `oracle-actions/*` actions. Set these
+in **Settings → Secrets and variables → Actions**.
+
+| Secret | Value | Used by |
+|---|---|---|
+| `OCI_CLI_USER` | Deploy user OCID | both |
+| `OCI_CLI_TENANCY` | Tenancy OCID | both |
+| `OCI_CLI_FINGERPRINT` | API signing-key fingerprint | both |
+| `OCI_CLI_KEY_CONTENT` | Contents of the staging deploy key PEM | staging |
+| `OCI_CLI_KEY_CONTENT_PROD` | Contents of the production deploy key PEM | production |
+| `OCI_CLI_REGION` | `ap-singapore-1` | both |
+| `OCI_CLUSTER_OCID` | Staging OKE cluster OCID | staging |
+| `OCI_CLUSTER_OCID_PROD` | Production OKE cluster OCID | production |
+
+See [`oci-ci-deploy-user.md`](./oci-ci-deploy-user.md) for the one-time setup
+that creates a least-privilege CI deploy user, the IAM policy it needs, and
+the exact `gh secret set` commands to populate the table above.
 
 ## DNS Strategy
 
