@@ -70,6 +70,7 @@ export function decodeAuthState(state: string): AuthState | null {
 export interface BuildAuthorizationUrlOptions {
   state: string;
   codeChallenge: string;
+  nonce: string;
   prompt?: 'none' | 'login' | 'consent';
 }
 
@@ -81,7 +82,11 @@ export function buildAuthorizationUrl(opts: BuildAuthorizationUrlOptions): strin
     scope: 'openid profile email',
     state: opts.state,
     code_challenge: opts.codeChallenge,
-    code_challenge_method: 'S256'
+    code_challenge_method: 'S256',
+    // OIDC nonce — Keycloak echoes this into the id_token's `nonce` claim.
+    // The callback verifies the echoed value matches the original to prevent
+    // token-replay attacks (a stolen authorize-response can't be re-used).
+    nonce: opts.nonce,
   });
   if (opts.prompt) {
     params.set('prompt', opts.prompt);
@@ -196,27 +201,50 @@ export async function refreshToken(refreshToken: string): Promise<TokenResponse>
  * refreshTokenWithRetry retries up to `attempts` times on transient failures
  * with a small fixed backoff. Permanent failures throw immediately so the
  * caller can clear cookies without waiting for retries.
+ *
+ * Single-flight: the realm rotates refresh tokens and forbids reuse
+ * (revokeRefreshToken=true, refreshTokenMaxReuse=0). A page with an open SSE
+ * stream + heartbeat + several polling queries fires many requests at once;
+ * near token expiry each would independently try to refresh with the SAME
+ * cookie value, and all but the first would get `invalid_grant` (reuse) and
+ * force a logout. We collapse concurrent refreshes for the same refresh-token
+ * value into one in-flight promise so only one network exchange happens and
+ * every caller receives the same rotated tokens.
  */
+const inflightRefreshes = new Map<string, Promise<TokenResponse>>();
+
 export async function refreshTokenWithRetry(
   rt: string,
   attempts = 3,
   backoffMs = 200
 ): Promise<TokenResponse> {
-  let last: unknown;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await refreshToken(rt);
-    } catch (err) {
-      last = err;
-      if (err instanceof RefreshError && err.kind === 'permanent') {
-        throw err;
-      }
-      if (i < attempts - 1) {
-        await new Promise((r) => setTimeout(r, backoffMs));
+  const existing = inflightRefreshes.get(rt);
+  if (existing) return existing;
+
+  const run = (async (): Promise<TokenResponse> => {
+    let last: unknown;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await refreshToken(rt);
+      } catch (err) {
+        last = err;
+        if (err instanceof RefreshError && err.kind === 'permanent') {
+          throw err;
+        }
+        if (i < attempts - 1) {
+          await new Promise((r) => setTimeout(r, backoffMs));
+        }
       }
     }
+    throw last;
+  })();
+
+  inflightRefreshes.set(rt, run);
+  try {
+    return await run;
+  } finally {
+    inflightRefreshes.delete(rt);
   }
-  throw last;
 }
 
 // ─── User Info ───────────────────────────────────────────────────
@@ -254,11 +282,9 @@ export const COOKIE_OPTS = {
   sameSite: 'lax' as const
 };
 
-// Same options as COOKIE_OPTS (kept for code compat — both cookies HttpOnly now
-// since the BFF proxy forwards the token server-side, browser never reads it).
-export const COOKIE_OPTS_READABLE = {
-  path: '/',
-  httpOnly: true,
-  secure: isHttps,
-  sameSite: 'lax' as const
-};
+// Max age for the refresh-token cookie. Bounded to the realm's
+// ssoSessionMaxLifespan (24h) — a longer cookie life is pointless because
+// Keycloak will reject the refresh token once the SSO session ends, and an
+// over-long cookie just misleads. Idle timeout (8h) is enforced server-side
+// by Keycloak regardless.
+export const REFRESH_COOKIE_MAX_AGE = 86400;

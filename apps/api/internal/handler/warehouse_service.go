@@ -102,58 +102,58 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id and location_id required"))
 	}
 
-	// Validate lot is QC_APPROVED
-	lot, err := s.q.GetLot(ctx, msg.LotId)
+	assignedBy := userFromCtx(ctx)
+	assignmentID := uuid.NewString()
+
+	// Single transaction wrapping every mutation:
+	//   1. Lock the lot row + validate status (FOR UPDATE — prevents concurrent
+	//      AssignSlot calls from both seeing QC_APPROVED and racing).
+	//   2. Atomic capacity decrement — `UPDATE … capacity = capacity - 1
+	//      WHERE id = ? AND capacity > 0` returning rowsAffected=1 only if
+	//      we won the race for the last unit.
+	//   3. Read the location for the response.
+	//   4. Insert the assignment row.
+	//   5. Advance the lot to READY_FOR_PRODUCTION.
+	//   6. Append both outbox events (warehouse.slot_assigned + lot.status_changed).
+	//
+	// On any failure between (2) and (6), the deferred Rollback undoes the
+	// capacity decrement automatically — no more "best-effort restore" dance.
+	tx, err := s.dbx.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+	defer func() { _ = tx.Rollback() }()
+	qtx := s.q.WithTx(tx)
+
+	// 1. Lot must be QC_APPROVED. Reading FOR UPDATE keeps the row locked so
+	//    a concurrent transition can't race us.
+	lot, err := qtx.GetLotForUpdate(ctx, msg.LotId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
 	}
 	if lot.Status != db.LotsStatusQCAPPROVED {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("lot must be QC_APPROVED (current: %s)", lot.Status))
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("lot must be QC_APPROVED (current: %s)", lot.Status))
 	}
 
-	// Atomic capacity decrement: only succeeds if capacity > 0
-	// Returns rows affected = 1 if successful, 0 if no capacity left.
-	// Note: this commits before the tx below — that's intentional. The atomic
-	// decrement is the contention point; once it succeeds we own a unit of capacity
-	// and the rest of the work is a simple two-row insert/update.
-	rowsAffected, err := s.q.DecrementLocationCapacityAtomic(ctx, msg.LocationId)
+	// 2. Atomic capacity decrement INSIDE the tx. On rollback, this is
+	//    automatically undone — no separate increment-on-failure needed.
+	rowsAffected, err := qtx.DecrementLocationCapacityAtomic(ctx, msg.LocationId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("capacity check: %w", err))
 	}
 	if rowsAffected == 0 {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("no capacity available at this location"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("no capacity available at this location"))
 	}
 
-	// Fetch location for response (read-only)
-	loc, err := s.q.GetWarehouseLocation(ctx, msg.LocationId)
+	// 3. Fetch the (now-decremented) location for the response payload.
+	loc, err := qtx.GetWarehouseLocation(ctx, msg.LocationId)
 	if err != nil {
-		// Roll back the capacity reservation we just took.
-		_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("location not found"))
 	}
 
-	assignedBy := userFromCtx(ctx)
-	assignmentID := uuid.NewString()
-
-	// Wrap assignment insert + lot status advance in a tx. If either fails we roll
-	// both back AND give the capacity unit back. This guarantees we never have
-	// (capacity_consumed && no assignment row) or (assignment row && lot not advanced).
-	tx, err := s.dbx.BeginTx(ctx, nil)
-	if err != nil {
-		_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
-	}
-	committed := false
-	defer func() {
-		_ = tx.Rollback()
-		if !committed {
-			// tx rolled back — restore capacity
-			_, _ = s.q.IncrementLocationCapacity(ctx, msg.LocationId)
-		}
-	}()
-
-	qtx := s.q.WithTx(tx)
-
+	// 4. Insert the assignment row.
 	if err := qtx.CreateWarehouseAssignment(ctx, db.CreateWarehouseAssignmentParams{
 		ID:         assignmentID,
 		LotID:      msg.LotId,
@@ -163,13 +163,16 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create assignment: %w", err))
 	}
 
-	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusREADYFORPRODUCTION, ID: msg.LotId}); err != nil {
+	// 5. Advance the lot.
+	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
+		Status: db.LotsStatusREADYFORPRODUCTION,
+		ID:     msg.LotId,
+	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
 	}
 
-	// Emit warehouse.slot_assigned for SSE fan-out. Owner is the lot creator so
-	// operators get a "your lot was slotted" toast even though the action was
-	// performed by warehouse staff.
+	// 6a. Emit warehouse.slot_assigned for SSE fan-out. Owner is the lot
+	//     creator so operators get a "your lot was slotted" toast.
 	whEnvelope, err := events.NewEnvelope(
 		"warehouse.slot_assigned",
 		assignedBy,
@@ -196,8 +199,8 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
 	}
 
-	// Also emit lot.status_changed so subscribers tracking only lot.* see the
-	// final transition to READY_FOR_PRODUCTION.
+	// 6b. Emit lot.status_changed so subscribers tracking only lot.* see the
+	//     final transition to READY_FOR_PRODUCTION.
 	statusEnvelope, err := events.NewEnvelope(
 		"lot.status_changed",
 		assignedBy,
@@ -227,7 +230,6 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 	if err := tx.Commit(); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
 	}
-	committed = true
 
 	middleware.IncWarehouseAssignment()
 

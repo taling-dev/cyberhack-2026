@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
   import { popupLogin } from '$lib/auth/popupLogin';
+  import { focusTrap } from '$lib/actions/focusTrap.svelte';
 
   let { open = $bindable(false), onSignedIn, onSignOut }: {
     open?: boolean;
@@ -46,6 +47,7 @@
     aria-modal="true"
     aria-labelledby="session-expired-title"
     aria-describedby="session-expired-body"
+    use:focusTrap
   >
     <div class="bg-white rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl">
       <div class="flex items-center gap-3">

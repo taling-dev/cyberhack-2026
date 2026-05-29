@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"connectrpc.com/connect"
@@ -18,6 +19,16 @@ import (
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/storage"
 )
+
+// allowedQCImageContentTypes restricts uploads to image MIME types we know
+// browsers render safely and that won't double as XSS vectors. SVG is
+// deliberately excluded — it's an XSS sink. HTML/JS/etc. are excluded by
+// virtue of not being on the list.
+var allowedQCImageContentTypes = map[string]string{
+	"image/jpeg": ".jpg",
+	"image/png":  ".png",
+	"image/webp": ".webp",
+}
 
 var _ qcv1connect.QCServiceHandler = (*QCService)(nil)
 
@@ -46,9 +57,10 @@ func (s *QCService) CreateQCUploadUrl(ctx context.Context, req *connect.Request[
 		contentType = "image/jpeg"
 	}
 
-	ext := ".jpg"
-	if contentType == "image/png" {
-		ext = ".png"
+	ext, ok := allowedQCImageContentTypes[contentType]
+	if !ok {
+		return nil, connect.NewError(connect.CodeInvalidArgument,
+			fmt.Errorf("content_type must be one of: image/jpeg, image/png, image/webp"))
 	}
 
 	objectKey := fmt.Sprintf("%s/%s%s", msg.LotId, uuid.NewString(), ext)
@@ -68,6 +80,14 @@ func (s *QCService) CreateQCUploadUrl(ctx context.Context, req *connect.Request[
 	}), nil
 }
 
+// CreateQCViewUrl mints a short-lived presigned GET for a QC image. We
+// authorize the caller against the lot referenced by the object key prefix:
+//   - OPERATOR: only lots they created (owner check)
+//   - QC_SUPERVISOR / MANAGER / ADMIN / WAREHOUSE_STAFF: any lot
+//
+// The object key format is `<lot_id>/<uuid>.<ext>`; we extract the lot_id
+// prefix and load the lot to enforce ownership. This closes an IDOR where
+// any authenticated user could view any QC image by guessing object keys.
 func (s *QCService) CreateQCViewUrl(ctx context.Context, req *connect.Request[qcv1.CreateQCViewUrlRequest]) (*connect.Response[qcv1.CreateQCViewUrlResponse], error) {
 	if s.minio == nil {
 		return nil, connect.NewError(connect.CodeUnavailable, fmt.Errorf("object storage unavailable"))
@@ -75,6 +95,34 @@ func (s *QCService) CreateQCViewUrl(ctx context.Context, req *connect.Request[qc
 	if req.Msg.ObjectKey == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("object_key required"))
 	}
+
+	// Parse and validate the lot_id prefix. uuid.Parse rejects directory
+	// traversal attempts (`../`) and arbitrary keys outside our schema.
+	parts := strings.SplitN(req.Msg.ObjectKey, "/", 2)
+	if len(parts) != 2 || parts[1] == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("malformed object_key"))
+	}
+	lotID := parts[0]
+	if _, err := uuid.Parse(lotID); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("malformed object_key: %w", err))
+	}
+
+	lot, err := s.q.GetLot(ctx, lotID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
+	}
+
+	// Owner check for OPERATOR. roleFromCtx returns the caller's primary role;
+	// userFromCtx returns the username (the value services write to created_by).
+	role := roleFromCtx(ctx)
+	if role == "OPERATOR" {
+		caller := userFromCtx(ctx)
+		if lot.CreatedBy != caller {
+			return nil, connect.NewError(connect.CodePermissionDenied,
+				fmt.Errorf("operators may only view images for lots they created"))
+		}
+	}
+
 	expiry := 15 * time.Minute
 	url, err := s.minio.PresignedGetURL(ctx, storage.QCImagesBucket, req.Msg.ObjectKey, expiry)
 	if err != nil {

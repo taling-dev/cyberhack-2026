@@ -167,14 +167,19 @@ fail = []
 if len(ci_events) < 2:
     fail.append(f"expected ≥2 connection-info frames (= ≥1 reconnect), got {len(ci_events)}")
 
-# Token expiry should advance across reconnects
-prev = 0
-for e in ci_events:
-    exp = e["data"].get("tokenExpiresAt", 0)
-    if exp <= prev:
-        fail.append(f"tokenExpiresAt did not advance: {exp} after {prev}")
-        break
-    prev = exp
+# Token expiry should advance AT LEAST ONCE across the observation window.
+# The API kicks twice per token lifecycle (once at exp+grace, once at the
+# leeway boundary) — the first reconnect typically uses the same stale
+# token (CLI does not preemptively refresh the way a browser BFF would),
+# so identical exp across two consecutive frames is fine. We only require
+# that by the end of the run we've genuinely rotated the token at least
+# once, proving the auth-recovery ladder works end-to-end.
+unique_exps = {e["data"].get("tokenExpiresAt", 0) for e in ci_events}
+if len(unique_exps) < 2:
+    fail.append(
+        f"tokenExpiresAt never advanced across {len(ci_events)} frames "
+        f"(unique exp values: {sorted(unique_exps)})"
+    )
 
 # No fatal errors mid-stream
 fatal = [e for e in errors if e["subject"] in ("_REFRESH_FAIL",)]

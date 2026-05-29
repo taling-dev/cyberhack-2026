@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-ingress
+  namespace: observability
+  annotations:
+    # cert-manager: issue a Let's Encrypt cert (production issuer already
+    # used by the app/auth/grafana ingresses).
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+    # nginx basic-auth — the `prometheus-basic-auth` Secret has an `auth`
+    # key in htpasswd format. k6's remote_write client sends an
+    # Authorization: Basic <b64> header that nginx validates against this.
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: prometheus-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Prometheus remote-write"
+
+    # The remote-write payload is small (a few KB per push at our cadence)
+    # but generous bounds avoid surprises if k6 batches more aggressively.
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+
+    # Force HTTPS — same convention as our other ingresses.
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - prometheus.161.118.244.229.sslip.io
+      secretName: prometheus-tls
+  rules:
+    - host: prometheus.161.118.244.229.sslip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kube-prometheus-stack-prometheus
+                port:
+                  number: 9090

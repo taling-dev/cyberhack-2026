@@ -89,8 +89,8 @@
 
     {#if hasPrev || hasNext}
       <div class="flex justify-center gap-2 pt-2">
-        <button disabled={!hasPrev} onclick={prevPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">← Prev</button>
-        <button disabled={!hasNext} onclick={nextPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">Next →</button>
+        <button disabled={!hasPrev} onclick={prevPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">{$t('common.prev')}</button>
+        <button disabled={!hasNext} onclick={nextPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">{$t('common.next')}</button>
       </div>
     {/if}
   {/if}

@@ -10,6 +10,27 @@ import (
 	"encoding/json"
 )
 
+const claimOutboxBatch = `-- name: ClaimOutboxBatch :execrows
+UPDATE outbox_events
+SET status = 'PUBLISHING'
+WHERE status = 'PENDING'
+ORDER BY created_at ASC
+LIMIT ?
+`
+
+// Atomically transitions a batch of PENDING events to PUBLISHING. Combined
+// with `ListClaimedOutboxEvents` immediately after, this gives the leader
+// exclusive ownership of a batch — preventing any racing leader (during
+// election handoff) or this same leader (after a recovered crash) from
+// re-publishing a row that was already taken.
+func (q *Queries) ClaimOutboxBatch(ctx context.Context, limit int32) (int64, error) {
+	result, err := q.db.ExecContext(ctx, claimOutboxBatch, limit)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const createIdempotencyKey = `-- name: CreateIdempotencyKey :exec
 INSERT INTO idempotency_keys (key_hash, user_id, operation, response_json)
 VALUES (?, ?, ?, ?)
@@ -83,8 +104,54 @@ func (q *Queries) IncrementOutboxRetry(ctx context.Context, id string) error {
 	return err
 }
 
+const listClaimedOutboxEvents = `-- name: ListClaimedOutboxEvents :many
+SELECT id, event_type, payload_json, retry_count
+FROM outbox_events
+WHERE status = 'PUBLISHING'
+ORDER BY created_at ASC
+LIMIT ?
+`
+
+type ListClaimedOutboxEventsRow struct {
+	ID          string          `json:"id"`
+	EventType   string          `json:"event_type"`
+	PayloadJson json.RawMessage `json:"payload_json"`
+	RetryCount  int32           `json:"retry_count"`
+}
+
+// Reads the rows just claimed by ClaimOutboxBatch. Singleton-leader semantics
+// mean we are the only writer; the SELECT cannot see anyone else's claim
+// because no one else is allowed to claim.
+func (q *Queries) ListClaimedOutboxEvents(ctx context.Context, limit int32) ([]ListClaimedOutboxEventsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listClaimedOutboxEvents, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListClaimedOutboxEventsRow
+	for rows.Next() {
+		var i ListClaimedOutboxEventsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EventType,
+			&i.PayloadJson,
+			&i.RetryCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPendingOutboxEvents = `-- name: ListPendingOutboxEvents :many
-SELECT id, event_type, payload_json, status, retry_count, created_at, published_at FROM outbox_events WHERE status = 'PENDING' ORDER BY created_at ASC LIMIT ?
+SELECT id, event_type, payload_json, retry_count, created_at, published_at, status FROM outbox_events WHERE status = 'PENDING' ORDER BY created_at ASC LIMIT ?
 `
 
 func (q *Queries) ListPendingOutboxEvents(ctx context.Context, limit int32) ([]OutboxEvent, error) {
@@ -100,10 +167,10 @@ func (q *Queries) ListPendingOutboxEvents(ctx context.Context, limit int32) ([]O
 			&i.ID,
 			&i.EventType,
 			&i.PayloadJson,
-			&i.Status,
 			&i.RetryCount,
 			&i.CreatedAt,
 			&i.PublishedAt,
+			&i.Status,
 		); err != nil {
 			return nil, err
 		}
@@ -119,21 +186,60 @@ func (q *Queries) ListPendingOutboxEvents(ctx context.Context, limit int32) ([]O
 }
 
 const markOutboxFailed = `-- name: MarkOutboxFailed :exec
-UPDATE outbox_events SET status = 'FAILED', retry_count = retry_count + 1 WHERE id = ?
+UPDATE outbox_events
+SET status = 'FAILED', retry_count = retry_count + 1
+WHERE id = ? AND status = 'PUBLISHING'
 `
 
+// Final failure path: retry budget exhausted. Status moves PUBLISHING → FAILED
+// so the row leaves the active queue and only resurfaces if an operator
+// manually resets it (e.g., after a NATS / config fix).
 func (q *Queries) MarkOutboxFailed(ctx context.Context, id string) error {
 	_, err := q.db.ExecContext(ctx, markOutboxFailed, id)
 	return err
 }
 
 const markOutboxPublished = `-- name: MarkOutboxPublished :exec
-UPDATE outbox_events SET status = 'PUBLISHED', published_at = CURRENT_TIMESTAMP WHERE id = ?
+UPDATE outbox_events
+SET status = 'PUBLISHED', published_at = CURRENT_TIMESTAMP
+WHERE id = ? AND status = 'PUBLISHING'
 `
 
 func (q *Queries) MarkOutboxPublished(ctx context.Context, id string) error {
 	_, err := q.db.ExecContext(ctx, markOutboxPublished, id)
 	return err
+}
+
+const releaseClaimedToPending = `-- name: ReleaseClaimedToPending :exec
+UPDATE outbox_events
+SET status = 'PENDING', retry_count = retry_count + 1
+WHERE id = ? AND status = 'PUBLISHING'
+`
+
+// Returns a single claimed event back to PENDING with retry_count incremented.
+// Used when the publish call to NATS fails but the event hasn't yet exhausted
+// its retry budget — the next poll cycle will pick it up again.
+func (q *Queries) ReleaseClaimedToPending(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, releaseClaimedToPending, id)
+	return err
+}
+
+const resetStuckPublishingEvents = `-- name: ResetStuckPublishingEvents :execrows
+UPDATE outbox_events
+SET status = 'PENDING'
+WHERE status = 'PUBLISHING'
+`
+
+// Called once on publisher startup. Recovers events left in PUBLISHING by a
+// prior leader that crashed mid-publish. They go back to PENDING and the
+// new leader's next poll cycle re-claims and re-publishes them. NATS
+// `Nats-Msg-Id` dedup ensures stream consumers don't see duplicates.
+func (q *Queries) ResetStuckPublishingEvents(ctx context.Context) (int64, error) {
+	result, err := q.db.ExecContext(ctx, resetStuckPublishingEvents)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const updateIdempotencyResponse = `-- name: UpdateIdempotencyResponse :exec

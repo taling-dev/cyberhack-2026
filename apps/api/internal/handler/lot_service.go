@@ -58,9 +58,12 @@ func (s *LotService) CreateLot(ctx context.Context, req *connect.Request[lotv1.C
 
 	// Generate lot number with collision retry: LOT-YYYY-MM-DD-XXXXXX (6 random chars)
 	now := time.Now()
+	// Lot number format: LOT-YYYY-MM-DD-XXXXXXXX (8 hex chars).
+	// Birthday-paradox: at 1000 lots/day, collision probability is ~0.012%/day
+	// (~1/27 years). The DB UNIQUE constraint catches the residual case.
 	lotNumber := fmt.Sprintf("LOT-%s-%s",
 		now.Format("2006-01-02"),
-		strings.ToUpper(uuid.NewString()[:6]),
+		strings.ToUpper(uuid.NewString()[:8]),
 	)
 
 	// Marshal storage requirement
@@ -243,8 +246,20 @@ func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[l
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("new_status is required"))
 	}
 
-	// Fetch current state to validate the transition.
-	current, err := s.q.GetLot(ctx, req.Msg.LotId)
+	actor := userFromCtx(ctx)
+
+	// Open the transaction first, then read the lot WITH FOR UPDATE so the
+	// row stays locked through validation and the write below. Without this,
+	// two concurrent UpdateLotStatus calls could both pass the FSM check
+	// against the same source state, then both write — corrupting the FSM.
+	tx, err := s.dbx.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+	defer func() { _ = tx.Rollback() }()
+	qtx := s.q.WithTx(tx)
+
+	current, err := qtx.GetLotForUpdate(ctx, req.Msg.LotId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
 	}
@@ -253,6 +268,10 @@ func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[l
 	// Same-state is idempotent: succeed without mutation. Skip both the DB write
 	// and the outbox event so we don't spam consumers with no-op updates.
 	if currentStatus == req.Msg.NewStatus {
+		// Commit (no-op) so the FOR UPDATE lock is released cleanly.
+		if err := tx.Commit(); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit no-op: %w", err))
+		}
 		return connect.NewResponse(&lotv1.UpdateLotStatusResponse{Lot: dbLotToProto(current)}), nil
 	}
 
@@ -262,17 +281,6 @@ func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[l
 			fmt.Errorf("invalid lot status transition: %s → %s",
 				currentStatus, req.Msg.NewStatus))
 	}
-
-	actor := userFromCtx(ctx)
-
-	// Wrap status update + outbox event in a transaction so SSE consumers never
-	// see a status they can't reconcile against the DB.
-	tx, err := s.dbx.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
-	}
-	defer func() { _ = tx.Rollback() }()
-	qtx := s.q.WithTx(tx)
 
 	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
 		Status: db.LotsStatus(lotStatusToDB(req.Msg.NewStatus)),

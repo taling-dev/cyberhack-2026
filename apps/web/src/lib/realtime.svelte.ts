@@ -144,7 +144,12 @@ export function connectRealtime(queryClient: QueryClient, opts: ConnectOptions =
         const res = await fetch('/auth/heartbeat', { credentials: 'same-origin' });
         if (res.status === 401) {
           consecutive401s++;
-          const reason = res.headers.get('X-Auth-Failure-Reason') ?? 'expired';
+          // A heartbeat 401 means hooks.server.ts already attempted a refresh
+          // and it failed (revoked) — or there were no cookies (missing).
+          // Either way Tier-0 force-refresh is futile, so default a missing
+          // header to 'revoked' (skips Tier-0, goes straight to silent renew)
+          // rather than 'expired' (which would waste a doomed force-refresh).
+          const reason = res.headers.get('X-Auth-Failure-Reason') ?? 'revoked';
           await recoverFromAuthFail(reason);
         } else {
           consecutive401s = 0;
@@ -274,16 +279,23 @@ export function connectRealtime(queryClient: QueryClient, opts: ConnectOptions =
     });
     // Generic message handler — not used since we listen per event type below.
     source.onerror = () => {
-      // Browser will handle reconnect via the retry directive, but we still
-      // bump the backoff counter so manual reconnects after token rotation
-      // don't all burst at once.
+      // The browser's native EventSource auto-reconnect would race the API's
+      // token-expiry kick (every 120-300s the API closes the stream when the
+      // JWT exp passes). If we let it reconnect with the SAME expired cookie
+      // the API just rejected, we get a tight 401-retry storm. Instead:
+      //   1. Close the EventSource so the browser stops auto-reconnecting.
+      //   2. After 2 consecutive failures (= the kick is real, not a
+      //      transient blip), trigger the auth-recovery ladder which forces
+      //      a refresh and reopens the stream with a fresh cookie.
+      //   3. Otherwise schedule a manual backoff reconnect.
       consecutiveFailures++;
       state.status = 'reconnecting';
-      // If we hit consecutive 401s on the SSE handshake itself, escalate.
-      // The browser doesn't tell us the status code, so we infer from a
-      // simultaneous heartbeat failure.
-      if (consecutive401s >= 3) {
-        void recoverFromAuthFail('revoked');
+      closeEventSource();
+      if (consecutiveFailures >= 2 || consecutive401s >= 3) {
+        void recoverFromAuthFail('expired');
+      } else {
+        clearTimer(backoffTimer);
+        backoffTimer = setTimeout(() => connect(), backoffDelayMs());
       }
     };
     // Domain events: SSE allows arbitrary event names. We attach a listener

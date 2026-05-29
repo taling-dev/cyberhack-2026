@@ -1,11 +1,13 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { t } from 'svelte-i18n';
+  import { get } from 'svelte/store';
   import { createQuery, getQueryClientContext } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
+  import { focusTrap } from '$lib/actions/focusTrap.svelte';
 
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
@@ -19,19 +21,24 @@
     enabled: !!lotId,
   }));
 
-  // Latest QC job for this lot
+  // Latest QC job for this lot. Poll only while the job is non-terminal —
+  // once it reaches APPROVED(5)/REJECTED(6)/FAILED(7) there's nothing left to
+  // wait for, so stop hitting the API every 5s.
+  const TERMINAL_QC_STATUSES = new Set([5, 6, 7]);
   const qcJobQuery = createQuery(() => ({
     queryKey: ['qc-job-for-lot', lotId],
     queryFn: () => qcClient.getQCJob({ lotId, qcJobId: '' }),
     enabled: !!lotId,
-    refetchInterval: 5_000, // poll while AI is processing
+    refetchInterval: (q) =>
+      TERMINAL_QC_STATUSES.has(q.state.data?.job?.status ?? -1) ? false : 5_000,
   }));
 
   const qcResultQuery = createQuery(() => ({
     queryKey: ['qc-result', qcJobQuery.data?.job?.id],
     queryFn: () => qcClient.getQCResult({ qcJobId: qcJobQuery.data!.job!.id }),
     enabled: !!qcJobQuery.data?.job?.id,
-    refetchInterval: 5_000,
+    // The result is immutable once present; stop polling as soon as we have it.
+    refetchInterval: (q) => (q.state.data?.result ? false : 5_000),
   }));
 
   // Presigned GET for image
@@ -81,7 +88,12 @@
         idempotencyKey: crypto.randomUUID()
       });
       showModal = false;
-      reviewSuccess = decision === 1 ? 'Approved' : decision === 2 ? 'Rejected' : 'Recheck';
+      const tt = get(t);
+      reviewSuccess = decision === 1
+        ? tt('qc.review_decision_approved')
+        : decision === 2
+          ? tt('qc.review_decision_rejected')
+          : tt('qc.review_decision_recheck');
       queryClient.invalidateQueries({ queryKey: ['lot', lotId] });
       queryClient.invalidateQueries({ queryKey: ['qc-job-for-lot', lotId] });
     } catch (e: any) {
@@ -117,7 +129,7 @@
     <div class="flex items-center justify-between">
       <div>
         <a href="/qc" class="text-sm text-gray-500 hover:text-blue-600">{$t('qc.back_to_queue')}</a>
-        <h1 class="text-2xl font-bold mt-1">QC Review: {lot.lotNumber}</h1>
+        <h1 class="text-2xl font-bold mt-1">{$t('qc.review_for')}: {lot.lotNumber}</h1>
         <p class="text-gray-500 text-sm">{lot.materialName} — {lot.supplierName}</p>
       </div>
       <span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
@@ -219,7 +231,10 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="modal-title"
+    tabindex="-1"
+    use:focusTrap
     onclick={(e) => { if (e.target === e.currentTarget) showModal = false; }}
+    onkeydown={(e) => { if (e.key === 'Escape') showModal = false; }}
   >
     <div class="bg-white rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl">
       <h2 id="modal-title" class="text-lg font-bold">
@@ -241,7 +256,6 @@
           id="reason-input"
           bind:value={reason}
           rows="3"
-          autofocus
           class="w-full border rounded-md px-3 py-2 text-sm"
           placeholder={$t('qc.reason_placeholder')}
         ></textarea>

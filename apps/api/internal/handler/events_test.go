@@ -131,3 +131,90 @@ func TestEventsHandler_DispatchedEventReachesClient(t *testing.T) {
 		t.Errorf("did not receive lot.created event")
 	}
 }
+
+// TestEventsHandler_KicksOnTokenExpiry verifies that the SSE stream is
+// force-closed shortly after the access token's `exp` is reached. The
+// client should observe EOF (read returns io.EOF) within a small window
+// past the expiry, not the full lifetime of the connection.
+func TestEventsHandler_KicksOnTokenExpiry(t *testing.T) {
+	hub := events.NewHub(0)
+	// Token expires 1s from now — handler should close the stream within
+	// ~1s + tokenExpiryGrace (5s) = at most ~6s. Use 10s timeout for slack.
+	exp := time.Now().Add(1 * time.Second).Unix()
+	srv := httptest.NewServer(fakeAuthMiddleware("alice", []string{"ADMIN"}, exp, EventsHandler(hub)))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/events")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Drain the stream — when the timer fires, the connection closes and
+	// ReadString returns an error (EOF or "connection reset").
+	reader := bufio.NewReader(resp.Body)
+	timeoutAt := time.Now().Add(10 * time.Second)
+	closedAt := time.Time{}
+	for time.Now().Before(timeoutAt) {
+		_, err := reader.ReadString('\n')
+		if err != nil {
+			closedAt = time.Now()
+			break
+		}
+	}
+	if closedAt.IsZero() {
+		t.Fatalf("stream did not close within 10s of token expiry")
+	}
+
+	// Sanity: the close happened *after* the token's exp, not before.
+	expTime := time.Unix(exp, 0)
+	if closedAt.Before(expTime) {
+		t.Errorf("stream closed at %v, before token exp %v", closedAt, expTime)
+	}
+	// And not absurdly late — within exp + 8s.
+	if closedAt.After(expTime.Add(8 * time.Second)) {
+		t.Errorf("stream closed at %v, more than 8s after token exp %v", closedAt, expTime)
+	}
+}
+
+// TestEventsHandler_DoesNotKickAlreadyExpiredToken verifies that when a
+// client reconnects with a token that is *already past exp* (but still
+// within the JWT leeway window so the middleware accepted it), we do NOT
+// schedule another kick. Otherwise the same client would bounce in a tight
+// loop reusing the same expired cookie. The connection should ride out
+// the heartbeat interval without being closed by the expiry timer.
+func TestEventsHandler_DoesNotKickAlreadyExpiredToken(t *testing.T) {
+	hub := events.NewHub(0)
+	// Token already expired 30 seconds ago — within typical 60s leeway, so
+	// the JWT middleware would still accept it; our handler should NOT
+	// re-kick.
+	exp := time.Now().Add(-30 * time.Second).Unix()
+	srv := httptest.NewServer(fakeAuthMiddleware("alice", []string{"ADMIN"}, exp, EventsHandler(hub)))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/events")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Watch for ~3 seconds — long enough to observe the connection-info
+	// frame, then verify NO close occurs (the expiry timer is intentionally
+	// not scheduled in this case).
+	reader := bufio.NewReader(resp.Body)
+	deadline := time.Now().Add(3 * time.Second)
+	gotConnInfo := false
+	for time.Now().Before(deadline) {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			t.Fatalf("stream closed unexpectedly at %v (would loop with same expired token): %v",
+				time.Now(), err)
+		}
+		if strings.HasPrefix(line, "event: connection-info") {
+			gotConnInfo = true
+		}
+	}
+	if !gotConnInfo {
+		t.Errorf("did not see connection-info frame")
+	}
+}

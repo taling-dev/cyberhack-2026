@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,6 +17,13 @@ import (
 // timeouts. 15s is short enough to survive 30s default proxy timeouts and
 // long enough to be unobtrusive in network logs.
 const heartbeatInterval = 15 * time.Second
+
+// tokenExpiryGrace is the small extra delay added past the JWT `exp` claim
+// before the server force-closes a long-lived SSE stream. It absorbs minor
+// API↔Keycloak clock skew so we never kick a connection whose token is
+// still valid from the client's perspective. Keep it small — every second
+// here is a window in which a revoked token could still receive events.
+const tokenExpiryGrace = 5 * time.Second
 
 // EventsHandler returns an http.HandlerFunc that streams realtime events to
 // authenticated users via Server-Sent Events.
@@ -115,10 +123,63 @@ func EventsHandler(hub *events.Hub) http.HandlerFunc {
 		ticker := time.NewTicker(heartbeatInterval)
 		defer ticker.Stop()
 
+		// Schedule a forced disconnect at a sensible point in the token's
+		// validity window. The exact deadline depends on where in the token
+		// lifecycle the connection is being established:
+		//
+		//   * Fresh token (exp in the future): kick at exp + grace, giving
+		//     the client a small buffer past exp to handle natural token
+		//     rotation. This is the common path on the first connect.
+		//
+		//   * Stale-but-leeway-valid token (exp in the past, but within the
+		//     JWT middleware's leeway window): kick at the leeway boundary
+		//     (exp + leeway) so the connection doesn't outlive the token's
+		//     actual validity. Re-kicking immediately here would create a
+		//     reconnect storm — the client's reconnect would carry the same
+		//     stale cookie, the middleware would accept it (still in
+		//     leeway), and we'd kick again in 1ms. Letting the connection
+		//     ride until the leeway boundary gives the client time to
+		//     refresh; once they do, a new connection schedules a normal
+		//     kick at the new exp + grace.
+		//
+		//   * Past-leeway token: shouldn't reach here (middleware rejects
+		//     before the handler runs), but as defense-in-depth, kick
+		//     within a millisecond so the laggard is gone.
+		//
+		//   * No exp claim (accessExp == 0): cap the connection at 30
+		//     minutes. This shouldn't happen with WithExpirationRequired()
+		//     but the audit principle is "never trust upstream".
+		const maxLifetimeWithoutExp = 30 * time.Minute
+		var expiryC <-chan time.Time
+		var delay time.Duration
+		switch {
+		case accessExp > 0:
+			remainingToExp := time.Until(time.Unix(accessExp, 0))
+			switch {
+			case remainingToExp > 0:
+				delay = remainingToExp + tokenExpiryGrace
+			case remainingToExp+auth.JWTLeeway > 0:
+				delay = remainingToExp + auth.JWTLeeway
+			default:
+				delay = 1 * time.Millisecond
+			}
+		default:
+			delay = maxLifetimeWithoutExp
+		}
+		expiryTimer := time.NewTimer(delay)
+		defer expiryTimer.Stop()
+		expiryC = expiryTimer.C
+
 		ctx := r.Context()
 		for {
 			select {
 			case <-ctx.Done():
+				return
+			case <-expiryC:
+				slog.Info("sse token expiry kick",
+					"user", userSub,
+					"access_exp", accessExp,
+				)
 				return
 			case <-client.Done:
 				// Hub closed the client (drain, kick, or LRU evict). The

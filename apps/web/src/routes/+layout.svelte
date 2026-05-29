@@ -2,6 +2,7 @@
   import '../app.css';
   import '$lib/i18n';
   import { t, locale } from 'svelte-i18n';
+  import { get } from 'svelte/store';
   import { page } from '$app/stores';
   import { browser } from '$app/environment';
   import { onMount, onDestroy, untrack } from 'svelte';
@@ -59,11 +60,11 @@
   );
   const qcBadgeQuery = createQuery(() => ({
     queryKey: ['nav-badges', 'qc-review'],
-    queryFn: () => lotClient.listLots({ pageSize: 100, statusFilter: 4 }),
+    queryFn: () => lotClient.listLots({ pageSize: 1, statusFilter: 4 }),
     enabled: qcBadgeEnabled,
     staleTime: 30_000,
   }));
-  const qcBadgeCount = $derived(qcBadgeQuery.data?.lots?.length ?? 0);
+  const qcBadgeCount = $derived(qcBadgeQuery.data?.totalCount ?? 0);
 
   // Warehouse pending badge — lots in QC_APPROVED (=5) waiting to be slotted.
   const whBadgeEnabled = $derived(
@@ -71,11 +72,11 @@
   );
   const whBadgeQuery = createQuery(() => ({
     queryKey: ['nav-badges', 'warehouse-pending'],
-    queryFn: () => lotClient.listLots({ pageSize: 100, statusFilter: 5 }),
+    queryFn: () => lotClient.listLots({ pageSize: 1, statusFilter: 5 }),
     enabled: whBadgeEnabled,
     staleTime: 30_000,
   }));
-  const whBadgeCount = $derived(whBadgeQuery.data?.lots?.length ?? 0);
+  const whBadgeCount = $derived(whBadgeQuery.data?.totalCount ?? 0);
 
   function badgeFor(href: string): number {
     if (href === '/qc') return qcBadgeCount;
@@ -119,14 +120,12 @@
     }
   }
 
-  // Translator wrapper that resolves to a plain string.
+  // Translator wrapper that resolves to a plain string. Uses `get(t)` for
+  // a one-shot read instead of subscribing — avoids creating/disposing a
+  // subscription on every dispatch (called once per SSE event by the toast
+  // dispatcher).
   function translateFn(key: string, opts?: { values?: Record<string, any> }) {
-    let out = '';
-    const unsubscribe = t.subscribe((fn) => {
-      out = fn(key, opts);
-    });
-    unsubscribe();
-    return out;
+    return get(t)(key, opts);
   }
 
   onMount(() => {

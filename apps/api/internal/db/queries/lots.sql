@@ -5,6 +5,13 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT', ?);
 -- name: GetLot :one
 SELECT * FROM lots WHERE id = ?;
 
+-- name: GetLotForUpdate :one
+-- Locks the row for the duration of the transaction (TiDB pessimistic mode).
+-- Used by UpdateLotStatus to close a TOCTOU race: without FOR UPDATE, a
+-- concurrent caller could change `status` between our read and our write,
+-- letting both transitions succeed even though only one should.
+SELECT * FROM lots WHERE id = ? FOR UPDATE;
+
 -- name: GetLotByNumber :one
 SELECT * FROM lots WHERE lot_number = ?;
 

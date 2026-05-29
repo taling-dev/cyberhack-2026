@@ -2,13 +2,17 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { t } from 'svelte-i18n';
+  import { get } from 'svelte/store';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { useDraft } from '$lib/forms/draft.svelte';
 
   const client = createClient(LotService, transport);
-  const userSub = $derived($page.data.user?.sub as string | undefined);
+  // Read once (non-reactive): the user sub is stable for this component's
+  // lifetime and useDraft only consumes it at init to build the storage key.
+  // A $derived here would trigger a "captures only the initial value" warning.
+  const userSub = $page.data.user?.sub as string | undefined;
 
   // Form state persisted to localStorage so an unfinished form survives a
   // session-expired re-auth or a tab reload. Cleared on successful submit.
@@ -37,10 +41,11 @@
   });
 
   function validate(): string | null {
-    if (!draft.state.supplierName.trim()) return 'Supplier name is required';
-    if (!draft.state.materialName.trim()) return 'Material name is required';
-    if (!draft.state.quantity || draft.state.quantity <= 0) return 'Quantity must be greater than 0';
-    if (!draft.state.arrivalDate) return 'Arrival date is required';
+    const tt = get(t);
+    if (!draft.state.supplierName.trim()) return tt('lot.validation.supplier_required');
+    if (!draft.state.materialName.trim()) return tt('lot.validation.material_required');
+    if (!draft.state.quantity || draft.state.quantity <= 0) return tt('lot.validation.quantity_positive');
+    if (!draft.state.arrivalDate) return tt('lot.validation.arrival_date_required');
     return null;
   }
 

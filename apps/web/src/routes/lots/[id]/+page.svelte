@@ -209,7 +209,7 @@
 
     <!-- Timeline -->
     <div class="border rounded-lg p-4 bg-white">
-      <h2 class="font-semibold text-sm text-gray-500 uppercase mb-3">Timeline</h2>
+      <h2 class="font-semibold text-sm text-gray-500 uppercase mb-3">{$t('common.timeline')}</h2>
       {#if timelineQuery.isLoading}
         <p class="text-gray-400 text-sm">{$t('lot.loading_timeline')}</p>
       {:else if (timelineQuery.data?.entries?.length ?? 0) > 0}

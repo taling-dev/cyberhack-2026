@@ -22,6 +22,7 @@ from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 
 import nats
+import nats.errors
 import pymysql
 from dbutils.pooled_db import PooledDB
 import uvicorn
@@ -100,7 +101,13 @@ class MockStrategy(QCStrategy):
 def get_strategy() -> QCStrategy:
     if QC_STRATEGY == "mock":
         return MockStrategy()
-    return MockStrategy()
+    # When real ONNX strategies are added (Phase 5), branch on QC_STRATEGY
+    # and return the appropriate implementation. Until then, an unknown
+    # value should fail loudly rather than silently fall back to mock —
+    # otherwise a misconfigured env var would mask real-strategy bugs.
+    raise ValueError(
+        f"Unknown QC_STRATEGY={QC_STRATEGY!r}. Supported values: 'mock'"
+    )
 
 
 # ─── Database ─────────────────────────────────────────────────────
@@ -108,6 +115,13 @@ def get_strategy() -> QCStrategy:
 
 # Pooled DB — created once at module load, shared across all handlers.
 # mincached=2 keeps idle connections; maxconnections=20 caps total concurrent connections.
+#
+# autocommit=False here because write_qc_result performs three related writes
+# (insert qc_results, update qc_jobs, update lots) that MUST be atomic — a
+# crash between them would leave the system in an inconsistent state with no
+# automatic recovery (the NATS message is acked only after commit). Per-call
+# auto-commit can be re-enabled inside individual functions that don't need
+# transactional semantics.
 _db_pool = PooledDB(
     creator=pymysql,
     maxconnections=20,
@@ -119,7 +133,7 @@ _db_pool = PooledDB(
     user=TIDB_USER,
     password=TIDB_PASSWORD,
     database=TIDB_DB,
-    autocommit=True,
+    autocommit=False,
 )
 
 
@@ -135,11 +149,23 @@ def mark_job_processing(job_id: str):
                 "UPDATE qc_jobs SET status='PROCESSING', started_at=NOW() WHERE id=%s AND status='QUEUED'",
                 (job_id,),
             )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
 
 def write_qc_result(job_id: str, lot_id: str, result: dict):
+    """Atomically write the QC result and advance the lot to QC_REVIEW.
+
+    Wraps the three statements in a single transaction so either ALL writes
+    succeed or NONE do. The caller (message_handler) only acks the NATS
+    message after this returns successfully, so a crash mid-write triggers
+    NATS redelivery (and the `ON DUPLICATE KEY UPDATE` clauses make the retry
+    idempotent).
+    """
     db = get_db()
     try:
         with db.cursor() as cur:
@@ -156,6 +182,10 @@ def write_qc_result(job_id: str, lot_id: str, result: dict):
             )
             cur.execute("UPDATE qc_jobs SET status='AI_COMPLETED', completed_at=NOW() WHERE id=%s", (job_id,))
             cur.execute("UPDATE lots SET status='QC_REVIEW' WHERE id=%s", (lot_id,))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -168,6 +198,10 @@ def mark_job_failed(job_id: str, reason: str):
                 "UPDATE qc_jobs SET status='FAILED', failure_reason=%s, completed_at=NOW() WHERE id=%s",
                 (reason[:500], job_id),
             )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -362,38 +396,98 @@ async def message_handler(msg):
 
 
 async def run_consumer():
-    """Connect to NATS, ensure stream exists, subscribe with push consumer."""
+    """Connect to NATS and pull QC jobs in a fetch loop.
+
+    Uses a JetStream PULL consumer (not push). Pull mode supports multiple
+    competing subscribers on the same durable name — JetStream load-balances
+    pending messages across whichever pods happen to be calling fetch().
+    This is the unlock for horizontal scaling: with N replicas, all N can
+    simultaneously consume from the same durable and JetStream guarantees
+    each message is delivered to exactly one of them at a time (with
+    redelivery if the holder doesn't ack within ack_wait).
+
+    Concurrency model:
+      * Outer loop: fetch up to FETCH_BATCH messages with FETCH_TIMEOUT.
+      * Inner: process the batch concurrently with asyncio.gather, capped
+        at MAX_INFLIGHT via a semaphore so we never overwhelm the DB pool
+        (PooledDB maxconnections=20).
+      * Same message_handler is reused unchanged — it already handles ack /
+        nak correctly, idempotent DB writes, and lifecycle event emission.
+
+    Recovery semantics:
+      * max_deliver=4 — same as before; after 4 failed deliveries NATS drops
+        the message (it's not redelivered further).
+      * ack_wait=120s — same.
+      * On NATS disconnect, the outer fetch raises; we sleep 5s and reconnect.
+    """
     global _nc
+
+    # Tuneables. Values chosen so a single pod processes ≤ FETCH_BATCH
+    # messages at a time without saturating the DB pool, and the outer
+    # fetch returns promptly on idle so shutdown is responsive.
+    FETCH_BATCH = 8
+    FETCH_TIMEOUT = 5.0  # seconds — short so shutdown_event is checked often
+    MAX_INFLIGHT = 4     # parallel handlers; well under DB pool max=20
+
     while not shutdown_event.is_set():
         try:
             nc = await nats.connect(NATS_URL, name="simaops-ai-worker", reconnect_time_wait=2)
             _nc = nc
             js = nc.jetstream()
 
-            # Subscribe — push consumer with manual ack and DLQ semantics
-            # max_deliver=4: NATS retries up to 4 times, then drops (consumer DLQ pattern)
-            # ack_wait=60s: long enough for image fetch + inference
-            # The qc.job.dlq subject collects failures via NATS advisory or app-level publish
             from nats.js.api import ConsumerConfig
-            sub = await js.subscribe(
+            # pull_subscribe creates the consumer if it doesn't exist (using
+            # `config`), or attaches to the existing one (config ignored).
+            # We deliberately do NOT pass `cb=` — that's the push-mode flag.
+            sub = await js.pull_subscribe(
                 "qc.job.created",
                 durable="simaops-ai-worker",
                 stream="SIMAOPS",
-                manual_ack=True,
-                cb=message_handler,
                 config=ConsumerConfig(
                     max_deliver=4,
                     ack_wait=120,
                 ),
             )
             print(
-                f"[worker] subscribed (strategy={QC_STRATEGY}, model={MODEL_VERSION}, max_deliver=4, ack_wait=60s)",
+                f"[worker] subscribed (mode=pull, strategy={QC_STRATEGY}, model={MODEL_VERSION}, "
+                f"max_deliver=4, ack_wait=120s, batch={FETCH_BATCH}, in_flight={MAX_INFLIGHT})",
                 flush=True,
             )
 
-            await shutdown_event.wait()
+            sem = asyncio.Semaphore(MAX_INFLIGHT)
 
-            await sub.unsubscribe()
+            async def _handle_one(m):
+                async with sem:
+                    await message_handler(m)
+
+            while not shutdown_event.is_set():
+                try:
+                    msgs = await sub.fetch(batch=FETCH_BATCH, timeout=FETCH_TIMEOUT)
+                except (asyncio.TimeoutError, nats.errors.TimeoutError):
+                    # Idle period — no messages within FETCH_TIMEOUT. Loop back
+                    # so we promptly notice shutdown_event without waiting.
+                    continue
+                except Exception as fetch_err:
+                    # Includes nats.errors.ConnectionClosedError and the
+                    # nats-py specific errors that surface during a JetStream
+                    # blip. Log + reconnect via outer loop.
+                    print(f"[worker] fetch error: {fetch_err} — reconnecting", flush=True)
+                    raise
+
+                if not msgs:
+                    continue
+
+                # Dispatch the batch concurrently. asyncio.gather waits for all
+                # handlers (each of which acks/naks itself) before pulling the
+                # next batch. This keeps in-flight count bounded by FETCH_BATCH
+                # × MAX_INFLIGHT (since handlers within a batch share the sem).
+                await asyncio.gather(
+                    *(_handle_one(m) for m in msgs),
+                    return_exceptions=True,
+                )
+
+            # Graceful shutdown — drain rather than unsubscribe so any handler
+            # currently inside the semaphore has a chance to finish + ack.
             await nc.drain()
             _nc = None
             print("[worker] consumer shut down cleanly", flush=True)

@@ -3,13 +3,14 @@ import type { RequestHandler } from './$types';
 import {
   exchangeCode,
   decodeAuthState,
+  parseJwtPayload,
   COOKIE_ACCESS,
   COOKIE_REFRESH,
   COOKIE_ID,
   COOKIE_PKCE,
   COOKIE_STATE,
   COOKIE_OPTS,
-  COOKIE_OPTS_READABLE,
+  REFRESH_COOKIE_MAX_AGE,
 } from '$lib/server/auth';
 
 /**
@@ -32,11 +33,14 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   const decoded = state ? decodeAuthState(state) : null;
   const mode = decoded?.mode ?? 'default';
 
-  // Validate state against the cookie we set in /auth/login. Silent failures
-  // (login_required) skip this check because Keycloak returns the same state
-  // we set, so the cookie comparison still works.
+  // Validate state against the cookie we set in /auth/login. This is the
+  // CSRF/replay defense for the authorization-code flow and must FAIL CLOSED:
+  // a callback that carries no state, or whose state doesn't match the cookie
+  // we issued, is rejected. The one exception is the silent (prompt=none)
+  // flow — if its short-lived state cookie has been evicted we still surface a
+  // clean failure to the parent frame rather than a hard error page.
   const savedState = cookies.get(COOKIE_STATE);
-  if (state && savedState && state !== savedState) {
+  if (!state || !savedState || state !== savedState) {
     if (mode === 'silent') return silentResultHtml(false);
     throw error(400, 'State mismatch');
   }
@@ -64,9 +68,29 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     throw error(400, 'Token exchange failed');
   }
 
+  // OIDC nonce validation: the id_token's `nonce` claim must match the value
+  // we put in the original authorize URL (encoded in our `state` cookie too).
+  // Without this, a stolen authorize-response can be replayed against the
+  // token endpoint as long as the PKCE verifier remained available — nonce
+  // closes that window. Per the OIDC spec this is REQUIRED for any flow that
+  // returns an id_token.
+  try {
+    const idPayload = parseJwtPayload(tokens.id_token);
+    const expected = decoded?.nonce;
+    if (!expected || idPayload.nonce !== expected) {
+      if (mode === 'silent') return silentResultHtml(false);
+      throw error(400, 'Nonce mismatch');
+    }
+  } catch (err) {
+    if (mode === 'silent') return silentResultHtml(false);
+    // Re-throw SvelteKit errors as-is; only catch the parseJwtPayload throw.
+    if (err && typeof err === 'object' && 'status' in err) throw err;
+    throw error(400, 'Invalid id_token');
+  }
+
   // Set session cookies.
-  cookies.set(COOKIE_ACCESS, tokens.access_token, { ...COOKIE_OPTS_READABLE, maxAge: tokens.expires_in });
-  cookies.set(COOKIE_REFRESH, tokens.refresh_token, { ...COOKIE_OPTS, maxAge: 86400 * 30 });
+  cookies.set(COOKIE_ACCESS, tokens.access_token, { ...COOKIE_OPTS, maxAge: tokens.expires_in });
+  cookies.set(COOKIE_REFRESH, tokens.refresh_token, { ...COOKIE_OPTS, maxAge: REFRESH_COOKIE_MAX_AGE });
   cookies.set(COOKIE_ID, tokens.id_token, { ...COOKIE_OPTS, maxAge: tokens.expires_in });
 
   // Clean up PKCE cookies.
@@ -76,8 +100,13 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   if (mode === 'silent') return silentResultHtml(true);
   if (mode === 'popup') return popupResultHtml();
 
-  const returnTo = decoded?.returnTo && decoded.returnTo.startsWith('/') ? decoded.returnTo : '/dashboard';
-  throw redirect(302, returnTo);
+  // Reject protocol-relative URLs ("//evil.com" — `startsWith('/')` alone
+  // would let an attacker craft /auth/login?return_to=//evil.com and the
+  // browser would resolve it to https://evil.com after we redirect).
+  const rawReturn = decoded?.returnTo;
+  const safeReturn =
+    rawReturn && rawReturn.startsWith('/') && !rawReturn.startsWith('//') ? rawReturn : '/dashboard';
+  throw redirect(302, safeReturn);
 };
 
 // ─── PostMessage HTML responses ─────────────────────────────────────

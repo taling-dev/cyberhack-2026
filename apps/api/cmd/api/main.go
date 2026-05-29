@@ -16,6 +16,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/auth"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/events"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/handler"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/middleware"
@@ -110,6 +111,11 @@ func main() {
 	// Background goroutine: every 30s, sample lot counts by status and update
 	// the simaops_api_lots_by_status gauge. Drives the LotsStuckIn* alerts.
 	go startLotsByStatusUpdater(dbConn)
+
+	// Periodic table-maintenance worker — prunes idempotency_keys (TTL 24h)
+	// and PUBLISHED outbox_events older than 7 days. Without this, both
+	// tables grow unboundedly and slow down the hot RPC path.
+	go startCleanupWorker(dbConn, db.New(dbConn))
 
 	// Wrap with middleware (order: outer → inner)
 	// RequestID → Logger → BodyLimit → CORS → Metrics → JWT → RBAC → Idempotency → Audit → handlers
@@ -208,6 +214,41 @@ func startLotsByStatusUpdater(db *sql.DB) {
 	}
 
 	tick() // immediate seed so the gauge isn't empty for 30s
+	for range ticker.C {
+		tick()
+	}
+}
+
+// startCleanupWorker runs periodic maintenance:
+//   - Every hour: prune idempotency_keys older than their TTL (24h by default).
+//     Without this, the table grows unboundedly and degrades the PRIMARY KEY
+//     lookup that every mutation RPC performs.
+//   - Every hour: prune outbox_events with status='PUBLISHED' older than 7
+//     days. Same growth/perf concern.
+//
+// Both deletes are best-effort: they share a single 30-second timeout so a
+// single slow query doesn't queue up. Failures are logged at WARN.
+func startCleanupWorker(dbConn *sql.DB, queries *db.Queries) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	tick := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := queries.DeleteExpiredIdempotencyKeys(ctx); err != nil {
+			slog.Warn("idempotency_keys cleanup failed", "err", err)
+		}
+		// Outbox cleanup is plain SQL because there's no sqlc query for it.
+		// 7 days is comfortably past any operational scenario where an event
+		// could be re-published or audited.
+		if _, err := dbConn.ExecContext(ctx,
+			"DELETE FROM outbox_events WHERE status = 'PUBLISHED' AND published_at < DATE_SUB(NOW(), INTERVAL 7 DAY)",
+		); err != nil {
+			slog.Warn("outbox_events cleanup failed", "err", err)
+		}
+	}
+
+	tick() // run once at startup so a freshly-deployed pod doesn't wait an hour
 	for range ticker.C {
 		tick()
 	}

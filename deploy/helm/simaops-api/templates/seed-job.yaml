@@ -40,7 +40,7 @@ spec:
               set -e
               echo "Waiting for TiDB to be ready..."
               for i in $(seq 1 30); do
-                if mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -e "SELECT 1" > /dev/null 2>&1; then
+                if mysql -h "$DB_HOST" -P "$DB_PORT" -u "$TIDB_USER" -p"$TIDB_PASSWORD" -e "SELECT 1" > /dev/null 2>&1; then
                   echo "TiDB ready"
                   break
                 fi
@@ -48,17 +48,21 @@ spec:
                 sleep 2
               done
               echo "Running idempotent seed (INSERT IGNORE)..."
-              mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" < /seed/seed-data.sql
+              mysql -h "$DB_HOST" -P "$DB_PORT" -u "$TIDB_USER" -p"$TIDB_PASSWORD" "$DB_NAME" < /seed/seed-data.sql
               echo "✓ Seed complete"
           env:
             - name: DB_HOST
               value: {{ .Values.seedJob.dbHost | default "simaops-tidb.platform" | quote }}
             - name: DB_PORT
               value: {{ .Values.seedJob.dbPort | default "4000" | quote }}
-            - name: DB_USER
-              value: {{ .Values.seedJob.dbUser | default "root" | quote }}
             - name: DB_NAME
               value: {{ .Values.seedJob.dbName | default "simaops" | quote }}
+          # TIDB_USER + TIDB_PASSWORD come from the same Secret the runtime
+          # services consume. The seed user needs INSERT privileges on the
+          # simaops database; the `simaops` service-account user has them.
+          envFrom:
+            - secretRef:
+                name: simaops-infra-creds
           volumeMounts:
             - name: seed-data
               mountPath: /seed

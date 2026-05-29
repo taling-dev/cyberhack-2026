@@ -32,7 +32,12 @@ export function silentRenew(timeoutMs = 5000): Promise<boolean> {
     iframe.src = '/auth/login?silent=1';
 
     let settled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const cleanup = () => {
+      if (timer !== null) {
+        clearTimeout(timer);
+        timer = null;
+      }
       window.removeEventListener('message', onMessage);
       try {
         iframe.remove();
@@ -56,7 +61,7 @@ export function silentRenew(timeoutMs = 5000): Promise<boolean> {
     }
     window.addEventListener('message', onMessage);
 
-    const timer = setTimeout(() => finish(false), timeoutMs);
+    timer = setTimeout(() => finish(false), timeoutMs);
     iframe.addEventListener('load', () => {
       // load fires for both success and error paths — but the callback page
       // also posts a message in both cases, so we rely on that. Keep the
@@ -64,13 +69,5 @@ export function silentRenew(timeoutMs = 5000): Promise<boolean> {
       // browser navigated away from our origin.
     });
     document.body.appendChild(iframe);
-    // Cleanup the timer ref on settle.
-    Promise.resolve().then(() => {
-      const origFinish = finish;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _ = origFinish; // satisfy strict no-unused-vars
-    });
-    // Tie the timer to settle.
-    void timer;
   });
 }

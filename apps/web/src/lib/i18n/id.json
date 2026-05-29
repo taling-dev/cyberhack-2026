@@ -68,7 +68,18 @@
     "updated": "Diperbarui",
     "back": "Kembali",
     "no_results": "Tidak ada hasil",
-    "refresh": "Muat ulang"
+    "refresh": "Muat ulang",
+    "prev": "← Sebelumnya",
+    "next": "Berikutnya →",
+    "result": "hasil",
+    "results": "hasil",
+    "results_on_page": "hasil di halaman ini",
+    "clear_filters": "Hapus filter",
+    "timeline": "Linimasa",
+    "approved": "Disetujui",
+    "rejected": "Ditolak",
+    "recheck": "Periksa ulang",
+    "assign": "Tetapkan"
   },
   "locale": {
     "en": "English",
@@ -100,7 +111,13 @@
     "details": "Rincian Lot",
     "created_by": "Dibuat Oleh",
     "no_timeline": "Belum ada entri audit.",
-    "loading_timeline": "Memuat riwayat..."
+    "loading_timeline": "Memuat riwayat...",
+    "validation": {
+      "supplier_required": "Nama pemasok wajib diisi",
+      "material_required": "Nama material wajib diisi",
+      "quantity_positive": "Jumlah harus lebih dari 0",
+      "arrival_date_required": "Tanggal tiba wajib diisi"
+    }
   },
   "qc": {
     "queue_title": "Antrian Tinjauan QC",
@@ -139,7 +156,11 @@
     "reason_optional": "(opsional)",
     "reason_placeholder": "Jelaskan keputusan Anda...",
     "submitting": "Mengirim...",
-    "review_failed": "Tinjauan gagal"
+    "review_failed": "Tinjauan gagal",
+    "review_for": "Tinjauan QC",
+    "review_decision_approved": "Disetujui",
+    "review_decision_rejected": "Ditolak",
+    "review_decision_recheck": "Periksa ulang"
   },
   "warehouse": {
     "subtitle": "Lot yang disetujui QC menunggu penempatan slot",

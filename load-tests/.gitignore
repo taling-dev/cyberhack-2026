@@ -1,2 +1,5 @@
 reports/
 *.local.json
+*-summary.json
+*-stdout.txt
+node_modules/

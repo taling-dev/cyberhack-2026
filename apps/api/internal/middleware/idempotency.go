@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/auth"
@@ -120,8 +119,3 @@ func (r *responseRecorder) Write(b []byte) (int, error) {
 
 // Unwrap exposes the underlying writer for http.NewResponseController.
 func (r *responseRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
-
-// IsIdempotentRPC checks if a path is a mutation RPC (for use in other middleware).
-func IsIdempotentRPC(path string) bool {
-	return idempotentRPCs[path] || strings.Contains(path, "Create") || strings.Contains(path, "Update") || strings.Contains(path, "Assign") || strings.Contains(path, "Revoke") || strings.Contains(path, "Review")
-}

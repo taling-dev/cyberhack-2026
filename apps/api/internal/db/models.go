@@ -108,9 +108,10 @@ func (ns NullLotsStatus) Value() (driver.Value, error) {
 type OutboxEventsStatus string
 
 const (
-	OutboxEventsStatusPENDING   OutboxEventsStatus = "PENDING"
-	OutboxEventsStatusPUBLISHED OutboxEventsStatus = "PUBLISHED"
-	OutboxEventsStatusFAILED    OutboxEventsStatus = "FAILED"
+	OutboxEventsStatusPENDING    OutboxEventsStatus = "PENDING"
+	OutboxEventsStatusPUBLISHING OutboxEventsStatus = "PUBLISHING"
+	OutboxEventsStatusPUBLISHED  OutboxEventsStatus = "PUBLISHED"
+	OutboxEventsStatusFAILED     OutboxEventsStatus = "FAILED"
 )
 
 func (e *OutboxEventsStatus) Scan(src interface{}) error {
@@ -408,10 +409,10 @@ type OutboxEvent struct {
 	ID          string             `json:"id"`
 	EventType   string             `json:"event_type"`
 	PayloadJson json.RawMessage    `json:"payload_json"`
-	Status      OutboxEventsStatus `json:"status"`
 	RetryCount  int32              `json:"retry_count"`
 	CreatedAt   time.Time          `json:"created_at"`
 	PublishedAt sql.NullTime       `json:"published_at"`
+	Status      OutboxEventsStatus `json:"status"`
 }
 
 type QcJob struct {

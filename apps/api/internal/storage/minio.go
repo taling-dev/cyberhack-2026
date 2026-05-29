@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"time"
 
@@ -44,10 +43,15 @@ func NewMinIOClient() (*MinIOClient, error) {
 }
 
 // PresignedPutURL generates a presigned PUT URL for uploading an object.
+//
+// Note: MinIO's PresignedPutObject signs only the verb+path+expiry — it does
+// not bind a Content-Type header into the signature. Content-type enforcement
+// is performed by the API handler (allowlist) and by a bucket policy. The
+// `contentType` argument here is retained for possible future migration to a
+// PostPolicy-based upload that DOES sign the content-type, but is not
+// currently embedded in the signature.
 func (m *MinIOClient) PresignedPutURL(ctx context.Context, bucket, objectKey, contentType string, expiry time.Duration) (string, error) {
-	reqParams := make(url.Values)
-	reqParams.Set("Content-Type", contentType)
-
+	_ = contentType // see doc comment — currently advisory only
 	u, err := m.client.PresignedPutObject(ctx, bucket, objectKey, expiry)
 	if err != nil {
 		return "", fmt.Errorf("presigned put: %w", err)

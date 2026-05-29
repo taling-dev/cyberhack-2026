@@ -42,6 +42,7 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   const authUrl = buildAuthorizationUrl({
     state,
     codeChallenge,
+    nonce,
     prompt: silent ? 'none' : undefined,
   });
   throw redirect(302, authUrl);

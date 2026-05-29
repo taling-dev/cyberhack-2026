@@ -1,10 +1,24 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
+import { env as pubEnv } from '$env/dynamic/public';
 import { COOKIE_REFRESH, parseJwtPayload } from '$lib/server/auth';
 
 // Backend API URL — internal cluster URL by default, configurable for dev.
 const BACKEND_URL = env.PRIVATE_API_URL || 'http://simaops-api.simaops:8080';
+
+// Allowed Origin for cross-site protection on mutating requests. SameSite=Lax
+// blocks GET cross-origin but a top-level form POST from an attacker site
+// would still ride along with the cookies. We require the Origin header to
+// match this app's own origin for any non-safe method.
+//
+// Multiple values are accepted (comma-separated) so a single deployment can
+// serve from both the app domain and (e.g.) a www. alias.
+const APP_ORIGINS = (pubEnv.PUBLIC_APP_URL ?? 'http://localhost:5173')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 // Forwarded request headers — only what the API needs. SSE handshakes require
 // `accept` and `last-event-id`; everything else is the existing Connect set.
@@ -38,13 +52,40 @@ const PASSTHROUGH_RESPONSE_HEADERS = new Set([
  *
  * Path mapping: /api/v1/<service>/<method> → <BACKEND>/<service>/<method>
  */
+// Connect RPC paths look like `simaops.lot.v1.LotService/CreateLot` and the
+// SSE bridge uses the literal `events`. Anything outside this character set
+// (including `..`, `//`, scheme prefixes, query injection in the path) is a
+// SSRF attempt against the cluster's other services and must be rejected
+// before we hand the value to fetch().
+const RPC_PATH_RE = /^[a-zA-Z0-9._/-]+$/;
+
 const handler: RequestHandler = async ({ request, params, locals, url, cookies }) => {
   if (!locals.accessToken) {
     throw error(401, 'unauthenticated');
   }
 
+  // CSRF defense — for any non-safe method, require an Origin header that
+  // matches our app. Connect-RPC always sets `Content-Type: application/json`
+  // which prevents simple form-encoded POSTs, and the BFF cookie has
+  // SameSite=Lax which blocks cross-origin sub-resource fetches. The Origin
+  // check covers the residual case (top-level form POST with appropriate
+  // content type, or a navigator that does send Origin on cross-origin POST).
+  if (!SAFE_METHODS.has(request.method)) {
+    const origin = request.headers.get('origin');
+    if (!origin || !APP_ORIGINS.includes(origin)) {
+      throw error(403, 'cross-origin request blocked');
+    }
+  }
+
   const path = params.path;
   if (!path) throw error(400, 'missing rpc path');
+
+  // SSRF defense — refuse anything that doesn't look like a Connect RPC
+  // path or the literal SSE bridge path. This blocks `..`, `//`, encoded
+  // characters, and absolute-URL injection.
+  if (!RPC_PATH_RE.test(path) || path.includes('..') || path.startsWith('/')) {
+    throw error(400, 'invalid rpc path');
+  }
 
   const targetUrl = `${BACKEND_URL}/${path}${url.search}`;
 

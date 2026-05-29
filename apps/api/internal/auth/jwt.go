@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
@@ -48,10 +49,16 @@ const (
 	AuthFailReasonMissing = "missing"
 )
 
-// jwtLeeway is the symmetric tolerance applied to `exp`/`nbf` validation so
+// JWTLeeway is the symmetric tolerance applied to `exp`/`nbf` validation so
 // brief clock skew between the API pod and Keycloak doesn't spuriously reject
-// otherwise-valid tokens.
-const jwtLeeway = 60
+// otherwise-valid tokens. MUST be a typed time.Duration — `jwt.WithLeeway`
+// accepts time.Duration, and an untyped int constant `60` would be silently
+// converted to 60ns, defeating the whole purpose of leeway.
+//
+// Exported so the SSE handler can use the same window when scheduling its
+// forced-disconnect timer (otherwise the SSE expiry timer can outlive the
+// JWT validity window or under-shoot it).
+const JWTLeeway = 60 * time.Second
 
 // GetClaims extracts auth claims from context (set by JWTMiddleware).
 func GetClaims(ctx context.Context) *Claims {
@@ -165,7 +172,7 @@ func (m *JWTMiddleware) Wrap(next http.Handler) http.Handler {
 			jwt.WithIssuer(m.issuer),
 			jwt.WithExpirationRequired(),
 			jwt.WithValidMethods([]string{"RS256", "RS384", "RS512", "ES256", "ES384"}),
-			jwt.WithLeeway(jwtLeeway),
+			jwt.WithLeeway(JWTLeeway),
 		)
 		if err != nil {
 			reason := classifyTokenError(err)
