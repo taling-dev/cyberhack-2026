@@ -23,7 +23,15 @@ func NewDashboardService(q *db.Queries) *DashboardService {
 }
 
 func (s *DashboardService) GetOpsDashboard(ctx context.Context, req *connect.Request[dashv1.GetOpsDashboardRequest]) (*connect.Response[dashv1.GetOpsDashboardResponse], error) {
-	statusCounts, _ := s.q.CountLotsByStatusGroup(ctx)
+	// The primary query (status group counts) drives the dashboard's main
+	// signal — if it fails the dashboard is meaningless and we should surface
+	// the error rather than render zeros. Secondary counts are allowed to
+	// degrade gracefully (logged but not returned) so a partial outage of one
+	// downstream query doesn't blank the whole dashboard.
+	statusCounts, err := s.q.CountLotsByStatusGroup(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, fmt.Errorf("count lots by status: %w", err))
+	}
 	totalCount, _ := s.q.CountLots(ctx)
 	awaitingQC, _ := s.q.CountLotsByStatus(ctx, db.LotsStatusQCREVIEW)
 	ready, _ := s.q.CountLotsByStatus(ctx, db.LotsStatusREADYFORPRODUCTION)

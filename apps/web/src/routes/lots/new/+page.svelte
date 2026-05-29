@@ -1,38 +1,51 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { t } from 'svelte-i18n';
+  import { get } from 'svelte/store';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import { useDraft } from '$lib/forms/draft.svelte';
 
   const client = createClient(LotService, transport);
+  // Read once (non-reactive): the user sub is stable for this component's
+  // lifetime and useDraft only consumes it at init to build the storage key.
+  // A $derived here would trigger a "captures only the initial value" warning.
+  const userSub = $page.data.user?.sub as string | undefined;
 
-  let supplierName = $state('');
-  let materialName = $state('');
-  let materialType = $state(1); // RAW_BOTANICAL
-  let quantity = $state<number | undefined>(undefined);
-  let unit = $state('kg');
-  let arrivalDate = $state(new Date().toISOString().slice(0, 10));
-  let temperatureRange = $state(1); // AMBIENT
-  let hazardClass = $state(1); // NONE
+  // Form state persisted to localStorage so an unfinished form survives a
+  // session-expired re-auth or a tab reload. Cleared on successful submit.
+  const draft = useDraft(userSub, 'createLot', {
+    supplierName: '',
+    materialName: '',
+    materialType: 1, // RAW_BOTANICAL
+    quantity: undefined as number | undefined,
+    unit: 'kg',
+    arrivalDate: new Date().toISOString().slice(0, 10),
+    temperatureRange: 1, // AMBIENT
+    hazardClass: 1, // NONE
+  });
+
   let submitting = $state(false);
   let error = $state('');
 
   // Auto-adjust defaults when material type changes
   $effect(() => {
-    if (materialType === 1) {
-      temperatureRange = 1;
-      hazardClass = 1;
-    } else if (materialType === 2 || materialType === 3) {
-      temperatureRange = 2;
+    if (draft.state.materialType === 1) {
+      draft.state.temperatureRange = 1;
+      draft.state.hazardClass = 1;
+    } else if (draft.state.materialType === 2 || draft.state.materialType === 3) {
+      draft.state.temperatureRange = 2;
     }
   });
 
   function validate(): string | null {
-    if (!supplierName.trim()) return 'Supplier name is required';
-    if (!materialName.trim()) return 'Material name is required';
-    if (!quantity || quantity <= 0) return 'Quantity must be greater than 0';
-    if (!arrivalDate) return 'Arrival date is required';
+    const tt = get(t);
+    if (!draft.state.supplierName.trim()) return tt('lot.validation.supplier_required');
+    if (!draft.state.materialName.trim()) return tt('lot.validation.material_required');
+    if (!draft.state.quantity || draft.state.quantity <= 0) return tt('lot.validation.quantity_positive');
+    if (!draft.state.arrivalDate) return tt('lot.validation.arrival_date_required');
     return null;
   }
 
@@ -44,15 +57,20 @@
     error = '';
     try {
       const res = await client.createLot({
-        supplierName: supplierName.trim(),
-        materialName: materialName.trim(),
-        materialType,
-        quantity: quantity!,
-        unit,
-        arrivalDate,
-        storageRequirement: { temperatureRange, hazardClass },
+        supplierName: draft.state.supplierName.trim(),
+        materialName: draft.state.materialName.trim(),
+        materialType: draft.state.materialType,
+        quantity: draft.state.quantity!,
+        unit: draft.state.unit,
+        arrivalDate: draft.state.arrivalDate,
+        storageRequirement: {
+          temperatureRange: draft.state.temperatureRange,
+          hazardClass: draft.state.hazardClass,
+        },
         idempotencyKey: crypto.randomUUID()
       });
+      // Clear the draft on successful submission so the form is empty next time.
+      draft.clear();
       goto(`/lots/${res.lot?.id}`);
     } catch (e: any) {
       error = e.message || 'Failed to create lot';
@@ -76,18 +94,18 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <label for="supplier" class="block text-sm font-medium mb-1">{$t('lot.supplier_name')} <span class="text-red-500">*</span></label>
-        <input id="supplier" name="supplier" bind:value={supplierName} required autocomplete="organization" class="w-full border rounded-md px-3 py-2 text-sm" />
+        <input id="supplier" name="supplier" bind:value={draft.state.supplierName} required autocomplete="organization" class="w-full border rounded-md px-3 py-2 text-sm" />
       </div>
       <div>
         <label for="material" class="block text-sm font-medium mb-1">{$t('lot.material_name')} <span class="text-red-500">*</span></label>
-        <input id="material" name="material" bind:value={materialName} required class="w-full border rounded-md px-3 py-2 text-sm" />
+        <input id="material" name="material" bind:value={draft.state.materialName} required class="w-full border rounded-md px-3 py-2 text-sm" />
       </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label for="mtype" class="block text-sm font-medium mb-1">{$t('lot.material_type')}</label>
-        <select id="mtype" bind:value={materialType} class="w-full border rounded-md px-3 py-2 text-sm">
+        <select id="mtype" bind:value={draft.state.materialType} class="w-full border rounded-md px-3 py-2 text-sm">
           {#each [1,2,3,4] as m}
             <option value={m}>{$t(`material_type.${m}`)}</option>
           {/each}
@@ -95,11 +113,11 @@
       </div>
       <div>
         <label for="qty" class="block text-sm font-medium mb-1">{$t('lot.quantity')} <span class="text-red-500">*</span></label>
-        <input id="qty" type="number" step="0.001" min="0.001" bind:value={quantity} placeholder="0.000" required class="w-full border rounded-md px-3 py-2 text-sm" />
+        <input id="qty" type="number" step="0.001" min="0.001" bind:value={draft.state.quantity} placeholder="0.000" required class="w-full border rounded-md px-3 py-2 text-sm" />
       </div>
       <div>
         <label for="unit" class="block text-sm font-medium mb-1">{$t('lot.unit')}</label>
-        <select id="unit" bind:value={unit} class="w-full border rounded-md px-3 py-2 text-sm">
+        <select id="unit" bind:value={draft.state.unit} class="w-full border rounded-md px-3 py-2 text-sm">
           <option value="kg">kg</option>
           <option value="L">L</option>
           <option value="pcs">pcs</option>
@@ -109,7 +127,7 @@
 
     <div>
       <label for="arrival" class="block text-sm font-medium mb-1">{$t('lot.arrival_date')} <span class="text-red-500">*</span></label>
-      <input id="arrival" bind:value={arrivalDate} type="date" required class="w-full border rounded-md px-3 py-2 text-sm" />
+      <input id="arrival" bind:value={draft.state.arrivalDate} type="date" required class="w-full border rounded-md px-3 py-2 text-sm" />
     </div>
 
     <fieldset class="border rounded-md p-4 space-y-3">
@@ -117,7 +135,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="temp" class="block text-sm mb-1">{$t('lot.temperature_range')}</label>
-          <select id="temp" bind:value={temperatureRange} class="w-full border rounded-md px-3 py-2 text-sm">
+          <select id="temp" bind:value={draft.state.temperatureRange} class="w-full border rounded-md px-3 py-2 text-sm">
             {#each [1,2,3] as r}
               <option value={r}>{$t(`temp_range.${r}`)}</option>
             {/each}
@@ -125,7 +143,7 @@
         </div>
         <div>
           <label for="hz" class="block text-sm mb-1">{$t('lot.hazard_class')}</label>
-          <select id="hz" bind:value={hazardClass} class="w-full border rounded-md px-3 py-2 text-sm">
+          <select id="hz" bind:value={draft.state.hazardClass} class="w-full border rounded-md px-3 py-2 text-sm">
             {#each [1,2,3] as h}
               <option value={h}>{$t(`hazard.${h}`)}</option>
             {/each}

@@ -139,3 +139,13 @@ SimaOps AI is a single enterprise platform that:
 **Awaiting:** explicit `go` from the user before Task 1 (monorepo bootstrap) executes.
 
 **Version Policy:** Always use the latest stable versions of all dependencies, runtimes, and platform services (Kubernetes, Helm charts, npm packages, Go modules, Python packages). Never hardcode outdated versions — query the provider/registry for supported versions at deploy time.
+
+## Realtime UI updates (added in plan v5)
+
+- **R-RT-1** Web UI must reflect lot/QC/warehouse state changes within ≤2 seconds without manual refresh, on Dashboard, Lots, Lot detail, QC queue, Warehouse, and Audit pages.
+- **R-RT-2** Sidebar nav badges (QC review pending, warehouse pending) must update live in under 2 seconds when an event affects them.
+- **R-RT-3** Operators must see realtime events only for lots they created (owner-scoped). Supervisors and managers see all events in their role's permission scope.
+- **R-RT-4** Role-targeted toast notifications (e.g. "QC needs review", "Lot ready for slot") must be deduped across browser tabs.
+- **R-RT-5** Mid-stream access-token rotation must not disconnect the user or lose in-flight form data. Three-tier recovery: force refresh → silent OIDC renew → popup login. Form drafts persisted to localStorage every 500ms.
+- **R-RT-6** API↔Keycloak clock skew >30s must fail startup probe; >60s for 3 consecutive readiness polls fails readiness (after JWT 60s leeway).
+- **R-RT-7** Per-user SSE connection cap (default 10) prevents runaway tabs / DDoS; admin role-change immediately kicks affected user's open streams.

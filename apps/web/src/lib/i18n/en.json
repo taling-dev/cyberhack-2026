@@ -16,7 +16,42 @@
   },
   "auth": {
     "required_title": "Authentication required",
-    "required_body": "You must be logged in to access SimaOps."
+    "required_body": "You must be logged in to access SimaOps.",
+    "session_expired": {
+      "title": "Session expired",
+      "body": "Sign in to continue where you left off. Your unsaved work is preserved.",
+      "sign_in": "Sign in",
+      "sign_out": "Sign out"
+    },
+    "session_ending_soon": {
+      "title": "Session ending soon",
+      "body": "Your session will end in 5 minutes. Stay signed in to continue working.",
+      "stay_signed_in": "Stay signed in"
+    }
+  },
+  "realtime": {
+    "live": "Live",
+    "reconnecting": "Reconnecting…",
+    "re_authenticating": "Re-authenticating…",
+    "session_expired": "Session expired"
+  },
+  "toast": {
+    "qc_needs_review": {
+      "title": "QC needs review",
+      "body": "Lot {lot} requires supervisor decision."
+    },
+    "qc_approved": {
+      "title": "Lot approved",
+      "body": "Lot {lot} is ready for warehouse assignment."
+    },
+    "qc_failed": {
+      "title": "QC job failed",
+      "body": "Lot {lot} requires retry or attention."
+    },
+    "warehouse_assigned": {
+      "title": "Warehouse slot assigned",
+      "body": "Lot {lot} assigned to slot {slot}."
+    }
   },
   "common": {
     "loading": "Loading...",
@@ -33,7 +68,18 @@
     "updated": "Updated",
     "back": "Back",
     "no_results": "No results found",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "prev": "← Prev",
+    "next": "Next →",
+    "result": "result",
+    "results": "results",
+    "results_on_page": "results on this page",
+    "clear_filters": "Clear filters",
+    "timeline": "Timeline",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "recheck": "Recheck",
+    "assign": "Assign"
   },
   "locale": {
     "en": "English",
@@ -65,7 +111,13 @@
     "details": "Lot Details",
     "created_by": "Created By",
     "no_timeline": "No audit entries yet.",
-    "loading_timeline": "Loading timeline..."
+    "loading_timeline": "Loading timeline...",
+    "validation": {
+      "supplier_required": "Supplier name is required",
+      "material_required": "Material name is required",
+      "quantity_positive": "Quantity must be greater than 0",
+      "arrival_date_required": "Arrival date is required"
+    }
   },
   "qc": {
     "queue_title": "QC Review Queue",
@@ -104,7 +156,11 @@
     "reason_optional": "(optional)",
     "reason_placeholder": "Explain your decision...",
     "submitting": "Submitting...",
-    "review_failed": "Review failed"
+    "review_failed": "Review failed",
+    "review_for": "QC Review",
+    "review_decision_approved": "Approved",
+    "review_decision_rejected": "Rejected",
+    "review_decision_recheck": "Recheck"
   },
   "warehouse": {
     "subtitle": "QC-approved lots awaiting slot assignment",

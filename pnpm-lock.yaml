@@ -41,6 +41,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.3.0
         version: 4.3.0(vite@8.0.14(@types/node@25.9.1)(jiti@2.7.0))
+      '@types/node':
+        specifier: ^25.9.1
+        version: 25.9.1
       eslint:
         specifier: ^10.4.0
         version: 10.4.0(jiti@2.7.0)

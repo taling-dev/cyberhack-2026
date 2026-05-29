@@ -149,6 +149,35 @@ func (q *Queries) GetLotByNumber(ctx context.Context, lotNumber string) (Lot, er
 	return i, err
 }
 
+const getLotForUpdate = `-- name: GetLotForUpdate :one
+SELECT id, lot_number, supplier_name, material_name, material_type, quantity, unit, arrival_date, storage_requirement, status, created_by, created_at, updated_at FROM lots WHERE id = ? FOR UPDATE
+`
+
+// Locks the row for the duration of the transaction (TiDB pessimistic mode).
+// Used by UpdateLotStatus to close a TOCTOU race: without FOR UPDATE, a
+// concurrent caller could change `status` between our read and our write,
+// letting both transitions succeed even though only one should.
+func (q *Queries) GetLotForUpdate(ctx context.Context, id string) (Lot, error) {
+	row := q.db.QueryRowContext(ctx, getLotForUpdate, id)
+	var i Lot
+	err := row.Scan(
+		&i.ID,
+		&i.LotNumber,
+		&i.SupplierName,
+		&i.MaterialName,
+		&i.MaterialType,
+		&i.Quantity,
+		&i.Unit,
+		&i.ArrivalDate,
+		&i.StorageRequirement,
+		&i.Status,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listLots = `-- name: ListLots :many
 SELECT id, lot_number, supplier_name, material_name, material_type, quantity, unit, arrival_date, storage_requirement, status, created_by, created_at, updated_at FROM lots ORDER BY created_at DESC LIMIT ? OFFSET ?
 `

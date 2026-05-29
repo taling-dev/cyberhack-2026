@@ -8,6 +8,7 @@ import (
 	"connectrpc.com/connect"
 
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/events"
 	adminv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1/adminv1connect"
 )
@@ -15,11 +16,12 @@ import (
 var _ adminv1connect.AdminServiceHandler = (*AdminService)(nil)
 
 type AdminService struct {
-	q *db.Queries
+	q   *db.Queries
+	hub *events.Hub // optional — if non-nil, role mutations auto-kick the affected user
 }
 
-func NewAdminService(q *db.Queries) *AdminService {
-	return &AdminService{q: q}
+func NewAdminService(q *db.Queries, hub *events.Hub) *AdminService {
+	return &AdminService{q: q, hub: hub}
 }
 
 func (s *AdminService) ListUsers(ctx context.Context, req *connect.Request[adminv1.ListUsersRequest]) (*connect.Response[adminv1.ListUsersResponse], error) {
@@ -78,6 +80,12 @@ func (s *AdminService) AssignRole(ctx context.Context, req *connect.Request[admi
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("assign role: %w", err))
 	}
+	// Kick the user's open SSE connections so the next reconnect carries the
+	// new role list. Best-effort — the kick targets users by Keycloak sub,
+	// which equals users.id in our seed data.
+	if s.hub != nil {
+		s.hub.KickUser(req.Msg.UserId)
+	}
 	// Note: full implementation would also sync to Keycloak via Admin API; deferred for now.
 	roleNames, _ := s.q.ListUserRoleNames(ctx, req.Msg.UserId)
 	roles := make([]adminv1.Role, 0, len(roleNames))
@@ -106,6 +114,9 @@ func (s *AdminService) RevokeRole(ctx context.Context, req *connect.Request[admi
 		RoleID: role.ID,
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("revoke role: %w", err))
+	}
+	if s.hub != nil {
+		s.hub.KickUser(req.Msg.UserId)
 	}
 	roleNames, _ := s.q.ListUserRoleNames(ctx, req.Msg.UserId)
 	roles := make([]adminv1.Role, 0, len(roleNames))

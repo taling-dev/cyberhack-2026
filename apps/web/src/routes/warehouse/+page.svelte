@@ -5,6 +5,8 @@
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { WarehouseService } from '$lib/gen/simaops/warehouse/v1/warehouse_pb';
+  import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
+  import { focusTrap } from '$lib/actions/focusTrap.svelte';
 
   const lotClient = createClient(LotService, transport);
   const whClient = createClient(WarehouseService, transport);
@@ -99,7 +101,7 @@
         </thead>
         <tbody class="divide-y">
           {#each lots as lot}
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={lot.id}>
               <td class="px-4 py-3 font-mono text-xs">{lot.lotNumber}</td>
               <td class="px-4 py-3">{lot.materialName}</td>
               <td class="px-4 py-3 text-xs text-gray-600">
@@ -134,7 +136,10 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="assign-title"
+    tabindex="-1"
+    use:focusTrap
     onclick={(e) => { if (e.target === e.currentTarget) showModal = false; }}
+    onkeydown={(e) => { if (e.key === 'Escape') showModal = false; }}
   >
     <div class="bg-white rounded-lg p-6 w-full max-w-lg space-y-4 shadow-xl">
       <h2 id="assign-title" class="text-lg font-bold">{$t('warehouse.assign_modal_title')}: {selectedLotNumber}</h2>

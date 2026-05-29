@@ -54,6 +54,15 @@ func ReadyzHandler(db *sql.DB, minioClient *storage.MinIOClient) http.HandlerFun
 			// MinIO is non-fatal for readiness — only QC upload requires it.
 		}
 
+		// Clock skew vs Keycloak. Fatal only after 3 consecutive failures
+		// (>60s skew) — a single transient Keycloak hiccup shouldn't kick
+		// us out of the load balancer.
+		skewCheck, skewOK := CheckSkewForReadiness(ctx)
+		checks["clock_skew"] = skewCheck
+		if !skewOK {
+			ok = false
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		if ok {
 			w.WriteHeader(http.StatusOK)

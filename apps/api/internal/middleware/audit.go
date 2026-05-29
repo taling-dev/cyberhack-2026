@@ -222,3 +222,7 @@ func (r *auditResponseRecorder) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
 }
+
+// Unwrap exposes the underlying writer for http.NewResponseController so SSE
+// streams traversing this middleware can still flush.
+func (r *auditResponseRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }

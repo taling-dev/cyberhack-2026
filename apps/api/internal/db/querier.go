@@ -12,6 +12,12 @@ import (
 type Querier interface {
 	AssignUserRole(ctx context.Context, arg AssignUserRoleParams) error
 	AvgQCConfidence(ctx context.Context, createdAt time.Time) (interface{}, error)
+	// Atomically transitions a batch of PENDING events to PUBLISHING. Combined
+	// with `ListClaimedOutboxEvents` immediately after, this gives the leader
+	// exclusive ownership of a batch — preventing any racing leader (during
+	// election handoff) or this same leader (after a recovered crash) from
+	// re-publishing a row that was already taken.
+	ClaimOutboxBatch(ctx context.Context, limit int32) (int64, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
 	CountLots(ctx context.Context) (int64, error)
 	CountLotsByStatus(ctx context.Context, status LotsStatus) (int64, error)
@@ -31,6 +37,11 @@ type Querier interface {
 	GetIdempotencyKey(ctx context.Context, keyHash string) (IdempotencyKey, error)
 	GetLot(ctx context.Context, id string) (Lot, error)
 	GetLotByNumber(ctx context.Context, lotNumber string) (Lot, error)
+	// Locks the row for the duration of the transaction (TiDB pessimistic mode).
+	// Used by UpdateLotStatus to close a TOCTOU race: without FOR UPDATE, a
+	// concurrent caller could change `status` between our read and our write,
+	// letting both transitions succeed even though only one should.
+	GetLotForUpdate(ctx context.Context, id string) (Lot, error)
 	GetQCJob(ctx context.Context, id string) (QcJob, error)
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
@@ -43,6 +54,10 @@ type Querier interface {
 	ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByActorParams) ([]AuditLog, error)
 	ListAuditLogsByEntity(ctx context.Context, arg ListAuditLogsByEntityParams) ([]AuditLog, error)
 	ListAvailableLocations(ctx context.Context) ([]WarehouseLocation, error)
+	// Reads the rows just claimed by ClaimOutboxBatch. Singleton-leader semantics
+	// mean we are the only writer; the SELECT cannot see anyone else's claim
+	// because no one else is allowed to claim.
+	ListClaimedOutboxEvents(ctx context.Context, limit int32) ([]ListClaimedOutboxEventsRow, error)
 	ListLots(ctx context.Context, arg ListLotsParams) ([]Lot, error)
 	ListLotsByMaterialType(ctx context.Context, arg ListLotsByMaterialTypeParams) ([]Lot, error)
 	ListLotsByStatus(ctx context.Context, arg ListLotsByStatusParams) ([]Lot, error)
@@ -55,8 +70,20 @@ type Querier interface {
 	ListWarehouseAssignments(ctx context.Context, arg ListWarehouseAssignmentsParams) ([]WarehouseAssignment, error)
 	ListWarehouseLocations(ctx context.Context) ([]WarehouseLocation, error)
 	ListWarehouseLocationsByZone(ctx context.Context, zone string) ([]WarehouseLocation, error)
+	// Final failure path: retry budget exhausted. Status moves PUBLISHING → FAILED
+	// so the row leaves the active queue and only resurfaces if an operator
+	// manually resets it (e.g., after a NATS / config fix).
 	MarkOutboxFailed(ctx context.Context, id string) error
 	MarkOutboxPublished(ctx context.Context, id string) error
+	// Returns a single claimed event back to PENDING with retry_count incremented.
+	// Used when the publish call to NATS fails but the event hasn't yet exhausted
+	// its retry budget — the next poll cycle will pick it up again.
+	ReleaseClaimedToPending(ctx context.Context, id string) error
+	// Called once on publisher startup. Recovers events left in PUBLISHING by a
+	// prior leader that crashed mid-publish. They go back to PENDING and the
+	// new leader's next poll cycle re-claims and re-publishes them. NATS
+	// `Nats-Msg-Id` dedup ensures stream consumers don't see duplicates.
+	ResetStuckPublishingEvents(ctx context.Context) (int64, error)
 	RevokeUserRole(ctx context.Context, arg RevokeUserRoleParams) error
 	UpdateIdempotencyResponse(ctx context.Context, arg UpdateIdempotencyResponseParams) error
 	UpdateLocationStatus(ctx context.Context, arg UpdateLocationStatusParams) error

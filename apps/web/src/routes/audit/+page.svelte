@@ -4,6 +4,7 @@
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { AuditService } from '$lib/gen/simaops/audit/v1/audit_pb';
+  import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
 
   const client = createClient(AuditService, transport);
 
@@ -64,7 +65,7 @@
         </thead>
         <tbody class="divide-y">
           {#each logs as log}
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={log.id}>
               <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{log.createdAt ? new Date(Number(log.createdAt.seconds) * 1000).toLocaleString() : ''}</td>
               <td class="px-4 py-3">
                 <span class="text-xs font-medium">{log.actorUserId}</span>
@@ -88,8 +89,8 @@
 
     {#if hasPrev || hasNext}
       <div class="flex justify-center gap-2 pt-2">
-        <button disabled={!hasPrev} onclick={prevPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">← Prev</button>
-        <button disabled={!hasNext} onclick={nextPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">Next →</button>
+        <button disabled={!hasPrev} onclick={prevPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">{$t('common.prev')}</button>
+        <button disabled={!hasNext} onclick={nextPage} class="px-3 py-1.5 border rounded text-sm disabled:opacity-40">{$t('common.next')}</button>
       </div>
     {/if}
   {/if}

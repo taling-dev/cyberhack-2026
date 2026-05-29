@@ -12,15 +12,15 @@ env:
   NATS_URL: "nats://nats.platform:4222"
   TIDB_HOST: "simaops-tidb.platform"
   TIDB_PORT: "4000"
-  TIDB_USER: "root"
   TIDB_DB: "simaops"
   MINIO_ENDPOINT: "minio.platform:9000"
   QC_STRATEGY: "mock"
   MODEL_VERSION: "mock-v0.1.0"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability:4317"
 
-# AI worker uses MINIO_ACCESS_KEY + MINIO_SECRET_KEY from the Secret.
-# It also accepts TIDB_PASSWORD from the Secret (currently empty for root).
+# AI worker reads TIDB_USER + TIDB_PASSWORD + MINIO_ACCESS_KEY + MINIO_SECRET_KEY
+# from the simaops-infra-creds Secret. Service-account user `simaops` (not root)
+# has SELECT/INSERT/UPDATE/DELETE on the simaops database only.
 envFrom:
   - secretRef:
       name: simaops-infra-creds

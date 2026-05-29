@@ -70,6 +70,80 @@ docs/                   Architecture, API, RBAC, deployment docs
 - [Deployment](docs/deployment.md)
 - [Demo Script](docs/demo-script.md)
 
+## Realtime updates
+
+The Web UI receives live updates over Server-Sent Events. Mutations on the
+API publish events to NATS via the outbox publisher; the API fans them out
+to all locally-connected SSE clients with role-based and owner-scoped
+filtering.
+
+```
+Outbox → NATS → API hub → /events SSE → BFF passthrough → EventSource
+                                                               │
+                                                               ├─→ TanStack Query invalidation
+                                                               ├─→ Row-highlight action
+                                                               ├─→ Toaster (role-targeted)
+                                                               └─→ Live nav badges
+```
+
+**Endpoint:** `GET /events` (Authorization: Bearer required). The browser
+hits `/api/v1/events` which is forwarded by the SvelteKit BFF.
+
+**Envelope schema** (`apps/api/internal/events/envelope.go`):
+
+```json
+{
+  "event_id":      "uuid",
+  "event_type":    "qc.job.created",
+  "occurred_at":   "2026-05-27T04:10:00Z",
+  "actor_id":      "kc-user-id",
+  "owner_user_id": "kc-user-id",
+  "resource_id":   "lot-id-or-qc-job-id",
+  "payload":       { ... }
+}
+```
+
+**Subjects:** `lot.created`, `lot.status_changed`, `qc.job.created`,
+`qc.job.completed`, `qc.job.needs_human_review`, `qc.job.reviewed`,
+`qc.job.failed`, `qc.job.approved`, `warehouse.slot_assigned`,
+`audit.log_created`.
+
+**Role / owner filtering** (`apps/api/internal/events/filter.go`):
+
+| Role | Allowed subjects | Owner-scoped |
+|------|------------------|--------------|
+| `OPERATOR` | `lot.>`, `warehouse.slot_assigned`, `qc.job.failed`, `qc.job.completed` | yes — only events for lots they created |
+| `QC_SUPERVISOR` | `lot.>`, `qc.>` | no |
+| `WAREHOUSE_STAFF` | `lot.>`, `warehouse.>`, `qc.job.approved`, `qc.job.completed` | no |
+| `MANAGER`, `ADMIN` | everything | no |
+
+**Auth-refresh resilience.** Browsers hit `/auth/heartbeat` every 60s so
+the access cookie rotates before the API forces a reconnect. On any 401,
+the client runs a three-tier recovery:
+
+1. **Force refresh** (`/auth/heartbeat?force=true`) — exchanges the refresh
+   token for a fresh access token.
+2. **Silent OIDC renew** — invisible iframe at `/auth/login?silent=1` does a
+   `prompt=none` OIDC roundtrip if the Keycloak SSO session is still alive.
+3. **Popup login** — `SessionExpiredModal` opens `/auth/login?popup=1` in a
+   popup; on success the parent window reconnects with no work loss.
+
+Form drafts (new lot, QC review, slot assignment) are auto-saved to
+`localStorage` every 500ms and survive any of the above tier transitions.
+
+**Verification scripts:**
+
+```bash
+bash scripts/e2e-realtime.sh         # full pipeline + role-filter assertions
+bash scripts/e2e-token-refresh.sh    # 4-min test, lowers TTL to 120s
+```
+
+**Observability:** the `simaops-api` Grafana dashboard's *SSE / Realtime* row
+shows active connections per role, events/sec by subject, drops by reason,
+hub dispatch p99, and clock skew vs Keycloak. Alerts:
+`SimaopsSSEHighSlowClientDrops`, `SimaopsSSEHighEvictions`,
+`SimaopsSSEDispatchPanics`, `SimaopsAPIClockSkewHigh`.
+
 ## License
 
 Proprietary — Sima Arome / CYBERHACK 2026.

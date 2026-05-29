@@ -140,4 +140,50 @@ spec:
           annotations:
             summary: "Lots stuck in AI_PROCESSING for over 15 minutes"
             description: "{{ "{{" }} $value {{ "}}" }} lot(s) have been processing for over 15m. AI worker may be stalled or unable to upload results."
+
+    - name: simaops.sse
+      interval: 60s
+      rules:
+        # SSEHighSlowClientDrops — non-zero drop rate from full client channels.
+        # A small trickle is normal under load; sustained > 1/s suggests we
+        # need to grow the channel buffer or investigate slow consumers.
+        - alert: SimaopsSSEHighSlowClientDrops
+          expr: rate(simaops_api_sse_events_dropped_total{reason="slow_client"}[5m]) > 1
+          for: 10m
+          labels: {severity: warning, service: simaops-api}
+          annotations:
+            summary: "SSE slow-client drop rate above 1/s for 10m"
+            description: "{{ "{{" }} $value {{ "}}" }} events/sec dropped due to full client channels."
+
+        # SSEHighEvictions — per-user LRU eviction rate. Normal usage is 0;
+        # sustained eviction indicates a runaway client (browser tab loop) or
+        # a coordinated DDoS via many SSE handshakes.
+        - alert: SimaopsSSEHighEvictions
+          expr: rate(simaops_api_sse_connections_evicted_total[10m]) > 0.5
+          for: 10m
+          labels: {severity: warning, service: simaops-api}
+          annotations:
+            summary: "SSE per-user eviction rate above 0.5/s for 10m"
+            description: "Possible runaway client or DDoS — check connection counts per user."
+
+        # SSEDispatchPanics — should always be zero. Any non-zero count means
+        # we hit a bug in the NATS message handler (envelope parse, filter logic).
+        - alert: SimaopsSSEDispatchPanics
+          expr: increase(simaops_api_sse_dispatch_panics_total[5m]) > 0
+          for: 1m
+          labels: {severity: critical, service: simaops-api}
+          annotations:
+            summary: "SSE dispatcher recovered from panic"
+            description: "{{ "{{" }} $value {{ "}}" }} panic(s) in the last 5m. Inspect API logs for the recovered stack trace."
+
+        # APIClockSkewHigh — API pod's clock vs Keycloak more than 30s off.
+        # JWT validation has 60s leeway so we still serve traffic, but anything
+        # above 30s should be investigated (chrony broken, NTP server unreachable).
+        - alert: SimaopsAPIClockSkewHigh
+          expr: abs(simaops_api_clock_skew_seconds) > 30
+          for: 5m
+          labels: {severity: warning, service: simaops-api}
+          annotations:
+            summary: "API clock skew vs Keycloak above 30s for 5m"
+            description: "Skew is {{ "{{" }} $value {{ "}}" }}s. Check NTP/chrony on the underlying node."
 {{- end }}

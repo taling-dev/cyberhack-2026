@@ -5,6 +5,13 @@
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "sslRequired": "none",
+
+  "ssoSessionMaxLifespan": 86400,
+  "ssoSessionIdleTimeout": 28800,
+  "accessTokenLifespan": 300,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "offlineSessionIdleTimeout": 2592000,
   "roles": {
     "realm": [
       { "name": "OPERATOR", "description": "Lot intake and QC image upload" },

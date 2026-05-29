@@ -56,12 +56,35 @@ func main() {
 	defer db.Close()
 
 	natsURL := getEnv("NATS_URL", "nats://localhost:4222")
-	nc, err := nats.Connect(natsURL, nats.Name("simaops-outbox-publisher"))
+	// Reconnect options: NATS goes through brief blips during cluster
+	// rolling restarts. -1 = retry forever, 2s spacing. The handlers below
+	// log a structured event on each transition so an operator (or a NATS
+	// reconnect alert) can see what happened.
+	nc, err := nats.Connect(natsURL,
+		nats.Name("simaops-outbox-publisher"),
+		nats.MaxReconnects(-1),
+		nats.ReconnectWait(2*time.Second),
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
+			slog.Warn("nats disconnected", "err", err)
+		}),
+		nats.ReconnectHandler(func(c *nats.Conn) {
+			slog.Info("nats reconnected", "url", c.ConnectedUrl())
+		}),
+		nats.ClosedHandler(func(_ *nats.Conn) {
+			slog.Error("nats connection permanently closed — exiting")
+			os.Exit(1) // let the deployment restart us
+		}),
+	)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "err", err)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	// Drain (not Close) so any in-flight publishes are awaited on shutdown.
+	defer func() {
+		if err := nc.Drain(); err != nil {
+			slog.Warn("nats drain error", "err", err)
+		}
+	}()
 
 	js, err := jetstream.New(nc)
 	if err != nil {
@@ -74,6 +97,14 @@ func main() {
 		Subjects: []string{"qc.>", "lot.>", "warehouse.>", "audit.>"},
 		Storage:  jetstream.FileStorage,
 		MaxAge:   7 * 24 * time.Hour,
+		// 1 GiB cap — at our event rate (~tens of events/sec peak, ~200 bytes
+		// each) one week of retention fits in tens of MiB. The cap protects
+		// against unbounded disk usage if a future bug emits high-frequency
+		// events. NATS will drop oldest first when the limit is reached.
+		MaxBytes: 1 * 1024 * 1024 * 1024,
+		// Replicas defaults to 1 (current cluster has a single nats-0 pod).
+		// When we scale NATS to 3 nodes for production HA, set Replicas: 3
+		// here and the stream will be migrated automatically by JetStream.
 	})
 	if err != nil {
 		slog.Error("failed to create stream", "err", err)
@@ -150,6 +181,16 @@ func runWithLeaderElection(ctx context.Context, db *sql.DB, js jetstream.JetStre
 			OnStartedLeading: func(leaderCtx context.Context) {
 				slog.Info("became leader, starting poll loop", "identity", identity)
 				outboxIsLeader.Set(1)
+				// Recovery: any rows left in PUBLISHING by a prior crashed
+				// leader belong to no one now. Reset them to PENDING so we
+				// re-claim and re-publish (NATS Nats-Msg-Id dedup keeps
+				// stream consumers from seeing duplicates).
+				if res, err := db.ExecContext(leaderCtx,
+					"UPDATE outbox_events SET status = 'PENDING' WHERE status = 'PUBLISHING'"); err != nil {
+					slog.Warn("startup reset of stuck PUBLISHING rows failed", "err", err)
+				} else if n, _ := res.RowsAffected(); n > 0 {
+					slog.Info("recovered stuck PUBLISHING rows", "count", n)
+				}
 				pollLoop(leaderCtx, db, js)
 			},
 			OnStoppedLeading: func() {
@@ -194,11 +235,56 @@ func updateBacklogGauge(ctx context.Context, db *sql.DB) {
 	outboxBacklogSize.Set(n)
 }
 
+// publishPending implements the two-phase claim pattern:
+//
+//   Phase 1 (claim):  UPDATE … SET status='PUBLISHING' WHERE status='PENDING'
+//                     ORDER BY created_at LIMIT N. This is atomic in the DB
+//                     and gives us exclusive ownership of a batch — even if
+//                     leader election races during a handoff, only one
+//                     publisher can hold the PUBLISHING rows at any time.
+//
+//   Phase 2 (publish): for each claimed row, publish to NATS with
+//                     Nats-Msg-Id deduplication, then transition
+//                     PUBLISHING → PUBLISHED on success or PUBLISHING →
+//                     PENDING (with retry_count++) on transient failure or
+//                     PUBLISHING → FAILED if the retry budget is exhausted.
+//
+//   Recovery:         on publisher startup, ResetStuckPublishingEvents is
+//                     called once before pollLoop begins. Any rows left in
+//                     PUBLISHING by a crashed prior leader are returned to
+//                     PENDING so the new leader re-publishes them.
+//
+// The previous one-phase pattern (`SELECT … WHERE status='PENDING'` then
+// publish, then `UPDATE PUBLISHED`) was vulnerable to leader handoffs: a
+// failover after publish-but-before-mark would let the next leader re-publish
+// the same row. NATS Nats-Msg-Id absorbs the duplicate in the JetStream
+// stream layer, but core NATS subscribers (the SSE hub) still receive a
+// duplicate. With the claim phase, only one leader at a time can own the
+// row — so a failover immediately after publish leaves the row in
+// PUBLISHING, and the new leader's reset moves it to PENDING for re-publish.
 func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
-	rows, err := db.QueryContext(ctx,
-		"SELECT id, event_type, payload_json, retry_count FROM outbox_events WHERE status = 'PENDING' ORDER BY created_at ASC LIMIT 100")
+	// Phase 1: claim.
+	const batchSize = 100
+	res, err := db.ExecContext(ctx,
+		"UPDATE outbox_events SET status = 'PUBLISHING' WHERE status = 'PENDING' ORDER BY created_at ASC LIMIT ?",
+		batchSize,
+	)
 	if err != nil {
-		slog.Error("poll query failed", "err", err)
+		slog.Error("claim phase failed", "err", err)
+		return
+	}
+	claimed, _ := res.RowsAffected()
+	if claimed == 0 {
+		return // nothing to do this tick
+	}
+
+	// Phase 2: read the claimed batch.
+	rows, err := db.QueryContext(ctx,
+		"SELECT id, event_type, payload_json, retry_count FROM outbox_events WHERE status = 'PUBLISHING' ORDER BY created_at ASC LIMIT ?",
+		batchSize,
+	)
+	if err != nil {
+		slog.Error("read-claimed phase failed", "err", err)
 		return
 	}
 
@@ -222,10 +308,13 @@ func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
 
 	for _, p := range batch {
 		if p.retryCount >= maxRetries {
+			// Move PUBLISHING → FAILED. Bumping retry_count is informative
+			// for operators tailing the table.
 			_, _ = db.ExecContext(ctx,
-				"UPDATE outbox_events SET status = 'FAILED' WHERE id = ?", p.id)
+				"UPDATE outbox_events SET status = 'FAILED', retry_count = retry_count + 1 WHERE id = ? AND status = 'PUBLISHING'", p.id)
 			outboxEventsFailedTotal.WithLabelValues(p.eventType).Inc()
-			slog.Warn("event marked FAILED after max retries", "id", p.id, "retry_count", p.retryCount)
+			slog.Warn("event marked FAILED after max retries",
+				"id", p.id, "retry_count", p.retryCount)
 			continue
 		}
 
@@ -249,17 +338,22 @@ func publishPending(ctx context.Context, db *sql.DB, js jetstream.JetStream) {
 		_, err := js.PublishMsg(pubCtx, msg, jetstream.WithMsgID(p.id))
 		outboxPublishDurationSeconds.WithLabelValues(p.eventType).Observe(time.Since(publishStart).Seconds())
 		if err != nil {
-			slog.Warn("publish failed, will retry", "id", p.id, "err", err)
+			// Transient publish failure — release back to PENDING so the
+			// next poll cycle retries. retry_count++ ensures we eventually
+			// graduate to FAILED if NATS is permanently broken.
+			slog.Warn("publish failed, releasing to PENDING for retry",
+				"id", p.id, "err", err)
 			_, _ = db.ExecContext(pubCtx,
-				"UPDATE outbox_events SET retry_count = retry_count + 1 WHERE id = ?", p.id)
+				"UPDATE outbox_events SET status = 'PENDING', retry_count = retry_count + 1 WHERE id = ? AND status = 'PUBLISHING'", p.id)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			span.End()
 			continue
 		}
 
+		// Successful publish — transition PUBLISHING → PUBLISHED.
 		_, err = db.ExecContext(pubCtx,
-			"UPDATE outbox_events SET status = 'PUBLISHED', published_at = CURRENT_TIMESTAMP WHERE id = ?", p.id)
+			"UPDATE outbox_events SET status = 'PUBLISHED', published_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'PUBLISHING'", p.id)
 		if err != nil {
 			slog.Error("failed to mark published", "id", p.id, "err", err)
 			span.RecordError(err)

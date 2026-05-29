@@ -4,6 +4,7 @@
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
 
   const client = createClient(LotService, transport);
 
@@ -92,11 +93,11 @@
         onclick={() => { statusFilter = 0; materialFilter = 0; pageToken = ''; pageHistory = ['']; }}
         class="text-xs text-gray-500 hover:text-gray-900 underline"
       >
-        Clear filters
+        {$t('common.clear_filters')}
       </button>
     {/if}
     <div class="ml-auto text-xs text-gray-500">
-      {lots.length} {lots.length === 1 ? 'result' : 'results'} on this page
+      {lots.length} {lots.length === 1 ? $t('common.result') : $t('common.results')} {$t('common.results_on_page')}
     </div>
   </div>
 
@@ -126,7 +127,7 @@
         </thead>
         <tbody class="divide-y">
           {#each lots as lot}
-            <tr class="hover:bg-gray-50">
+            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={lot.id}>
               <td class="px-4 py-3">
                 <a href="/lots/{lot.id}" class="text-blue-600 hover:underline font-mono text-xs">{lot.lotNumber}</a>
               </td>
@@ -155,12 +156,12 @@
           disabled={!hasPrev}
           onclick={prevPage}
           class="px-3 py-1.5 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
-        >← Prev</button>
+        >{$t('common.prev')}</button>
         <button
           disabled={!hasNext}
           onclick={nextPage}
           class="px-3 py-1.5 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
-        >Next →</button>
+        >{$t('common.next')}</button>
       </div>
     {/if}
   {/if}

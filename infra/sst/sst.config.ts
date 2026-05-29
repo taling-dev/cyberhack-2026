@@ -141,6 +141,27 @@ export default $config({
       return sources[sources.length - 1]?.imageId ?? sources[0]?.imageId ?? "";
     });
 
+    // Cloud-init userdata for worker nodes — enforces NTP sync before the
+    // kubelet starts so a node with a misconfigured clock can't join the
+    // cluster and serve traffic with broken JWT validation. Oracle Linux 8/9
+    // ships chrony by default; this script ensures chronyd is enabled and
+    // synced within 30s.
+    //
+    // Note: existing OKE worker images include `oke-bootstrap.sh`. We use
+    // cloud-init's `runcmd` rather than overriding the bootstrap so OCI's
+    // managed onboarding still runs.
+    const workerUserData = Buffer.from(
+      [
+        "#cloud-config",
+        "runcmd:",
+        "  - systemctl enable --now chronyd",
+        "  - chronyc waitsync 30 0.1 0 1 || (echo \"NTP failed to sync within 30s\" >&2; exit 1)",
+        "  - chronyc tracking",
+        "",
+      ].join("\n"),
+      "utf-8",
+    ).toString("base64");
+
     // ─── Node Pool (VM.Standard.E4.Flex, burstable, AMD) ─────────
     const nodePool = new oci.containerengine.NodePool("simaops-pool", {
       compartmentId,
@@ -165,6 +186,10 @@ export default $config({
         sourceType: "IMAGE",
         imageId,
         bootVolumeSizeInGbs: "50",
+      },
+      // Inject cloud-init via nodeMetadata.user_data (base64-encoded).
+      nodeMetadata: {
+        user_data: workerUserData,
       },
     });
 
