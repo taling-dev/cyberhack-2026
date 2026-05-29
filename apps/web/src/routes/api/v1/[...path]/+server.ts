@@ -134,8 +134,17 @@ const handler: RequestHandler = async ({ request, params, locals, url, cookies }
   const respHeaders = new Headers();
   for (const [k, v] of res.headers.entries()) {
     const lk = k.toLowerCase();
-    // Skip hop-by-hop headers.
-    if (lk === 'transfer-encoding' || lk === 'connection' || lk === 'content-encoding') {
+    // Skip hop-by-hop / length-framing headers. We re-stream res.body, so the
+    // platform must recompute the framing — forwarding the upstream
+    // content-length (or content-encoding) can leave a declared length that
+    // doesn't match the bytes we actually emit, which browsers reject as
+    // ERR_HTTP2_PROTOCOL_ERROR even though the status is 200.
+    if (
+      lk === 'transfer-encoding' ||
+      lk === 'connection' ||
+      lk === 'content-encoding' ||
+      lk === 'content-length'
+    ) {
       continue;
     }
     respHeaders.set(k, v);
