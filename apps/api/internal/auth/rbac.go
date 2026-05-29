@@ -34,10 +34,14 @@ var rpcRoles = map[string][]string{
 	"/simaops.audit.v1.AuditService/ListAuditLogs":       {"MANAGER", "ADMIN"},
 	"/simaops.audit.v1.AuditService/GetEntityAuditTrail": {"MANAGER", "ADMIN"},
 
-	// DashboardService — MANAGER, ADMIN
-	"/simaops.dashboard.v1.DashboardService/GetOpsDashboard":    {"MANAGER", "ADMIN"},
-	"/simaops.dashboard.v1.DashboardService/GetQCMetrics":       {"MANAGER", "ADMIN"},
-	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics": {"MANAGER", "ADMIN"},
+	// DashboardService — read-only aggregate operational metrics. The
+	// dashboard is the universal post-login landing page for every role
+	// (see web nav: /dashboard is visible to all roles), and these RPCs
+	// return only non-sensitive summary counts, so any authenticated user
+	// may read them — same pattern as GetLot/ListLots/ListLocations.
+	"/simaops.dashboard.v1.DashboardService/GetOpsDashboard":    {},
+	"/simaops.dashboard.v1.DashboardService/GetQCMetrics":       {},
+	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics": {},
 
 	// AdminService — ADMIN only
 	"/simaops.admin.v1.AdminService/ListUsers":  {"ADMIN"},
