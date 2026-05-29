@@ -8,27 +8,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT_PROD }}
+      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure OCI CLI
-        uses: oracle-actions/configure-oci-cli@v1.5.0
+      - name: Configure kubectl for OKE
+        uses: oracle-actions/configure-kubectl-oke@v1.5.0
         with:
-          tenancy: ${{ secrets.OCI_TENANCY_OCID }}
-          user: ${{ secrets.OCI_USER_OCID }}
-          fingerprint: ${{ secrets.OCI_FINGERPRINT }}
-          privateKey: ${{ secrets.OCI_PRIVATE_KEY_PROD }}
-          region: ${{ secrets.OCI_REGION }}
-
-      - name: Get OKE kubeconfig
-        run: |
-          oci ce cluster create-kubeconfig \
-            --cluster-id ${{ secrets.OCI_CLUSTER_OCID_PROD }} \
-            --file $HOME/.kube/config \
-            --region ${{ secrets.OCI_REGION }} \
-            --token-version 2.0.0 \
-            --kube-endpoint PUBLIC_ENDPOINT
+          cluster: ${{ secrets.OCI_CLUSTER_OCID_PROD }}
 
       - name: Install Helm
         uses: azure/setup-helm@v4

@@ -10,27 +10,23 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure OCI CLI
-        uses: oracle-actions/configure-oci-cli@v1.5.0
+      # Installs + configures kubectl for the target OKE cluster using the
+      # OCI_CLI_* env vars above. Requires the cluster to expose a PUBLIC
+      # Kubernetes API endpoint (it does — *.sslip.io).
+      - name: Configure kubectl for OKE
+        uses: oracle-actions/configure-kubectl-oke@v1.5.0
         with:
-          tenancy: ${{ secrets.OCI_TENANCY_OCID }}
-          user: ${{ secrets.OCI_USER_OCID }}
-          fingerprint: ${{ secrets.OCI_FINGERPRINT }}
-          privateKey: ${{ secrets.OCI_PRIVATE_KEY }}
-          region: ${{ secrets.OCI_REGION }}
-
-      - name: Get OKE kubeconfig
-        run: |
-          oci ce cluster create-kubeconfig \
-            --cluster-id ${{ secrets.OCI_CLUSTER_OCID }} \
-            --file $HOME/.kube/config \
-            --region ${{ secrets.OCI_REGION }} \
-            --token-version 2.0.0 \
-            --kube-endpoint PUBLIC_ENDPOINT
+          cluster: ${{ secrets.OCI_CLUSTER_OCID }}
 
       - name: Install Helm
         uses: azure/setup-helm@v4
