@@ -268,19 +268,29 @@ func (q *Queries) UpdateLocationStatus(ctx context.Context, arg UpdateLocationSt
 }
 
 const zoneCapacityMetrics = `-- name: ZoneCapacityMetrics :many
-SELECT zone, SUM(capacity) as total_capacity,
-       SUM(CASE WHEN current_status = 'OCCUPIED' THEN 1 ELSE 0 END) as occupied,
-       SUM(CASE WHEN current_status = 'AVAILABLE' THEN capacity ELSE 0 END) as available
-FROM warehouse_locations GROUP BY zone
+SELECT l.zone,
+       SUM(l.capacity) + COALESCE(SUM(ac.cnt), 0) AS total_capacity,
+       COALESCE(SUM(ac.cnt), 0) AS occupied,
+       SUM(l.capacity) AS available
+FROM warehouse_locations l
+LEFT JOIN (
+  SELECT location_id, COUNT(*) AS cnt
+  FROM warehouse_assignments WHERE status = 'ACTIVE' GROUP BY location_id
+) ac ON ac.location_id = l.id
+GROUP BY l.zone ORDER BY l.zone
 `
 
 type ZoneCapacityMetricsRow struct {
 	Zone          string      `json:"zone"`
-	TotalCapacity interface{} `json:"total_capacity"`
+	TotalCapacity int32       `json:"total_capacity"`
 	Occupied      interface{} `json:"occupied"`
 	Available     interface{} `json:"available"`
 }
 
+// `capacity` is REMAINING slots (AssignSlot decrements it), so it equals
+// "available". Occupancy is the count of ACTIVE assignments for the zone's
+// locations; total = remaining + occupied, which stays stable as lots are
+// assigned (available shrinks, occupied grows). Ordered alphabetically by zone.
 func (q *Queries) ZoneCapacityMetrics(ctx context.Context) ([]ZoneCapacityMetricsRow, error) {
 	rows, err := q.db.QueryContext(ctx, zoneCapacityMetrics)
 	if err != nil {

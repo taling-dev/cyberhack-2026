@@ -109,6 +109,10 @@ type Querier interface {
 	UpdateQCJobStarted(ctx context.Context, id string) error
 	UpdateQCJobStatus(ctx context.Context, arg UpdateQCJobStatusParams) error
 	UpdateQCResultReview(ctx context.Context, arg UpdateQCResultReviewParams) error
+	// `capacity` is REMAINING slots (AssignSlot decrements it), so it equals
+	// "available". Occupancy is the count of ACTIVE assignments for the zone's
+	// locations; total = remaining + occupied, which stays stable as lots are
+	// assigned (available shrinks, occupied grows). Ordered alphabetically by zone.
 	ZoneCapacityMetrics(ctx context.Context) ([]ZoneCapacityMetricsRow, error)
 }
 
