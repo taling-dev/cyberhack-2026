@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { t } from 'svelte-i18n';
+  import { get } from 'svelte/store';
   import { createQuery, getQueryClientContext } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
@@ -41,11 +42,11 @@
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      uploadError = 'Only image files are allowed';
+      uploadError = get(t)('qc.upload_image_only');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      uploadError = 'File too large (max 10MB)';
+      uploadError = get(t)('qc.upload_too_large');
       return;
     }
 
@@ -80,11 +81,11 @@
             reject(new Error(`Upload failed: ${xhr.status}`));
           }
         };
-        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.onerror = () => reject(new Error(get(t)('qc.upload_network_error')));
         xhr.send(file);
       });
     } catch (err: any) {
-      uploadError = err.message || 'Upload failed';
+      uploadError = err.message || get(t)('qc.upload_failed');
     } finally {
       uploading = false;
     }
@@ -108,7 +109,7 @@
       queryClient.invalidateQueries({ queryKey: ['lot', lotId] });
       queryClient.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
     } catch (e: any) {
-      qcError = e.message || 'Failed to start QC';
+      qcError = e.message || get(t)('common.error');
     } finally {
       startingQC = false;
     }
@@ -154,8 +155,8 @@
       <div class="border rounded-lg p-4 space-y-3 bg-white">
         <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('lot.storage_requirement')}</h2>
         <dl class="space-y-2 text-sm">
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.temperature_range')}</dt><dd>{$t(`temp_range.${lot.storageRequirement?.temperatureRange ?? 0}`) || '—'}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.hazard_class')}</dt><dd>{$t(`hazard.${lot.storageRequirement?.hazardClass ?? 0}`) || '—'}</dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.temperature_range')}</dt><dd>{lot.storageRequirement?.temperatureRange ? $t(`temp_range.${lot.storageRequirement.temperatureRange}`) : '—'}</dd></div>
+          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.hazard_class')}</dt><dd>{lot.storageRequirement?.hazardClass ? $t(`hazard.${lot.storageRequirement.hazardClass}`) : '—'}</dd></div>
         </dl>
       </div>
     </div>

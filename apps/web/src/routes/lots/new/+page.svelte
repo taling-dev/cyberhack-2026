@@ -73,7 +73,7 @@
       draft.clear();
       goto(`/lots/${res.lot?.id}`);
     } catch (e: any) {
-      error = e.message || 'Failed to create lot';
+      error = e.message || get(t)('lot.create_failed');
     } finally {
       submitting = false;
     }

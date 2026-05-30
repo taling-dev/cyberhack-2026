@@ -159,6 +159,14 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 
 	qtx := s.q.WithTx(tx)
 
+	// Reject a second QC job while one is already in flight for this lot, so a
+	// double-click (or re-upload during PENDING_QC) can't spawn duplicate jobs.
+	if active, err := qtx.CountActiveQCJobsForLot(ctx, msg.LotId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("count active qc jobs: %w", err))
+	} else if active > 0 {
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("lot already has an active QC job"))
+	}
+
 	if err := qtx.CreateQCJob(ctx, db.CreateQCJobParams{
 		ID:             jobID,
 		LotID:          msg.LotId,

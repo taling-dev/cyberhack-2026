@@ -8,6 +8,12 @@ SELECT * FROM qc_jobs WHERE id = ?;
 -- name: ListQCJobsByLot :many
 SELECT * FROM qc_jobs WHERE lot_id = ? ORDER BY created_at DESC;
 
+-- name: CountActiveQCJobsForLot :one
+-- Active = not yet in a terminal state (APPROVED/REJECTED/FAILED). Used to
+-- reject a duplicate CreateQCJob while a job for the lot is still in flight.
+SELECT COUNT(*) FROM qc_jobs
+WHERE lot_id = ? AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW');
+
 -- name: ListQCJobsByStatus :many
 SELECT * FROM qc_jobs WHERE status = ? ORDER BY created_at DESC LIMIT ? OFFSET ?;
 

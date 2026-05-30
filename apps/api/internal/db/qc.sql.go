@@ -23,6 +23,20 @@ func (q *Queries) AvgQCConfidence(ctx context.Context, createdAt time.Time) (int
 	return coalesce, err
 }
 
+const countActiveQCJobsForLot = `-- name: CountActiveQCJobsForLot :one
+SELECT COUNT(*) FROM qc_jobs
+WHERE lot_id = ? AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW')
+`
+
+// Active = not yet in a terminal state (APPROVED/REJECTED/FAILED). Used to
+// reject a duplicate CreateQCJob while a job for the lot is still in flight.
+func (q *Queries) CountActiveQCJobsForLot(ctx context.Context, lotID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countActiveQCJobsForLot, lotID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countQCByRecommendation = `-- name: CountQCByRecommendation :many
 SELECT recommendation, COUNT(*) as count FROM qc_results WHERE created_at >= ? GROUP BY recommendation
 `

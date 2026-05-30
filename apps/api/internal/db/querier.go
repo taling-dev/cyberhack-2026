@@ -21,6 +21,9 @@ type Querier interface {
 	// A lot may only have one non-cancelled dispatch at a time. Used to reject a
 	// duplicate CreateDispatch for a lot already being shipped.
 	CountActiveDispatchesForLot(ctx context.Context, lotID string) (int64, error)
+	// Active = not yet in a terminal state (APPROVED/REJECTED/FAILED). Used to
+	// reject a duplicate CreateQCJob while a job for the lot is still in flight.
+	CountActiveQCJobsForLot(ctx context.Context, lotID string) (int64, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
 	CountDispatches(ctx context.Context) (int64, error)
 	CountDispatchesByStatus(ctx context.Context, status DispatchesStatus) (int64, error)

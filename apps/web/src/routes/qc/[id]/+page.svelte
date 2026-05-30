@@ -60,6 +60,14 @@
   const aiResult = $derived(qcResultQuery.data?.result);
   const imageUrl = $derived(imageUrlQuery.data?.viewUrl ?? '');
 
+  // Backend requires a reason on rejection AND on approval that overrides an
+  // AI REVIEW(2)/FAIL(3) recommendation. Mirror that here so the submit button
+  // blocks before the server rejects it.
+  const reasonRequired = $derived(
+    decision === 2 ||
+    (decision === 1 && (aiResult?.recommendation === 2 || aiResult?.recommendation === 3))
+  );
+
   function openReview(d: number) {
     decision = d;
     reason = '';
@@ -95,6 +103,7 @@
           ? tt('qc.review_decision_rejected')
           : tt('qc.review_decision_recheck');
       queryClient.invalidateQueries({ queryKey: ['lot', lotId] });
+      queryClient.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
       queryClient.invalidateQueries({ queryKey: ['qc-job-for-lot', lotId] });
     } catch (e: any) {
       reviewError = e.message || $t('qc.review_failed');
@@ -246,7 +255,7 @@
           {$t('qc.reason')}
           {#if decision === 2}
             <span class="text-red-500">{$t('qc.reason_required')}</span>
-          {:else if decision === 1}
+          {:else if reasonRequired}
             <span class="text-orange-600">{$t('qc.reason_required_override')}</span>
           {:else}
             <span class="text-gray-400">{$t('qc.reason_optional')}</span>
@@ -269,7 +278,7 @@
         <button onclick={() => showModal = false} class="px-4 py-2 border rounded-md text-sm">{$t('common.cancel')}</button>
         <button
           onclick={submitReview}
-          disabled={submitting || (decision === 2 && !reason.trim())}
+          disabled={submitting || (reasonRequired && !reason.trim())}
           class="px-4 py-2 text-white rounded-md text-sm disabled:opacity-50 {decisionColors[decision]}"
         >
           {submitting ? $t('qc.submitting') : $t('qc.confirm_label')}
