@@ -40,6 +40,10 @@
     'qc.upload_requested': 'bg-orange-100 text-orange-700',
     'qc.reviewed': 'bg-green-100 text-green-700',
     'warehouse.assigned': 'bg-purple-100 text-purple-700',
+    'dispatch.created': 'bg-teal-100 text-teal-700',
+    'dispatch.status_changed': 'bg-teal-100 text-teal-700',
+    'admin.role_assigned': 'bg-indigo-100 text-indigo-700',
+    'admin.role_revoked': 'bg-indigo-100 text-indigo-700',
     'lot.status_changed': 'bg-gray-100 text-gray-700',
   };
 </script>

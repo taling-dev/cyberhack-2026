@@ -107,7 +107,7 @@
               <td class="px-4 py-3 text-xs text-gray-600">
                 {lot.storageRequirement?.temperatureRange === 1 ? '🌡️ ' :
                  lot.storageRequirement?.temperatureRange === 2 ? '❄️ ' :
-                 lot.storageRequirement?.temperatureRange === 3 ? '🧊 ' : ''}{$t(`temp_range.${lot.storageRequirement?.temperatureRange ?? 0}`).split(' (')[0]}
+                 lot.storageRequirement?.temperatureRange === 3 ? '🧊 ' : ''}{lot.storageRequirement?.temperatureRange ? $t(`temp_range.${lot.storageRequirement.temperatureRange}`).split(' (')[0] : '—'}
                 {lot.storageRequirement?.hazardClass === 2 ? ' + IBC' :
                  lot.storageRequirement?.hazardClass === 3 ? ' + IPPC' : ''}
               </td>
