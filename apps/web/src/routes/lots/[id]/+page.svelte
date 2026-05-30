@@ -6,11 +6,9 @@
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
-  import { AuditService } from '$lib/gen/simaops/audit/v1/audit_pb';
 
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
-  const auditClient = createClient(AuditService, transport);
   const queryClient = getQueryClientContext();
 
   const lotId = $derived($page.params.id);
@@ -23,7 +21,12 @@
 
   const timelineQuery = createQuery(() => ({
     queryKey: ['lot-timeline', lotId],
-    queryFn: () => auditClient.getEntityAuditTrail({ entityType: 'lot', entityId: lotId }),
+    // Use the lot-scoped LotService/GetLotTimeline (open to any authenticated
+    // user) rather than AuditService/GetEntityAuditTrail (MANAGER/ADMIN only).
+    // The lot detail page is reachable by every role, so the audit-service
+    // call 403'd for OPERATOR/QC/WAREHOUSE users. Both return the same
+    // TimelineEntry shape (action/actorUserId/actorRole/createdAt).
+    queryFn: () => lotClient.getLotTimeline({ lotId }),
     enabled: !!lotId,
   }));
 
