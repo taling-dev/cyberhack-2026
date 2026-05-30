@@ -94,6 +94,35 @@ type kcRole struct {
 	Name string `json:"name"`
 }
 
+// getUserIDByUsername resolves a Keycloak user UUID from a username. We look up
+// by username rather than trusting a caller-supplied id because the local
+// users_profile.id values are synthetic seed placeholders (e.g. "u-admin"),
+// not the Keycloak `sub` UUID the Admin API requires.
+func (k *KeycloakAdmin) getUserIDByUsername(ctx context.Context, token, username string) (string, error) {
+	endpoint := fmt.Sprintf("%s/admin/realms/%s/users?username=%s&exact=true",
+		k.serverURL, k.realm, url.QueryEscape(username))
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	res, err := k.hc.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("lookup user %q: status %d", username, res.StatusCode)
+	}
+	var users []struct {
+		ID string `json:"id"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&users); err != nil {
+		return "", err
+	}
+	if len(users) == 0 {
+		return "", fmt.Errorf("keycloak user %q not found", username)
+	}
+	return users[0].ID, nil
+}
+
 func (k *KeycloakAdmin) getRealmRole(ctx context.Context, token, roleName string) (kcRole, error) {
 	var r kcRole
 	endpoint := fmt.Sprintf("%s/admin/realms/%s/roles/%s", k.serverURL, k.realm, url.PathEscape(roleName))
@@ -110,9 +139,14 @@ func (k *KeycloakAdmin) getRealmRole(ctx context.Context, token, roleName string
 	return r, json.NewDecoder(res.Body).Decode(&r)
 }
 
-// roleMapping POSTs (assign) or DELETEs (revoke) a realm role on a user.
-func (k *KeycloakAdmin) roleMapping(ctx context.Context, method, userID, roleName string) error {
+// roleMapping POSTs (assign) or DELETEs (revoke) a realm role on a user,
+// resolving the Keycloak user UUID from the given username first.
+func (k *KeycloakAdmin) roleMapping(ctx context.Context, method, username, roleName string) error {
 	token, err := k.token(ctx)
+	if err != nil {
+		return err
+	}
+	userID, err := k.getUserIDByUsername(ctx, token, username)
 	if err != nil {
 		return err
 	}
@@ -131,23 +165,23 @@ func (k *KeycloakAdmin) roleMapping(ctx context.Context, method, userID, roleNam
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusOK {
-		return fmt.Errorf("%s role-mapping %q on %q: status %d", method, roleName, userID, res.StatusCode)
+		return fmt.Errorf("%s role-mapping %q on %q: status %d", method, roleName, username, res.StatusCode)
 	}
 	return nil
 }
 
 // AssignRealmRole mirrors a role assignment to Keycloak. No-op if disabled.
-func (k *KeycloakAdmin) AssignRealmRole(ctx context.Context, userID, roleName string) error {
+func (k *KeycloakAdmin) AssignRealmRole(ctx context.Context, username, roleName string) error {
 	if !k.Enabled() {
 		return nil
 	}
-	return k.roleMapping(ctx, http.MethodPost, userID, roleName)
+	return k.roleMapping(ctx, http.MethodPost, username, roleName)
 }
 
 // RemoveRealmRole mirrors a role revocation to Keycloak. No-op if disabled.
-func (k *KeycloakAdmin) RemoveRealmRole(ctx context.Context, userID, roleName string) error {
+func (k *KeycloakAdmin) RemoveRealmRole(ctx context.Context, username, roleName string) error {
 	if !k.Enabled() {
 		return nil
 	}
-	return k.roleMapping(ctx, http.MethodDelete, userID, roleName)
+	return k.roleMapping(ctx, http.MethodDelete, username, roleName)
 }

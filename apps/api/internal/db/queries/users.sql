@@ -13,6 +13,9 @@ SELECT COUNT(*) FROM users_profile;
 -- name: GetUserByUsername :one
 SELECT * FROM users_profile WHERE username = ?;
 
+-- name: GetUserByID :one
+SELECT * FROM users_profile WHERE id = ?;
+
 -- name: ListRoles :many
 SELECT * FROM roles ORDER BY name;
 

@@ -57,6 +57,7 @@ type Querier interface {
 	GetQCJob(ctx context.Context, id string) (QcJob, error)
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
+	GetUserByID(ctx context.Context, id string) (UsersProfile, error)
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
 	GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error)
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)

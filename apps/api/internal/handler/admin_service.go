@@ -83,15 +83,16 @@ func (s *AdminService) AssignRole(ctx context.Context, req *connect.Request[admi
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("assign role: %w", err))
 	}
 	// Mirror to Keycloak so the user's JWT carries the new role on next refresh.
-	// No-op (returns nil) when the admin service account isn't configured;
-	// a sync failure is non-fatal — the local grant already succeeded and the
-	// SSE kick below forces a re-login that re-reads roles.
-	if err := s.kc.AssignRealmRole(ctx, req.Msg.UserId, roleName); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role sync: %w", err))
+	// Resolve the Keycloak username from the local user record (local ids are
+	// synthetic placeholders, not the KC sub). No-op when the admin service
+	// account isn't configured.
+	if u, uErr := s.q.GetUserByID(ctx, req.Msg.UserId); uErr == nil {
+		if err := s.kc.AssignRealmRole(ctx, u.Username, roleName); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role sync: %w", err))
+		}
 	}
 	// Kick the user's open SSE connections so the next reconnect carries the
-	// new role list. Best-effort — the kick targets users by Keycloak sub,
-	// which equals users.id in our seed data.
+	// new role list.
 	if s.hub != nil {
 		s.hub.KickUser(req.Msg.UserId)
 	}
@@ -123,8 +124,10 @@ func (s *AdminService) RevokeRole(ctx context.Context, req *connect.Request[admi
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("revoke role: %w", err))
 	}
-	if err := s.kc.RemoveRealmRole(ctx, req.Msg.UserId, roleName); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role sync: %w", err))
+	if u, uErr := s.q.GetUserByID(ctx, req.Msg.UserId); uErr == nil {
+		if err := s.kc.RemoveRealmRole(ctx, u.Username, roleName); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role sync: %w", err))
+		}
 	}
 	if s.hub != nil {
 		s.hub.KickUser(req.Msg.UserId)
