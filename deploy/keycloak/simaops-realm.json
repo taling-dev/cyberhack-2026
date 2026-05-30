@@ -54,7 +54,7 @@
       "secret": "${SIMAOPS_API_CLIENT_SECRET:changeme-dev-secret}",
       "protocol": "openid-connect",
       "serviceAccountClientRoles": {
-        "realm-management": ["manage-users", "view-users"]
+        "realm-management": ["manage-users", "view-users", "view-realm"]
       }
     }
   ],
