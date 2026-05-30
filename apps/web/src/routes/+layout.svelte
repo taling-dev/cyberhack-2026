@@ -16,6 +16,7 @@
   import { connectRealtime, type RealtimeHandle } from '$lib/realtime.svelte';
   import { dispatchToast } from '$lib/realtime/toastDispatch';
   import { sweepOldDrafts } from '$lib/forms/draft.svelte';
+  import { authState, markRecovered } from '$lib/auth/recover';
 
   let { children, data } = $props();
 
@@ -293,6 +294,6 @@
 <!-- Realtime UX overlays -->
 <Toaster />
 <SessionExpiredModal
-  open={realtimeStatus === 'session-expired'}
-  onSignedIn={reconnectRealtime}
+  open={realtimeStatus === 'session-expired' || authState.sessionExpired}
+  onSignedIn={() => { markRecovered(); reconnectRealtime(); }}
 />

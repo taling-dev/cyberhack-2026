@@ -1,6 +1,7 @@
 import { createConnectTransport } from '@connectrpc/connect-web';
-import type { Interceptor } from '@connectrpc/connect';
+import { Code, ConnectError, type Interceptor } from '@connectrpc/connect';
 import { browser } from '$app/environment';
+import { recoverAuth } from '$lib/auth/recover';
 
 /**
  * Connect-Web transport routed through the SvelteKit BFF proxy.
@@ -41,10 +42,29 @@ const ssrGuard: Interceptor = (next) => (req) => {
   return next(req);
 };
 
+// On an Unauthenticated (401) response, run the shared auth-recovery ladder
+// (force-refresh → silent renew → session-expired modal) and retry the
+// request ONCE. Without this, a token expiry on a page with no active SSE
+// interaction surfaced as a raw error instead of triggering re-auth.
+// Recovery is single-flight, so concurrent 401s collapse into one attempt.
+const authRecovery: Interceptor = (next) => async (req) => {
+  try {
+    return await next(req);
+  } catch (err) {
+    if (err instanceof ConnectError && err.code === Code.Unauthenticated) {
+      const recovered = await recoverAuth(true);
+      if (recovered) {
+        return await next(req);
+      }
+    }
+    throw err;
+  }
+};
+
 export const transport = createConnectTransport({
   baseUrl: getApiUrl(),
   useBinaryFormat: false,
-  interceptors: [ssrGuard],
+  interceptors: [ssrGuard, authRecovery],
   // credentials: 'include' is implicit because we're same-origin.
   // No interceptor needed — cookies travel with the request automatically.
 });
