@@ -42,6 +42,20 @@
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
       "defaultClientScopes": ["openid", "profile", "email", "roles"]
+    },
+    {
+      "clientId": "simaops-api",
+      "name": "SimaOps API service account",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "secret": "${SIMAOPS_API_CLIENT_SECRET:changeme-dev-secret}",
+      "protocol": "openid-connect",
+      "serviceAccountClientRoles": {
+        "realm-management": ["manage-users", "view-users"]
+      }
     }
   ],
   "clientScopes": [

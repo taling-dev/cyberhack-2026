@@ -15,6 +15,7 @@ env:
   KEYCLOAK_ISSUER: "https://auth.161.118.244.229.sslip.io/realms/simaops"
   KEYCLOAK_INTERNAL_URL: "http://keycloak.platform:8080/realms/simaops"
   KEYCLOAK_CLIENT_ID: "simaops-web"
+  KEYCLOAK_ADMIN_CLIENT_ID: "simaops-api"
   OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.observability:4317"
   OTEL_SERVICE_NAME: "simaops-api"
   CORS_ALLOWED_ORIGINS: "https://app.161.118.244.229.sslip.io,http://localhost:5173,http://localhost:3000"

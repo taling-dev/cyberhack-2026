@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -72,18 +73,29 @@ func (s *WarehouseService) RecommendSlot(ctx context.Context, req *connect.Reque
 			continue
 		}
 
-		// Filter: hazard class compatibility
+		// Filter: drum + hazard compatibility.
+		// The lot stores hazard_class as the proto enum string
+		// ("HAZARD_CLASS_IBC"); the location arrays store the bare drum code
+		// ("IBC"), so normalize before comparing. Rules:
+		//   - drum_compatibility is the PHYSICAL constraint: the slot must be
+		//     able to hold this drum type (required match).
+		//   - hazard_allowed is a SEGREGATION list: when non-empty it whitelists
+		//     which hazard classes the zone accepts; an empty list means the
+		//     zone imposes no hazard restriction.
 		if sr.HazardClass != nil && *sr.HazardClass != "" && *sr.HazardClass != "HAZARD_CLASS_NONE" {
-			if !jsonArrayContains(loc.HazardAllowed, *sr.HazardClass) &&
-				!jsonArrayContains(loc.DrumCompatibility, *sr.HazardClass) {
-				continue
+			drum := strings.TrimPrefix(*sr.HazardClass, "HAZARD_CLASS_")
+			if !jsonArrayContains(loc.DrumCompatibility, drum) {
+				continue // slot can't physically hold this drum type
+			}
+			if !jsonArrayIsEmpty(loc.HazardAllowed) && !jsonArrayContains(loc.HazardAllowed, drum) {
+				continue // zone segregation rejects this hazard class
 			}
 		}
 
 		score := float64(loc.Capacity) // simple: prefer higher capacity
 		reason := fmt.Sprintf("matches %s (%.0f to %.0f °C)", sr.TemperatureRange, locMin, locMax)
 		if sr.HazardClass != nil && *sr.HazardClass != "" && *sr.HazardClass != "HAZARD_CLASS_NONE" {
-			reason += fmt.Sprintf(" + %s drum", *sr.HazardClass)
+			reason += fmt.Sprintf(" + %s drum", strings.TrimPrefix(*sr.HazardClass, "HAZARD_CLASS_"))
 		}
 
 		recs = append(recs, &whv1.SlotRecommendation{
@@ -151,6 +163,18 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 	loc, err := qtx.GetWarehouseLocation(ctx, msg.LocationId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("location not found"))
+	}
+
+	// 3b. Flip the slot to OCCUPIED once its last unit is taken so
+	//     ListAvailableLocations (which filters current_status='AVAILABLE')
+	//     stops recommending a full slot. Capacity > 0 stays AVAILABLE.
+	if loc.Capacity == 0 {
+		if err := qtx.UpdateLocationStatus(ctx, db.UpdateLocationStatusParams{
+			CurrentStatus: db.WarehouseLocationsCurrentStatusOCCUPIED,
+			ID:            msg.LocationId,
+		}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update location status: %w", err))
+		}
 	}
 
 	// 4. Insert the assignment row.
@@ -342,4 +366,15 @@ func jsonArrayContains(raw json.RawMessage, val string) bool {
 		}
 	}
 	return false
+}
+
+// jsonArrayIsEmpty reports whether a JSON array column holds no elements
+// (or is null/unparseable). Used to treat an empty hazard_allowed list as
+// "no segregation restriction" rather than "nothing allowed".
+func jsonArrayIsEmpty(raw json.RawMessage) bool {
+	var arr []string
+	if json.Unmarshal(raw, &arr) != nil {
+		return true
+	}
+	return len(arr) == 0
 }

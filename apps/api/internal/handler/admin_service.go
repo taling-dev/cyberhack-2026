@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/auth"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/db"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/events"
 	adminv1 "github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1"
@@ -18,10 +19,11 @@ var _ adminv1connect.AdminServiceHandler = (*AdminService)(nil)
 type AdminService struct {
 	q   *db.Queries
 	hub *events.Hub // optional — if non-nil, role mutations auto-kick the affected user
+	kc  *auth.KeycloakAdmin // mirrors role changes to Keycloak (no-op if unconfigured)
 }
 
 func NewAdminService(q *db.Queries, hub *events.Hub) *AdminService {
-	return &AdminService{q: q, hub: hub}
+	return &AdminService{q: q, hub: hub, kc: auth.NewKeycloakAdmin()}
 }
 
 func (s *AdminService) ListUsers(ctx context.Context, req *connect.Request[adminv1.ListUsersRequest]) (*connect.Response[adminv1.ListUsersResponse], error) {
@@ -80,13 +82,19 @@ func (s *AdminService) AssignRole(ctx context.Context, req *connect.Request[admi
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("assign role: %w", err))
 	}
+	// Mirror to Keycloak so the user's JWT carries the new role on next refresh.
+	// No-op (returns nil) when the admin service account isn't configured;
+	// a sync failure is non-fatal — the local grant already succeeded and the
+	// SSE kick below forces a re-login that re-reads roles.
+	if err := s.kc.AssignRealmRole(ctx, req.Msg.UserId, roleName); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role sync: %w", err))
+	}
 	// Kick the user's open SSE connections so the next reconnect carries the
 	// new role list. Best-effort — the kick targets users by Keycloak sub,
 	// which equals users.id in our seed data.
 	if s.hub != nil {
 		s.hub.KickUser(req.Msg.UserId)
 	}
-	// Note: full implementation would also sync to Keycloak via Admin API; deferred for now.
 	roleNames, _ := s.q.ListUserRoleNames(ctx, req.Msg.UserId)
 	roles := make([]adminv1.Role, 0, len(roleNames))
 	for _, rn := range roleNames {
@@ -114,6 +122,9 @@ func (s *AdminService) RevokeRole(ctx context.Context, req *connect.Request[admi
 		RoleID: role.ID,
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("revoke role: %w", err))
+	}
+	if err := s.kc.RemoveRealmRole(ctx, req.Msg.UserId, roleName); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role sync: %w", err))
 	}
 	if s.hub != nil {
 		s.hub.KickUser(req.Msg.UserId)
