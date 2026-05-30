@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
+  import { page } from '$app/stores';
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
@@ -48,14 +49,22 @@
   const lots = $derived(lotsQuery.data?.lots ?? []);
   const hasNext = $derived(!!lotsQuery.data?.nextPageToken);
   const hasPrev = $derived(pageHistory.length > 1);
+
+  // Only OPERATOR/ADMIN can create lots (matches the CreateLot RBAC + the
+  // /lots/new route guard); hide the button for everyone else.
+  const canCreate = $derived(
+    ($page.data.user?.roles ?? []).some((r: string) => r === 'OPERATOR' || r === 'ADMIN')
+  );
 </script>
 
 <div class="space-y-4">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">{$t('lot.list_title')}</h1>
+    {#if canCreate}
     <a href="/lots/new" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
       {$t('lot.create_button')}
     </a>
+    {/if}
   </div>
 
   <!-- Filters -->
