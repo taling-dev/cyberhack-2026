@@ -9,6 +9,7 @@
     "qc": "Kontrol Kualitas",
     "warehouse": "Gudang",
     "audit": "Log Audit",
+    "dispatch": "Pengiriman",
     "admin": "Admin",
     "login": "Masuk",
     "logout": "Keluar",
@@ -51,6 +52,14 @@
     "warehouse_assigned": {
       "title": "Slot gudang ditetapkan",
       "body": "Lot {lot} ditetapkan ke slot {slot}."
+    },
+    "ready_for_production": {
+      "title": "Lot siap produksi",
+      "body": "Lot {lot} siap produksi dan dapat dikirim."
+    },
+    "dispatch_status": {
+      "title": "Pengiriman diperbarui",
+      "body": "Pengiriman {dispatch} sekarang {status}."
     }
   },
   "common": {
@@ -174,6 +183,30 @@
     "recs_label": "Slot yang direkomendasikan (diurutkan berdasarkan kapasitas):",
     "assigning": "Menetapkan..."
   },
+  "dispatch": {
+    "subtitle": "Kirim lot yang siap produksi dan lacak hingga pengiriman",
+    "create_button": "+ Pengiriman Baru",
+    "create_title": "Buat Pengiriman",
+    "create_submit": "Buat Pengiriman",
+    "creating": "Membuat...",
+    "created_msg": "Pengiriman dibuat",
+    "dispatch_number": "No. Pengiriman",
+    "destination": "Tujuan",
+    "carrier": "Pengangkut",
+    "scheduled_at": "Dijadwalkan Pada",
+    "notes": "Catatan",
+    "ready_lot": "Lot Siap Produksi",
+    "select_lot": "Pilih lot...",
+    "no_ready_lots": "Belum ada lot yang siap produksi.",
+    "no_dispatches": "Belum ada pengiriman",
+    "advance_to": "Lanjut →",
+    "cancel": "Batalkan",
+    "validation": {
+      "lot_required": "Pilih lot yang siap produksi",
+      "destination_required": "Tujuan wajib diisi",
+      "quantity_positive": "Kuantitas harus lebih dari 0"
+    }
+  },
   "dashboard": {
     "total_lots": "Total Lot",
     "awaiting_qc": "Menunggu QC",
@@ -225,6 +258,13 @@
     "7": "Slot Ditetapkan",
     "8": "Siap",
     "9": "Diblokir"
+  },
+  "dispatch_status": {
+    "1": "Menunggu",
+    "2": "Dijadwalkan",
+    "3": "Dalam Perjalanan",
+    "4": "Terkirim",
+    "5": "Dibatalkan"
   },
   "temp_range": {
     "1": "Sekitar (15–25 °C)",

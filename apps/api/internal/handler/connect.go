@@ -9,6 +9,7 @@ import (
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1/adminv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/audit/v1/auditv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/dashboard/v1/dashboardv1connect"
+	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/dispatch/v1/dispatchv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/lot/v1/lotv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/qc/v1/qcv1connect"
 	"github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1/warehousev1connect"
@@ -31,6 +32,10 @@ func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.
 	// WarehouseService
 	whPath, whHandler := warehousev1connect.NewWarehouseServiceHandler(NewWarehouseService(queries, dbConn))
 	mux.Handle(whPath, whHandler)
+
+	// DispatchService — final stage: ships READY_FOR_PRODUCTION lots.
+	dispatchPath, dispatchHandler := dispatchv1connect.NewDispatchServiceHandler(NewDispatchService(queries, dbConn))
+	mux.Handle(dispatchPath, dispatchHandler)
 
 	// AuditService
 	auditPath, auditHandler := auditv1connect.NewAuditServiceHandler(NewAuditService(queries))

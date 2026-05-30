@@ -18,13 +18,19 @@ type Querier interface {
 	// election handoff) or this same leader (after a recovered crash) from
 	// re-publishing a row that was already taken.
 	ClaimOutboxBatch(ctx context.Context, limit int32) (int64, error)
+	// A lot may only have one non-cancelled dispatch at a time. Used to reject a
+	// duplicate CreateDispatch for a lot already being shipped.
+	CountActiveDispatchesForLot(ctx context.Context, lotID string) (int64, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
+	CountDispatches(ctx context.Context) (int64, error)
+	CountDispatchesByStatus(ctx context.Context, status DispatchesStatus) (int64, error)
 	CountLots(ctx context.Context) (int64, error)
 	CountLotsByStatus(ctx context.Context, status LotsStatus) (int64, error)
 	CountLotsByStatusGroup(ctx context.Context) ([]CountLotsByStatusGroupRow, error)
 	CountQCByRecommendation(ctx context.Context, createdAt time.Time) ([]CountQCByRecommendationRow, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) error
+	CreateDispatch(ctx context.Context, arg CreateDispatchParams) error
 	CreateIdempotencyKey(ctx context.Context, arg CreateIdempotencyKeyParams) error
 	CreateLot(ctx context.Context, arg CreateLotParams) error
 	CreateOutboxEvent(ctx context.Context, arg CreateOutboxEventParams) error
@@ -34,6 +40,12 @@ type Querier interface {
 	DecrementLocationCapacity(ctx context.Context, id string) error
 	DecrementLocationCapacityAtomic(ctx context.Context, id string) (int64, error)
 	DeleteExpiredIdempotencyKeys(ctx context.Context) error
+	GetDispatch(ctx context.Context, id string) (Dispatch, error)
+	// Locks the row for the duration of the transaction (TiDB pessimistic mode).
+	// Used by UpdateDispatchStatus to close the same TOCTOU race the lot FSM
+	// guards against: without FOR UPDATE two concurrent status changes could both
+	// pass the FSM check against the same source state.
+	GetDispatchForUpdate(ctx context.Context, id string) (Dispatch, error)
 	GetIdempotencyKey(ctx context.Context, keyHash string) (IdempotencyKey, error)
 	GetLot(ctx context.Context, id string) (Lot, error)
 	GetLotByNumber(ctx context.Context, lotNumber string) (Lot, error)
@@ -58,6 +70,9 @@ type Querier interface {
 	// mean we are the only writer; the SELECT cannot see anyone else's claim
 	// because no one else is allowed to claim.
 	ListClaimedOutboxEvents(ctx context.Context, limit int32) ([]ListClaimedOutboxEventsRow, error)
+	ListDispatches(ctx context.Context, arg ListDispatchesParams) ([]Dispatch, error)
+	ListDispatchesByLot(ctx context.Context, arg ListDispatchesByLotParams) ([]Dispatch, error)
+	ListDispatchesByStatus(ctx context.Context, arg ListDispatchesByStatusParams) ([]Dispatch, error)
 	ListLots(ctx context.Context, arg ListLotsParams) ([]Lot, error)
 	ListLotsByMaterialType(ctx context.Context, arg ListLotsByMaterialTypeParams) ([]Lot, error)
 	ListLotsByStatus(ctx context.Context, arg ListLotsByStatusParams) ([]Lot, error)
@@ -85,6 +100,7 @@ type Querier interface {
 	// `Nats-Msg-Id` dedup ensures stream consumers don't see duplicates.
 	ResetStuckPublishingEvents(ctx context.Context) (int64, error)
 	RevokeUserRole(ctx context.Context, arg RevokeUserRoleParams) error
+	UpdateDispatchStatus(ctx context.Context, arg UpdateDispatchStatusParams) error
 	UpdateIdempotencyResponse(ctx context.Context, arg UpdateIdempotencyResponseParams) error
 	UpdateLocationStatus(ctx context.Context, arg UpdateLocationStatusParams) error
 	UpdateLotStatus(ctx context.Context, arg UpdateLotStatusParams) error

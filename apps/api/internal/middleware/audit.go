@@ -30,6 +30,8 @@ var rpcAuditAction = map[string]struct {
 	"/simaops.qc.v1.QCService/ReviewQC":                       {"qc.reviewed", "qc_job", "qcJobId"},
 	"/simaops.qc.v1.QCService/RetryQCJob":                     {"qc.retry", "qc_job", "qcJobId"},
 	"/simaops.warehouse.v1.WarehouseService/AssignSlot":       {"warehouse.assigned", "lot", "lotId"},
+	"/simaops.dispatch.v1.DispatchService/CreateDispatch":       {"dispatch.created", "dispatch", ""}, // use response.dispatch.id
+	"/simaops.dispatch.v1.DispatchService/UpdateDispatchStatus": {"dispatch.status_changed", "dispatch", "dispatchId"},
 	"/simaops.admin.v1.AdminService/AssignRole":               {"admin.role_assigned", "user", "userId"},
 	"/simaops.admin.v1.AdminService/RevokeRole":               {"admin.role_revoked", "user", "userId"},
 }
@@ -186,6 +188,18 @@ func extractEntityID(reqBody []byte, idField string, respBody []byte, entityType
 		}
 		if json.Unmarshal(respBody, &resp) == nil && resp.Job.Id != "" {
 			return resp.Job.Id
+		}
+	}
+
+	// CreateDispatch — response is { "dispatch": { "id": "..." } }
+	if entityType == "dispatch" {
+		var resp struct {
+			Dispatch struct {
+				Id string `json:"id"`
+			} `json:"dispatch"`
+		}
+		if json.Unmarshal(respBody, &resp) == nil && resp.Dispatch.Id != "" {
+			return resp.Dispatch.Id
 		}
 	}
 

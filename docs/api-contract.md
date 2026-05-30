@@ -38,6 +38,15 @@
 | `AssignSlot` | Assign lot to location | WAREHOUSE_STAFF, ADMIN |
 | `GetWarehouseAssignments` | List assignments | Any authenticated |
 
+### DispatchService (`simaops.dispatch.v1`)
+
+| Method | Description | Roles |
+|---|---|---|
+| `CreateDispatch` | Ship a READY_FOR_PRODUCTION lot | WAREHOUSE_STAFF, MANAGER, ADMIN |
+| `GetDispatch` | Get dispatch by ID | Any authenticated |
+| `ListDispatches` | Paginated list with filters | Any authenticated |
+| `UpdateDispatchStatus` | Advance dispatch FSM | WAREHOUSE_STAFF, MANAGER, ADMIN |
+
 ### AuditService (`simaops.audit.v1`)
 
 | Method | Description | Roles |
@@ -68,6 +77,6 @@ All mutation RPCs accept an `idempotency_key` field. Replaying the same key retu
 
 ## Proto Definitions
 
-Source: `proto/simaops/{lot,qc,warehouse,audit,dashboard,admin}/v1/*.proto`
+Source: `proto/simaops/{lot,qc,warehouse,dispatch,audit,dashboard,admin}/v1/*.proto`
 
 Generate stubs: `make gen` (requires `buf` CLI)

@@ -73,6 +73,32 @@ const dispatch: Record<string, Spec> = {
       variant: 'success',
     }),
   },
+  'lot.ready_for_production': {
+    roles: ['WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'],
+    build: (e, t) => ({
+      title: t('toast.ready_for_production.title'),
+      body: t('toast.ready_for_production.body', {
+        values: { lot: e.envelope.payload?.lot_number ?? '' },
+      }),
+      href: '/dispatch',
+      variant: 'success',
+    }),
+  },
+  'dispatch.status_changed': {
+    roles: ['MANAGER', 'ADMIN'],
+    operatorOwnerOnly: true,
+    build: (e, t) => ({
+      title: t('toast.dispatch_status.title'),
+      body: t('toast.dispatch_status.body', {
+        values: {
+          dispatch: e.envelope.payload?.dispatch_number ?? '',
+          status: e.envelope.payload?.to ?? '',
+        },
+      }),
+      href: '/dispatch',
+      variant: 'info',
+    }),
+  },
 };
 
 export interface DispatchContext {

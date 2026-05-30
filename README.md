@@ -103,18 +103,19 @@ hits `/api/v1/events` which is forwarded by the SvelteKit BFF.
 }
 ```
 
-**Subjects:** `lot.created`, `lot.status_changed`, `qc.job.created`,
-`qc.job.completed`, `qc.job.needs_human_review`, `qc.job.reviewed`,
-`qc.job.failed`, `qc.job.approved`, `warehouse.slot_assigned`,
+**Subjects:** `lot.created`, `lot.status_changed`, `lot.ready_for_production`,
+`qc.job.created`, `qc.job.completed`, `qc.job.needs_human_review`,
+`qc.job.reviewed`, `qc.job.failed`, `qc.job.approved`,
+`warehouse.slot_assigned`, `dispatch.created`, `dispatch.status_changed`,
 `audit.log_created`.
 
 **Role / owner filtering** (`apps/api/internal/events/filter.go`):
 
 | Role | Allowed subjects | Owner-scoped |
 |------|------------------|--------------|
-| `OPERATOR` | `lot.>`, `warehouse.slot_assigned`, `qc.job.failed`, `qc.job.completed` | yes — only events for lots they created |
+| `OPERATOR` | `lot.>`, `warehouse.slot_assigned`, `qc.job.failed`, `qc.job.completed`, `dispatch.>` | yes — only events for lots they created |
 | `QC_SUPERVISOR` | `lot.>`, `qc.>` | no |
-| `WAREHOUSE_STAFF` | `lot.>`, `warehouse.>`, `qc.job.approved`, `qc.job.completed` | no |
+| `WAREHOUSE_STAFF` | `lot.>`, `warehouse.>`, `qc.job.approved`, `qc.job.completed`, `dispatch.>` | no |
 | `MANAGER`, `ADMIN` | everything | no |
 
 **Auth-refresh resilience.** Browsers hit `/auth/heartbeat` every 60s so

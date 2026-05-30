@@ -211,13 +211,14 @@ A single `runPipeline(operatorToken, supervisorToken, warehouseToken)` function 
 3. `PUT image` to MinIO via the presigned URL — tags the request with `rpc:minio_upload`
 4. Wait for AI worker to process — poll `GetLot` every 1s up to 15s, until `status=AWAITING_REVIEW`. Tag waits separately so we can measure AI latency end-to-end.
 5. `ReviewQC` (supervisor) → `decision=APPROVED`
-6. `AssignSlot` (warehouse) → picks any READY slot
-7. `GetLotTimeline` → asserts ≥ 3 entries (validates audit chain)
+6. `AssignSlot` (warehouse) → picks any READY slot → lot `READY_FOR_PRODUCTION`
+7. `CreateDispatch` + `UpdateDispatchStatus` (warehouse) → ship the lot, advance PENDING → SCHEDULED
+8. `GetLotTimeline` → asserts ≥ 3 entries (validates audit chain)
 
 Emit a custom counter `pipeline_e2e_completed{result=success|failed}` and a `pipeline_e2e_duration` histogram. Tag each HTTP request with `rpc:create_lot|review_qc|...` so thresholds can target individual RPCs.
 
-- **Test**: `k6 run --vus 1 --iterations 1 scenarios/smoke.js` completes one full pipeline; assert all 7 steps succeeded
-- **Demo**: stdout `✓ pipeline completed in 4.2s | lot LOT-2026-05-27-XXXXXX → READY_FOR_PRODUCTION`
+- **Test**: `k6 run --vus 1 --iterations 1 scenarios/smoke.js` completes one full pipeline; assert all 8 steps succeeded
+- **Demo**: stdout `✓ pipeline completed in 4.2s | lot LOT-2026-05-27-XXXXXX → DELIVERED`
 
 ### Task 5: Smoke scenario (`scenarios/smoke.js`)
 

@@ -22,6 +22,9 @@
 #   qc.job.completed       |   ✗       |     ✓      |    ✓      |     ✓      |   ✓
 #   qc.job.reviewed        |   ✗       |     ✓      |    ✗      |     ✓      |   ✓
 #   warehouse.slot_assigned|   ✓ (own) |     ✓      |    ✓      |     ✓      |   ✓
+#   lot.ready_for_production|  ✓ (own) |     ✓      |    ✓      |     ✓      |   ✓
+#   dispatch.created       |   ✓ (own) |     ✗      |    ✓      |     ✓      |   ✓
+#   dispatch.status_changed|   ✓ (own) |     ✗      |    ✓      |     ✓      |   ✓
 #   audit.log_created      |   ✗       |     ✗      |    ✗      |     ✓      |   ✓
 #
 # (✓ own = OPERATOR sees only events for lots they created)
@@ -182,6 +185,25 @@ assign_resp = call(tokens["agus"], "/simaops.warehouse.v1.WarehouseService/Assig
 })
 print(f"  AssignSlot    -> {assign_resp['assignment']['locationCode']}")
 
+# Lot is now READY_FOR_PRODUCTION — ship it. CreateDispatch + advance the FSM.
+disp_resp = call(tokens["agus"], "/simaops.dispatch.v1.DispatchService/CreateDispatch", {
+    "lotId": lot_id,
+    "destination": "Jakarta DC",
+    "carrier": "E2E Logistics",
+    "quantity": 50,
+    "unit": "kg",
+    "idempotencyKey": f"e2e-disp-{ts}",
+})
+dispatch_id = disp_resp["dispatch"]["id"]
+print(f"  CreateDispatch-> {disp_resp['dispatch']['dispatchNumber']}")
+
+call(tokens["agus"], "/simaops.dispatch.v1.DispatchService/UpdateDispatchStatus", {
+    "dispatchId": dispatch_id,
+    "newStatus": 2,  # SCHEDULED
+    "idempotencyKey": f"e2e-disp-adv-{ts}",
+})
+print(f"  AdvanceDispatch-> SCHEDULED")
+
 print(color("\n[4] Waiting 4s for events to drain", "1;36"))
 time.sleep(4)
 stop.set()
@@ -218,31 +240,42 @@ def assert_not_in(user: str, subjects: set, want: str):
 assert_in("budi", s_budi, "lot.created")
 assert_in("budi", s_budi, "lot.status_changed")
 assert_in("budi", s_budi, "warehouse.slot_assigned")
+assert_in("budi", s_budi, "lot.ready_for_production")
+# Operator has dispatch.> (owner-scoped) — sees dispatch events for own lots.
+assert_in("budi", s_budi, "dispatch.created")
+assert_in("budi", s_budi, "dispatch.status_changed")
 # Operator does NOT see qc.job.* (subject filter excludes it)
 assert_not_in("budi", s_budi, "qc.job.created")
 assert_not_in("budi", s_budi, "qc.job.reviewed")
 
-# Siti (QC supervisor) — sees lot.* + qc.*, no warehouse.
+# Siti (QC supervisor) — sees lot.* + qc.*, no warehouse, no dispatch.
 assert_in("siti", s_siti, "lot.created")
 assert_in("siti", s_siti, "qc.job.created")
 assert_in("siti", s_siti, "qc.job.reviewed")
-# QC supervisor doesn't have warehouse.> in role perm — should NOT see it.
+assert_in("siti", s_siti, "lot.ready_for_production")  # lot.> grants this
+# QC supervisor doesn't have warehouse.> or dispatch.> in role perm.
 assert_not_in("siti", s_siti, "warehouse.slot_assigned")
+assert_not_in("siti", s_siti, "dispatch.created")
 
-# Agus (warehouse staff) — sees lot.*, warehouse.*, qc.job.approved/completed.
+# Agus (warehouse staff) — sees lot.*, warehouse.*, dispatch.*, qc.job.approved/completed.
 assert_in("agus", s_agus, "lot.created")
 assert_in("agus", s_agus, "warehouse.slot_assigned")
 assert_in("agus", s_agus, "lot.status_changed")
+assert_in("agus", s_agus, "lot.ready_for_production")
+assert_in("agus", s_agus, "dispatch.created")
+assert_in("agus", s_agus, "dispatch.status_changed")
 # Warehouse staff doesn't see general qc.* (only the specific allowed ones).
 assert_not_in("agus", s_agus, "qc.job.created")
 assert_not_in("agus", s_agus, "qc.job.reviewed")
 
 # Dewi (manager) — sees everything.
-for want in ["lot.created", "qc.job.created", "qc.job.reviewed", "warehouse.slot_assigned"]:
+for want in ["lot.created", "qc.job.created", "qc.job.reviewed", "warehouse.slot_assigned",
+             "lot.ready_for_production", "dispatch.created", "dispatch.status_changed"]:
     assert_in("dewi", s_dewi, want)
 
 # Admin — also sees everything.
-for want in ["lot.created", "qc.job.created", "qc.job.reviewed", "warehouse.slot_assigned"]:
+for want in ["lot.created", "qc.job.created", "qc.job.reviewed", "warehouse.slot_assigned",
+             "lot.ready_for_production", "dispatch.created", "dispatch.status_changed"]:
     assert_in("admin", s_admin, want)
 
 # Print results

@@ -94,7 +94,7 @@ func main() {
 
 	_, err = js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:     streamName,
-		Subjects: []string{"qc.>", "lot.>", "warehouse.>", "audit.>"},
+		Subjects: []string{"qc.>", "lot.>", "warehouse.>", "dispatch.>", "audit.>"},
 		Storage:  jetstream.FileStorage,
 		MaxAge:   7 * 24 * time.Hour,
 		// 1 GiB cap — at our event rate (~tens of events/sec peak, ~200 bytes

@@ -15,8 +15,9 @@
 //   4. CreateQCJob (operator)               → lot moves to PENDING_QC
 //   5. Poll GetLot every 1s for ≤ 15s      → AI worker advances to QC_REVIEW
 //   6. ReviewQC (supervisor, decision=APPROVED)
-//   7. RecommendSlot + AssignSlot (warehouse)
-//   8. GetLotTimeline (admin) → assert ≥ 3 audit entries
+//   7. RecommendSlot + AssignSlot (warehouse) → lot READY_FOR_PRODUCTION
+//   8. CreateDispatch + UpdateDispatchStatus (warehouse) → ship the lot
+//   9. GetLotTimeline (admin) → assert ≥ 3 audit entries
 //
 // Emits:
 //   * `pipeline_e2e_completed{result=success|failed}` Counter
@@ -185,7 +186,33 @@ export function runPipeline() {
     return false;
   }
 
-  // 8. GetLotTimeline — audit chain sanity check. Manager role has access.
+  // 8a. CreateDispatch — lot is now READY_FOR_PRODUCTION; ship it.
+  const r8a = rpc(whTok, '/simaops.dispatch.v1.DispatchService/CreateDispatch', {
+    lotId,
+    destination: 'Load-test DC',
+    carrier: 'k6 Logistics',
+    quantity: 10,
+    unit: 'kg',
+    idempotencyKey: `disp-${uuid().slice(0, 8)}`,
+  }, 'create_dispatch');
+  if (!check(r8a, { 'create dispatch ok': (r) => r.ok && r.json && r.json.dispatch && r.json.dispatch.id })) {
+    pipelineCompleted.add(1, { result: 'failed', step: 'create_dispatch' });
+    return false;
+  }
+  const dispatchId = r8a.json.dispatch.id;
+
+  // 8b. UpdateDispatchStatus — advance PENDING → SCHEDULED.
+  const r8b = rpc(whTok, '/simaops.dispatch.v1.DispatchService/UpdateDispatchStatus', {
+    dispatchId,
+    newStatus: 2, // SCHEDULED
+    idempotencyKey: `disp-adv-${uuid().slice(0, 8)}`,
+  }, 'update_dispatch_status');
+  if (!check(r8b, { 'advance dispatch ok': (r) => r.ok })) {
+    pipelineCompleted.add(1, { result: 'failed', step: 'update_dispatch_status' });
+    return false;
+  }
+
+  // 9. GetLotTimeline — audit chain sanity check. Manager role has access.
   const r8 = rpc(admTok, '/simaops.lot.v1.LotService/GetLotTimeline',
     { lotId }, 'get_lot_timeline');
   if (!check(r8, {

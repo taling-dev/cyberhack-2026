@@ -15,6 +15,7 @@ var SubscribedSubjects = []string{
 	"qc.>",
 	"lot.>",
 	"warehouse.>",
+	"dispatch.>",
 	"audit.>",
 }
 

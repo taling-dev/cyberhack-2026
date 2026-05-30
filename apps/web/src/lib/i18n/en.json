@@ -9,6 +9,7 @@
     "qc": "Quality Control",
     "warehouse": "Warehouse",
     "audit": "Audit Log",
+    "dispatch": "Dispatch",
     "admin": "Admin",
     "login": "Login",
     "logout": "Logout",
@@ -51,6 +52,14 @@
     "warehouse_assigned": {
       "title": "Warehouse slot assigned",
       "body": "Lot {lot} assigned to slot {slot}."
+    },
+    "ready_for_production": {
+      "title": "Lot ready for production",
+      "body": "Lot {lot} is production-ready and can be dispatched."
+    },
+    "dispatch_status": {
+      "title": "Dispatch updated",
+      "body": "Dispatch {dispatch} is now {status}."
     }
   },
   "common": {
@@ -174,6 +183,30 @@
     "recs_label": "Recommended slots (sorted by capacity):",
     "assigning": "Assigning..."
   },
+  "dispatch": {
+    "subtitle": "Ship production-ready lots and track them to delivery",
+    "create_button": "+ New Dispatch",
+    "create_title": "Create Dispatch",
+    "create_submit": "Create Dispatch",
+    "creating": "Creating...",
+    "created_msg": "Dispatch created",
+    "dispatch_number": "Dispatch #",
+    "destination": "Destination",
+    "carrier": "Carrier",
+    "scheduled_at": "Scheduled At",
+    "notes": "Notes",
+    "ready_lot": "Production-ready Lot",
+    "select_lot": "Select a lot...",
+    "no_ready_lots": "No lots are ready for production yet.",
+    "no_dispatches": "No dispatches yet",
+    "advance_to": "Advance →",
+    "cancel": "Cancel",
+    "validation": {
+      "lot_required": "Select a production-ready lot",
+      "destination_required": "Destination is required",
+      "quantity_positive": "Quantity must be greater than 0"
+    }
+  },
   "dashboard": {
     "total_lots": "Total Lots",
     "awaiting_qc": "Awaiting QC",
@@ -225,6 +258,13 @@
     "7": "Warehouse Assigned",
     "8": "Ready",
     "9": "Blocked"
+  },
+  "dispatch_status": {
+    "1": "Pending",
+    "2": "Scheduled",
+    "3": "In Transit",
+    "4": "Delivered",
+    "5": "Cancelled"
   },
   "temp_range": {
     "1": "Ambient (15–25 °C)",

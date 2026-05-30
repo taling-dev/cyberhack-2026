@@ -12,6 +12,51 @@ import (
 	"time"
 )
 
+type DispatchesStatus string
+
+const (
+	DispatchesStatusPENDING   DispatchesStatus = "PENDING"
+	DispatchesStatusSCHEDULED DispatchesStatus = "SCHEDULED"
+	DispatchesStatusINTRANSIT DispatchesStatus = "IN_TRANSIT"
+	DispatchesStatusDELIVERED DispatchesStatus = "DELIVERED"
+	DispatchesStatusCANCELLED DispatchesStatus = "CANCELLED"
+)
+
+func (e *DispatchesStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = DispatchesStatus(s)
+	case string:
+		*e = DispatchesStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for DispatchesStatus: %T", src)
+	}
+	return nil
+}
+
+type NullDispatchesStatus struct {
+	DispatchesStatus DispatchesStatus `json:"dispatches_status"`
+	Valid            bool             `json:"valid"` // Valid is true if DispatchesStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullDispatchesStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.DispatchesStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.DispatchesStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullDispatchesStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.DispatchesStatus), nil
+}
+
 type LotsMaterialType string
 
 const (
@@ -379,6 +424,22 @@ type AuditLog struct {
 	RequestID   sql.NullString  `json:"request_id"`
 	TraceID     sql.NullString  `json:"trace_id"`
 	CreatedAt   time.Time       `json:"created_at"`
+}
+
+type Dispatch struct {
+	ID             string           `json:"id"`
+	DispatchNumber string           `json:"dispatch_number"`
+	LotID          string           `json:"lot_id"`
+	Destination    string           `json:"destination"`
+	Carrier        string           `json:"carrier"`
+	Quantity       string           `json:"quantity"`
+	Unit           string           `json:"unit"`
+	ScheduledAt    sql.NullTime     `json:"scheduled_at"`
+	Notes          sql.NullString   `json:"notes"`
+	Status         DispatchesStatus `json:"status"`
+	CreatedBy      string           `json:"created_by"`
+	CreatedAt      time.Time        `json:"created_at"`
+	UpdatedAt      time.Time        `json:"updated_at"`
 }
 
 type IdempotencyKey struct {

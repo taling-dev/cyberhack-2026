@@ -41,8 +41,19 @@ Login URL: `https://app.<ip>.sslip.io/auth/login`
 - Click **Assign Slot** → see recommendations filtered by temperature (Ambient → Zone A)
 - Assign to A-01 → lot advances to READY_FOR_PRODUCTION
 - Show the "why this slot?" tooltip explaining the match
+- Note: the assignment also emits a `lot.ready_for_production` handoff event
 
-### 5. Manager — Dashboard (1.5 min) [Focus Area 1]
+### 5. Warehouse Staff — Dispatch (1.5 min) [Focus Area 1]
+
+- Still as `warehouse / Warehouse123!`, navigate to **Dispatch**
+- Click **+ New Dispatch** → the Patchouli Oil lot appears in the
+  production-ready picker (driven by the handoff event)
+- Enter destination "Jakarta DC", carrier, quantity → **Create Dispatch**
+- Advance the dispatch: PENDING → SCHEDULED → IN_TRANSIT → DELIVERED
+- Talking point: this closes the loop — intake → QC → warehouse →
+  production handoff → dispatch, all in one auditable source of truth
+
+### 6. Manager — Dashboard (1.5 min) [Focus Area 1]
 
 - Login as `manager / Manager123!`
 - Navigate to **Dashboard**
@@ -50,13 +61,13 @@ Login URL: `https://app.<ip>.sslip.io/auth/login`
 - Show QC metrics: pass/review/fail breakdown
 - Show warehouse capacity by zone
 
-### 6. Audit Trail (1 min) [Focus Area 1]
+### 7. Audit Trail (1 min) [Focus Area 1]
 
 - Navigate to **Audit Log** — show the full chronological trail
 - Open the Patchouli Oil lot detail → Timeline tab
 - Show: created → uploaded → QC submitted → AI completed → approved → assigned → ready
 
-### 7. Admin — RBAC (0.5 min)
+### 8. Admin — RBAC (0.5 min)
 
 - Login as `admin / Admin123!`
 - Navigate to **Admin** → show user list with roles

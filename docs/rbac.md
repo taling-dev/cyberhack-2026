@@ -6,7 +6,7 @@
 |---|---|
 | OPERATOR | Lot intake, QC image upload, trigger QC jobs |
 | QC_SUPERVISOR | Approve/reject/recheck QC results |
-| WAREHOUSE_STAFF | Assign warehouse slots |
+| WAREHOUSE_STAFF | Assign warehouse slots; create and advance dispatches |
 | MANAGER | View dashboards and audit logs |
 | ADMIN | Full access + user/role management |
 
@@ -28,6 +28,10 @@
 | RecommendSlot | | | ✓ | | ✓ |
 | AssignSlot | | | ✓ | | ✓ |
 | GetWarehouseAssignments | ✓ | ✓ | ✓ | ✓ | ✓ |
+| CreateDispatch | | | ✓ | ✓ | ✓ |
+| GetDispatch | ✓ | ✓ | ✓ | ✓ | ✓ |
+| ListDispatches | ✓ | ✓ | ✓ | ✓ | ✓ |
+| UpdateDispatchStatus | | | ✓ | ✓ | ✓ |
 | ListAuditLogs | | | | ✓ | ✓ |
 | GetEntityAuditTrail | | | | ✓ | ✓ |
 | GetOpsDashboard | | | | ✓ | ✓ |

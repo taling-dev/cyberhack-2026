@@ -227,6 +227,17 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create lot status outbox event: %w", err))
 	}
 
+	// 6c. Emit lot.ready_for_production — the dedicated production-handoff
+	//     event. Unlike the generic lot.status_changed firehose, this carries
+	//     the full lot payload a downstream dispatch / PPIC consumer needs to
+	//     act, and is a distinct subject that can be granted via the SSE role
+	//     filter without exposing every status change. This is the clean
+	//     integration seam that closes the Integrated Operations System loop
+	//     from warehouse → production handoff → dispatch.
+	if err := emitLotReadyForProduction(ctx, qtx, assignedBy, lot, loc.Code); err != nil {
+		return nil, err
+	}
+
 	if err := tx.Commit(); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
 	}

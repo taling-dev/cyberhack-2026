@@ -13,9 +13,9 @@ import "strings"
 // Roles not in this table receive no events. ADMIN/MANAGER are intentionally
 // granted ">" so the audit page works without a separate broadcast plane.
 var rolePerm = map[string][]string{
-	"OPERATOR":        {"lot.>", "warehouse.slot_assigned", "qc.job.failed", "qc.job.completed"},
+	"OPERATOR":        {"lot.>", "warehouse.slot_assigned", "qc.job.failed", "qc.job.completed", "dispatch.>"},
 	"QC_SUPERVISOR":   {"lot.>", "qc.>"},
-	"WAREHOUSE_STAFF": {"lot.>", "warehouse.>", "qc.job.approved", "qc.job.completed"},
+	"WAREHOUSE_STAFF": {"lot.>", "warehouse.>", "qc.job.approved", "qc.job.completed", "dispatch.>"},
 	"MANAGER":         {">"},
 	"ADMIN":           {">"},
 }

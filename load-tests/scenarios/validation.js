@@ -51,6 +51,7 @@ export const options = {
     'http_req_duration{rpc_class:non_ai}': ['p(95)<500'],
     'http_req_duration{rpc:create_lot}': ['p(95)<500'],
     'http_req_duration{rpc:assign_slot}': ['p(95)<800'],
+    'http_req_duration{rpc:create_dispatch}': ['p(95)<800'],
     'pipeline_e2e_completed{result:success}': ['count>=200'],
     iteration_duration: ['p(99)<20000'],
   },

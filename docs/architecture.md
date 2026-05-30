@@ -14,7 +14,7 @@ SimaOps AI is a cloud-portable enterprise operations platform running on Kuberne
 
 | # | Focus Area | SimaOps Component |
 |---|---|---|
-| 1 | Integrated Operations System | Unified data model (11 tables), Connect RPC (25 RPCs, 6 services), audit log, manager dashboard |
+| 1 | Integrated Operations System | Unified data model (12 tables), Connect RPC (29 RPCs, 7 services), audit log, manager dashboard, **dispatch stage** closing intake → QC → warehouse → production handoff → dispatch in one flow |
 | 2 | AI for Fruit & Raw-Material QC | AI worker `pretrained` strategy with `RAW_BOTANICAL` findings vocabulary |
 | 3 | AI for Extract & Powder QC | Same worker with `EXTRACT_POWDER` findings vocabulary |
 | 4 | AI-Assisted Warehousing & Cold-Chain | Warehouse recommender filtering on temperature range + drum class (IBC/IPPC) |
@@ -50,8 +50,26 @@ SimaOps AI is a cloud-portable enterprise operations platform running on Kuberne
 - Idempotency keys prevent duplicate mutations
 - Audit log on every state change
 
+## Production Handoff & Dispatch
+
+The final stage of the Integrated Operations System. When a lot reaches
+`READY_FOR_PRODUCTION` (via slot assignment or a direct status update), the API
+emits a dedicated `lot.ready_for_production` event carrying the full lot payload
+(material, quantity, storage requirement, assigned slot). This is a distinct
+subject — separate from the generic `lot.status_changed` firehose — so
+downstream consumers (dispatch, and a future PPIC scheduler) can subscribe to
+exactly the handoff signal, gated by the SSE role filter.
+
+`DispatchService` (Create/Get/List/UpdateDispatchStatus) records shipments of
+production-ready lots. A dispatch is created only from a `READY_FOR_PRODUCTION`
+lot, a lot may have at most one active (non-cancelled) dispatch, and the
+dispatch FSM is `PENDING → SCHEDULED → IN_TRANSIT → DELIVERED` with `CANCELLED`
+as a side-rail from any non-terminal state. Every transition writes an outbox
+event (`dispatch.created`, `dispatch.status_changed`) and an audit-log row in
+the same transaction as the state change.
+
 ## Out of Scope (v1)
 
-- Sample-dispatch tracking
 - Lab-instrument sensor ingestion
-- PPIC schedule generation (v1 stops at READY_FOR_PRODUCTION)
+- PPIC schedule generation — but `lot.ready_for_production` now provides the
+  clean integration seam a PPIC scheduler would consume.

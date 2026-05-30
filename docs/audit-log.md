@@ -23,6 +23,7 @@
 - `lot.create`, `lot.status_change`
 - `qc.job.create`, `qc.review`
 - `warehouse.assign`
+- `dispatch.created`, `dispatch.status_changed`
 - `admin.role.assign`, `admin.role.revoke`
 
 ## Retention

@@ -341,6 +341,7 @@ export function connectRealtime(queryClient: QueryClient, opts: ConnectOptions =
 const WATCHED_SUBJECTS = [
   'lot.created',
   'lot.status_changed',
+  'lot.ready_for_production',
   'qc.job.created',
   'qc.job.completed',
   'qc.job.needs_human_review',
@@ -348,6 +349,8 @@ const WATCHED_SUBJECTS = [
   'qc.job.failed',
   'qc.job.approved',
   'warehouse.slot_assigned',
+  'dispatch.created',
+  'dispatch.status_changed',
   'audit.log_created',
 ] as const;
 
@@ -414,6 +417,30 @@ function invalidateForEvent(qc: QueryClient, e: RealtimeEvent) {
         qc.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
       }
       qc.invalidateQueries({ queryKey: ['dashboard-warehouse'] });
+      qc.invalidateQueries({ queryKey: ['dashboard-ops'] });
+      qc.invalidateQueries({ queryKey: ['nav-badges'] });
+      break;
+    case 'lot.ready_for_production':
+      // A lot just became dispatchable. Refresh the dispatch page's
+      // "ready lots" picker and the lot views/badges.
+      qc.invalidateQueries({ queryKey: ['dispatch-ready-lots'] });
+      qc.invalidateQueries({ queryKey: ['lots'] });
+      if (lotId) {
+        qc.invalidateQueries({ queryKey: ['lot', lotId] });
+        qc.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
+      }
+      qc.invalidateQueries({ queryKey: ['dashboard-ops'] });
+      qc.invalidateQueries({ queryKey: ['nav-badges'] });
+      break;
+    case 'dispatch.created':
+    case 'dispatch.status_changed':
+      qc.invalidateQueries({ queryKey: ['dispatches'] });
+      qc.invalidateQueries({ queryKey: ['dispatch-ready-lots'] });
+      qc.invalidateQueries({ queryKey: ['dispatch', resourceId] });
+      if (lotId) {
+        qc.invalidateQueries({ queryKey: ['lot', lotId] });
+        qc.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
+      }
       qc.invalidateQueries({ queryKey: ['dashboard-ops'] });
       qc.invalidateQueries({ queryKey: ['nav-badges'] });
       break;

@@ -315,6 +315,15 @@ func (s *LotService) UpdateLotStatus(ctx context.Context, req *connect.Request[l
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
 	}
 
+	// A direct transition to READY_FOR_PRODUCTION (not via warehouse assignment)
+	// still emits the dedicated production-handoff event so dispatch/PPIC
+	// consumers get a uniform signal regardless of which path reached it.
+	if req.Msg.NewStatus == lotv1.LotStatus_LOT_STATUS_READY_FOR_PRODUCTION {
+		if err := emitLotReadyForProduction(ctx, qtx, actor, current, ""); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := tx.Commit(); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
 	}
@@ -351,6 +360,49 @@ func (s *LotService) GetLotTimeline(ctx context.Context, req *connect.Request[lo
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
+
+// emitLotReadyForProduction writes the dedicated `lot.ready_for_production`
+// production-handoff outbox event inside the caller's transaction. It carries
+// the full lot payload (material, quantity, storage requirement, slot) that a
+// downstream dispatch / PPIC consumer needs — a distinct subject that can be
+// granted via the SSE role filter without exposing the whole lot.* firehose.
+// locationCode may be empty when the handoff did not originate from a slot
+// assignment (e.g. a direct status update).
+func emitLotReadyForProduction(ctx context.Context, qtx *db.Queries, actor string, lot db.Lot, locationCode string) error {
+	var sr map[string]string
+	_ = json.Unmarshal(lot.StorageRequirement, &sr)
+	envelope, err := events.NewEnvelope(
+		"lot.ready_for_production",
+		actor,
+		lot.CreatedBy,
+		lot.ID,
+		map[string]any{
+			"lot_id":            lot.ID,
+			"lot_number":        lot.LotNumber,
+			"supplier_name":     lot.SupplierName,
+			"material_name":     lot.MaterialName,
+			"material_type":     string(lot.MaterialType),
+			"quantity":          parseFloat(lot.Quantity),
+			"unit":              lot.Unit,
+			"temperature_range": sr["temperature_range"],
+			"hazard_class":      sr["hazard_class"],
+			"location_code":     locationCode,
+			"created_by":        lot.CreatedBy,
+			"actor_id":          actor,
+		},
+	)
+	if err != nil {
+		return connect.NewError(connect.CodeInternal, fmt.Errorf("build ready_for_production envelope: %w", err))
+	}
+	if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "lot.ready_for_production",
+		PayloadJson: envelope,
+	}); err != nil {
+		return connect.NewError(connect.CodeInternal, fmt.Errorf("create ready_for_production outbox event: %w", err))
+	}
+	return nil
+}
 
 func dbLotToProto(l db.Lot) *lotv1.Lot {
 	var sr lotv1.StorageRequirement

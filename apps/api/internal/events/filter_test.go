@@ -18,6 +18,10 @@ func TestMatchPattern(t *testing.T) {
 		{"warehouse.slot_assigned", ">", true},
 		{"audit.log_created", ">", true},
 		{"audit.log_created", "audit.>", true},
+		{"dispatch.created", "dispatch.>", true},
+		{"dispatch.status_changed", "dispatch.>", true},
+		{"dispatch.created", "lot.>", false},
+		{"lot.ready_for_production", "lot.>", true},
 		{"qc.job.created", "qc.*", false}, // qc.* is one token; qc.job.created is two
 		{"qc.created", "qc.*", true},
 	}
@@ -45,6 +49,12 @@ func TestAllow_RoleBased(t *testing.T) {
 		{"qc supervisor sees lot.status_changed regardless of owner", "lot.status_changed", []string{"QC_SUPERVISOR"}, "siti", "alice", true},
 		{"warehouse staff sees qc.job.approved", "qc.job.approved", []string{"WAREHOUSE_STAFF"}, "dewi", "alice", true},
 		{"warehouse staff does NOT see qc.job.created", "qc.job.created", []string{"WAREHOUSE_STAFF"}, "dewi", "alice", false},
+		{"warehouse staff sees dispatch.created", "dispatch.created", []string{"WAREHOUSE_STAFF"}, "dewi", "alice", true},
+		{"warehouse staff sees dispatch.status_changed", "dispatch.status_changed", []string{"WAREHOUSE_STAFF"}, "dewi", "alice", true},
+		{"qc supervisor does NOT see dispatch.created", "dispatch.created", []string{"QC_SUPERVISOR"}, "siti", "alice", false},
+		{"operator sees own dispatch.created", "dispatch.created", []string{"OPERATOR"}, "alice", "alice", true},
+		{"operator NOT see other dispatch.created", "dispatch.created", []string{"OPERATOR"}, "bob", "alice", false},
+		{"warehouse staff sees lot.ready_for_production", "lot.ready_for_production", []string{"WAREHOUSE_STAFF"}, "dewi", "alice", true},
 		{"admin sees everything", "audit.log_created", []string{"ADMIN"}, "root", "alice", true},
 		{"manager bypasses owner filter even with operator role", "lot.created", []string{"MANAGER", "OPERATOR"}, "boss", "alice", true},
 		{"unknown role gets nothing", "lot.created", []string{"GUEST"}, "x", "alice", false},

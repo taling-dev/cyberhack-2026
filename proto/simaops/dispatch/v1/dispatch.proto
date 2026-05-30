@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package simaops.dispatch.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// DispatchService is the final stage of the Integrated Operations System:
+// it tracks finished, production-ready lots leaving the facility — closing
+// the loop from supplier intake → QC → warehouse → production handoff →
+// dispatch in a single auditable source of truth.
+service DispatchService {
+  rpc CreateDispatch(CreateDispatchRequest) returns (CreateDispatchResponse);
+  rpc GetDispatch(GetDispatchRequest) returns (GetDispatchResponse);
+  rpc ListDispatches(ListDispatchesRequest) returns (ListDispatchesResponse);
+  rpc UpdateDispatchStatus(UpdateDispatchStatusRequest) returns (UpdateDispatchStatusResponse);
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum DispatchStatus {
+  DISPATCH_STATUS_UNSPECIFIED = 0;
+  DISPATCH_STATUS_PENDING = 1;
+  DISPATCH_STATUS_SCHEDULED = 2;
+  DISPATCH_STATUS_IN_TRANSIT = 3;
+  DISPATCH_STATUS_DELIVERED = 4;
+  DISPATCH_STATUS_CANCELLED = 5;
+}
+
+// ─── Messages ────────────────────────────────────────────────────
+
+message Dispatch {
+  string id = 1;
+  string dispatch_number = 2;
+  string lot_id = 3;
+  string lot_number = 4;
+  string destination = 5;
+  string carrier = 6;
+  double quantity = 7;
+  string unit = 8;
+  google.protobuf.Timestamp scheduled_at = 9;
+  string notes = 10;
+  DispatchStatus status = 11;
+  string created_by = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+// ─── Requests / Responses ────────────────────────────────────────
+
+message CreateDispatchRequest {
+  string lot_id = 1;
+  string destination = 2;
+  string carrier = 3;
+  double quantity = 4;
+  string unit = 5;
+  string scheduled_at = 6; // RFC3339; empty = unscheduled
+  string notes = 7;
+  string idempotency_key = 8;
+}
+
+message CreateDispatchResponse {
+  Dispatch dispatch = 1;
+}
+
+message GetDispatchRequest {
+  string dispatch_id = 1;
+}
+
+message GetDispatchResponse {
+  Dispatch dispatch = 1;
+}
+
+message ListDispatchesRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  DispatchStatus status_filter = 3;
+  string lot_id_filter = 4;
+}
+
+message ListDispatchesResponse {
+  repeated Dispatch dispatches = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
+
+message UpdateDispatchStatusRequest {
+  string dispatch_id = 1;
+  DispatchStatus new_status = 2;
+  string reason = 3;
+  string idempotency_key = 4;
+}
+
+message UpdateDispatchStatusResponse {
+  Dispatch dispatch = 1;
+}

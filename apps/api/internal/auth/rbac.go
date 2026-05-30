@@ -30,6 +30,13 @@ var rpcRoles = map[string][]string{
 	"/simaops.warehouse.v1.WarehouseService/AssignSlot":             {"WAREHOUSE_STAFF", "ADMIN"},
 	"/simaops.warehouse.v1.WarehouseService/GetWarehouseAssignments": {},
 
+	// DispatchService — WAREHOUSE_STAFF/MANAGER create & advance shipments of
+	// production-ready lots; all authenticated users may read.
+	"/simaops.dispatch.v1.DispatchService/CreateDispatch":       {"WAREHOUSE_STAFF", "MANAGER", "ADMIN"},
+	"/simaops.dispatch.v1.DispatchService/GetDispatch":          {},
+	"/simaops.dispatch.v1.DispatchService/ListDispatches":       {},
+	"/simaops.dispatch.v1.DispatchService/UpdateDispatchStatus": {"WAREHOUSE_STAFF", "MANAGER", "ADMIN"},
+
 	// AuditService — MANAGER, ADMIN
 	"/simaops.audit.v1.AuditService/ListAuditLogs":       {"MANAGER", "ADMIN"},
 	"/simaops.audit.v1.AuditService/GetEntityAuditTrail": {"MANAGER", "ADMIN"},

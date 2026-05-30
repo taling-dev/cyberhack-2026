@@ -19,12 +19,12 @@ SimaOps AI is a single enterprise platform that:
 
 | # | Focus Area                              | SimaOps Coverage                                                                                            |
 | - | --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 1 | Integrated Operations System            | Unified data model + Connect RPC services + audit log + manager dashboard. Kills double-entry.              |
+| 1 | Integrated Operations System            | Unified data model + Connect RPC services + audit log + manager dashboard + dispatch stage (intake → QC → warehouse → production handoff → dispatch). Kills double-entry. |
 | 2 | AI for Fruit & Raw-Material QC          | AI worker `pretrained` strategy with `RAW_BOTANICAL` findings vocabulary (ripeness, color, foreign matter). |
 | 3 | AI for Extract & Powder QC              | Same worker with `EXTRACT_POWDER` findings vocabulary (color uniformity, contamination, lumping).           |
 | 4 | AI-Assisted Warehousing & Cold-Chain    | Warehouse recommender filtering on temperature range + drum class (IBC/IPPC) + hazard rules.                |
 
-**Out of scope for v1:** sample-dispatch tracking, lab-instrument sensor ingestion, PPIC schedule generation. (v1 stops at `READY_FOR_PRODUCTION` handoff signal.)
+**Out of scope for v1:** lab-instrument sensor ingestion, PPIC schedule generation. (Dispatch tracking is now implemented — `DispatchService` ships `READY_FOR_PRODUCTION` lots and the `lot.ready_for_production` handoff event provides the integration seam a future PPIC scheduler would consume.)
 
 ## 3. Hard Constraints (from spec)
 

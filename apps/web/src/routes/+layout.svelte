@@ -37,6 +37,7 @@
     { href: '/lots', icon: '📦', key: 'nav.lots', roles: ['OPERATOR', 'QC_SUPERVISOR', 'WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'] },
     { href: '/qc', icon: '🔬', key: 'nav.qc', roles: ['QC_SUPERVISOR', 'MANAGER', 'ADMIN'] },
     { href: '/warehouse', icon: '🏭', key: 'nav.warehouse', roles: ['WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'] },
+    { href: '/dispatch', icon: '🚚', key: 'nav.dispatch', roles: ['WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'] },
     { href: '/audit', icon: '📋', key: 'nav.audit', roles: ['MANAGER', 'ADMIN'] },
     { href: '/admin', icon: '⚙️', key: 'nav.admin', roles: ['ADMIN'] }
   ];
