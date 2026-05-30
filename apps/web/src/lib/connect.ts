@@ -1,7 +1,7 @@
 import { createConnectTransport } from '@connectrpc/connect-web';
 import { Code, ConnectError, type Interceptor } from '@connectrpc/connect';
 import { browser } from '$app/environment';
-import { recoverAuth } from '$lib/auth/recover';
+import { recoverAuth } from '$lib/auth/recover.svelte';
 
 /**
  * Connect-Web transport routed through the SvelteKit BFF proxy.

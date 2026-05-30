@@ -22,7 +22,7 @@
 
 import { browser } from '$app/environment';
 import type { QueryClient } from '@tanstack/svelte-query';
-import { recoverAuth } from '$lib/auth/recover';
+import { recoverAuth } from '$lib/auth/recover.svelte';
 
 export type RealtimeStatus =
   | 'idle'
