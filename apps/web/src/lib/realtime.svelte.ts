@@ -22,7 +22,7 @@
 
 import { browser } from '$app/environment';
 import type { QueryClient } from '@tanstack/svelte-query';
-import { silentRenew } from '$lib/auth/silentRenew';
+import { recoverAuth } from '$lib/auth/recover';
 
 export type RealtimeStatus =
   | 'idle'
@@ -192,27 +192,17 @@ export function connectRealtime(queryClient: QueryClient, opts: ConnectOptions =
     state.status = 're-authenticating';
     closeEventSource();
     try {
-      // Tier 0: force-refresh the access cookie.
-      if (reason === 'expired') {
-        try {
-          const res = await fetch('/auth/heartbeat?force=true', { credentials: 'same-origin' });
-          if (res.ok) {
-            consecutive401s = 0;
-            connect();
-            return;
-          }
-        } catch {
-          // fall through
-        }
-      }
-      // Tier 1: silent OIDC renew via iframe.
-      const ok = await silentRenew();
+      // Delegate to the shared single-flight recovery ladder so SSE and RPC
+      // 401s collapse into one attempt. Tier-0 force-refresh is only worth
+      // trying for plain expiry; a heartbeat 'revoked' means the server-side
+      // refresh already failed, so skip straight to silent renew.
+      const ok = await recoverAuth(reason === 'expired');
       if (ok) {
         consecutive401s = 0;
         connect();
         return;
       }
-      // Tier 2: session expired; modal handles it.
+      // Recovery exhausted; modal handles it (shared authState also set).
       state.status = 'session-expired';
     } finally {
       recovering = false;
