@@ -45,6 +45,13 @@ func (s *AdminService) CreateRole(ctx context.Context, req *connect.Request[admi
 		}
 	}
 
+	// Create the Keycloak realm role FIRST so a KC failure can't leave an
+	// orphaned DB role. A leftover KC role on a later DB failure is harmless
+	// (CreateRealmRole treats 409 as success, so a retry is idempotent).
+	if err := s.kc.CreateRealmRole(ctx, name, req.Msg.Description); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role create: %w", err))
+	}
+
 	roleID := uuid.NewString()
 	if err := s.q.CreateRole(ctx, db.CreateRoleParams{ID: roleID, Name: name, Description: req.Msg.Description}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create role: %w", err))
@@ -53,10 +60,6 @@ func (s *AdminService) CreateRole(ctx context.Context, req *connect.Request[admi
 		if err := s.q.AddRolePermission(ctx, db.AddRolePermissionParams{RoleID: roleID, RpcPath: p}); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("grant permission: %w", err))
 		}
-	}
-	// Create the matching Keycloak realm role so it lands in users' JWTs.
-	if err := s.kc.CreateRealmRole(ctx, name, req.Msg.Description); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak role create: %w", err))
 	}
 	// Make the new grants live without a restart.
 	refreshRolePermissions(ctx, s.q)
