@@ -98,15 +98,175 @@ class MockStrategy(QCStrategy):
         return {"recommendation": "REVIEW", "confidence": 0.82, "findings": findings}
 
 
+# ─── Classifier strategy (trained YOLOv8-cls + fuzzy grader) ─────
+#
+# Real QC: download the lot's QC image from MinIO, run the trained fruit
+# disease classifier, then grade with a fuzzy controller that combines the
+# healthy-confidence and defect-confidence signals into a 0-100 quality score,
+# mapped to the app's PASS / REVIEW / FAIL recommendation.
+
+MODEL_PATH = os.getenv("MODEL_PATH", "models/best.pt")
+# Defect keywords match the trained dataset's class names
+# (Apple___Black_rot, Banana cordana, Citrus Fruit disease, Guava Red Rust,
+#  Mango Bacterial Canker, Papaya RingSpot, "Disease … Fruit", etc.).
+_DEFECT_KEYWORDS = ("disease", "rot", "rust", "canker", "cordana", "ringspot")
+_HEALTHY_KEYWORDS = ("healthy", "healthly")  # dataset has a "Healthly" typo class
+
+
+class ClassifierStrategy(QCStrategy):
+    """YOLOv8-cls fruit-disease classifier + scikit-fuzzy quality grader.
+
+    Heavy deps (ultralytics, skfuzzy, opencv, minio) are imported lazily so the
+    worker process still boots — and /healthz still serves — even if the
+    inference image layer is somehow incomplete. The model is loaded once on
+    first use and cached.
+    """
+
+    def __init__(self):
+        self._model = None
+        self._fuzzy = None
+        self._minio = None
+
+    def _get_minio(self):
+        if self._minio is None:
+            from minio import Minio
+            endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+            self._minio = Minio(
+                endpoint,
+                access_key=os.getenv("MINIO_ACCESS_KEY", "simaops"),
+                secret_key=os.getenv("MINIO_SECRET_KEY", "simaops-dev-secret"),
+                secure=os.getenv("MINIO_USE_SSL", "false") == "true",
+            )
+        return self._minio
+
+    def _get_model(self):
+        if self._model is None:
+            from ultralytics import YOLO
+            self._model = YOLO(MODEL_PATH)
+        return self._model
+
+    def _get_fuzzy(self):
+        if self._fuzzy is None:
+            self._fuzzy = _build_fuzzy_system()
+        return self._fuzzy
+
+    def _download(self, image_key: str) -> str:
+        """Download the QC image from MinIO to a tmp path; returns the path."""
+        import tempfile
+        bucket = os.getenv("QC_IMAGES_BUCKET", "simaops-qc-images")
+        ext = os.path.splitext(image_key)[1] or ".jpg"
+        fd, path = tempfile.mkstemp(suffix=ext)
+        os.close(fd)
+        self._get_minio().fget_object(bucket, image_key, path)
+        return path
+
+    async def analyze(self, image_key: str, material_type: str) -> dict:
+        # Run the blocking download + CPU inference off the event loop.
+        return await asyncio.to_thread(self._analyze_sync, image_key, material_type)
+
+    def _analyze_sync(self, image_key: str, material_type: str) -> dict:
+        path = self._download(image_key)
+        try:
+            results = self._get_model()(path, verbose=False)[0]
+            names = results.names
+            probs = results.probs.data.tolist()
+        finally:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
+        healthy_score = 0.0
+        defect_score = 0.0
+        findings = []
+        for i, score in enumerate(probs):
+            name = names[i]
+            low = name.lower()
+            is_defect = any(k in low for k in _DEFECT_KEYWORDS)
+            is_healthy = (not is_defect) and any(k in low for k in _HEALTHY_KEYWORDS)
+            if is_healthy:
+                healthy_score = max(healthy_score, score)
+            elif is_defect:
+                defect_score = max(defect_score, score)
+            # Only surface the meaningful detections (top class + any notable signal).
+            if score >= 0.10:
+                findings.append({
+                    "class_name": name,
+                    "mapped_finding": "defect" if is_defect else ("healthy" if is_healthy else "other"),
+                    "confidence": round(float(score), 4),
+                    "is_anomaly": bool(is_defect),
+                })
+        findings.sort(key=lambda f: f["confidence"], reverse=True)
+        findings = findings[:5]
+
+        quality = _grade(self._get_fuzzy(), healthy_score, defect_score)
+        # Map the 0-100 fuzzy quality to the app's PASS/REVIEW/FAIL contract.
+        if quality >= 75:
+            recommendation = "PASS"
+        elif quality >= 40:
+            recommendation = "REVIEW"
+        else:
+            recommendation = "FAIL"
+        # Report the dominant signal's confidence as the headline confidence.
+        confidence = max(healthy_score, defect_score) if (healthy_score or defect_score) else 0.0
+        return {
+            "recommendation": recommendation,
+            "confidence": round(float(confidence), 4),
+            "findings": findings,
+        }
+
+
+def _build_fuzzy_system():
+    """Build the fuzzy quality controller (ported from ai-training)."""
+    import numpy as np
+    import skfuzzy as fuzz
+    from skfuzzy import control as ctrl
+
+    healthy = ctrl.Antecedent(np.arange(0, 1.01, 0.01), "healthy")
+    defect = ctrl.Antecedent(np.arange(0, 1.01, 0.01), "defect")
+    quality = ctrl.Consequent(np.arange(0, 101, 1), "quality")
+
+    healthy["low"] = fuzz.trimf(healthy.universe, [0, 0, 0.5])
+    healthy["medium"] = fuzz.trimf(healthy.universe, [0.3, 0.6, 0.8])
+    healthy["high"] = fuzz.trimf(healthy.universe, [0.6, 1, 1])
+    defect["none"] = fuzz.trimf(defect.universe, [0, 0, 0.3])
+    defect["minor"] = fuzz.trimf(defect.universe, [0.2, 0.5, 0.7])
+    defect["major"] = fuzz.trimf(defect.universe, [0.5, 1, 1])
+    quality["reject"] = fuzz.trapmf(quality.universe, [0, 0, 20, 40])
+    quality["standard"] = fuzz.trimf(quality.universe, [30, 60, 80])
+    quality["premium"] = fuzz.trapmf(quality.universe, [70, 90, 100, 100])
+
+    rules = [
+        ctrl.Rule(healthy["high"] & defect["none"], quality["premium"]),
+        ctrl.Rule(healthy["medium"] & defect["minor"], quality["standard"]),
+        ctrl.Rule(defect["major"], quality["reject"]),
+        ctrl.Rule(healthy["low"], quality["reject"]),
+    ]
+    return ctrl.ControlSystem(rules)
+
+
+def _grade(control_system, healthy_score: float, defect_score: float) -> float:
+    from skfuzzy import control as ctrl
+    sim = ctrl.ControlSystemSimulation(control_system)
+    sim.input["healthy"] = float(healthy_score)
+    sim.input["defect"] = float(defect_score)
+    try:
+        sim.compute()
+        return float(sim.output["quality"])
+    except Exception:
+        # No rule fired (e.g. ambiguous mid-range signals) — treat as REVIEW.
+        return 50.0
+
+
 def get_strategy() -> QCStrategy:
     if QC_STRATEGY == "mock":
         return MockStrategy()
-    # When real ONNX strategies are added (Phase 5), branch on QC_STRATEGY
-    # and return the appropriate implementation. Until then, an unknown
-    # value should fail loudly rather than silently fall back to mock —
+    if QC_STRATEGY == "classifier":
+        return ClassifierStrategy()
+    # Unknown values fail loudly rather than silently falling back to mock —
     # otherwise a misconfigured env var would mask real-strategy bugs.
     raise ValueError(
-        f"Unknown QC_STRATEGY={QC_STRATEGY!r}. Supported values: 'mock'"
+        f"Unknown QC_STRATEGY={QC_STRATEGY!r}. Supported values: 'mock', 'classifier'"
     )
 
 

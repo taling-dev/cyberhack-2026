@@ -17,6 +17,9 @@ dependencies = [
 
 [project.optional-dependencies]
 inference = [
+  "ultralytics>=8.3.0",
+  "scikit-fuzzy>=0.5.0",
+  "minio>=7.2.0",
   "opencv-python-headless>=4.10.0",
   "onnxruntime>=1.19.0",
   "numpy>=2.0.0",
@@ -28,3 +31,13 @@ dev = [
 
 [tool.ruff]
 line-length = 120
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# Only the generated proto package is importable; the worker runs as a script
+# (python main.py). Pinning this stops setuptools flat-layout auto-discovery
+# from erroring now that models/ and other top-level dirs exist alongside it.
+[tool.setuptools]
+packages = ["simaops_proto"]
