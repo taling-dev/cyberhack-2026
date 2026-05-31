@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# YOLOv8 / Ultralytics
+runs/
+*.cache
+
+# Models & Weights
+*.pt
+weights/*.pt
+
+# Datasets
+data/yolo_dataset/
+data/6  indian Fruit crops Fruit and Leaf Disease Dataset/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
