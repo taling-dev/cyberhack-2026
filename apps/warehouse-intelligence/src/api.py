@@ -84,14 +84,15 @@ def _recommend(req: RecommendRequest, coldchain: ColdChainMonitoringEngine) -> L
         # Score: capacity, tighter temp-fit, and cold-chain zone health.
         fit_bonus = max(0.0, 10.0 - (loc.temperature_max - loc.temperature_min))
         health = coldchain.get_equipment_health_score(loc.zone)
-        health_score = health.get("score", 0) or 0
-        health_bonus = (health_score - 80) / 10.0  # healthy zones boosted, sick zones penalized
+        health_score = health.get("health_score", health.get("score", 0)) or 0
+        has_health = health.get("status") not in (None, "NO_DATA")
+        health_bonus = (health_score - 80) / 10.0 if has_health else 0.0  # boost healthy zones, penalize sick
         score = float(loc.capacity) + fit_bonus + health_bonus
 
         reason = f"matches {req.storage_requirement.temperature_range} ({loc.temperature_min:.0f} to {loc.temperature_max:.0f} °C)"
         if drum:
             reason += f" + {drum} drum"
-        if health.get("status") not in (None, "NO_DATA"):
+        if has_health:
             reason += f"; zone {loc.zone} health {health_score}"
         recs.append(Recommendation(location_id=loc.id, reason=reason, score=score))
 
