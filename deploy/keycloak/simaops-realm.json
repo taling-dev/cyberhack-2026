@@ -6,11 +6,11 @@
   "duplicateEmailsAllowed": false,
   "sslRequired": "none",
 
-  "ssoSessionMaxLifespan": 86400,
-  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 259200,
+  "ssoSessionIdleTimeout": 86400,
   "accessTokenLifespan": 300,
   "revokeRefreshToken": true,
-  "refreshTokenMaxReuse": 0,
+  "refreshTokenMaxReuse": 3,
   "offlineSessionIdleTimeout": 2592000,
   "roles": {
     "realm": [

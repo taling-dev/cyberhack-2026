@@ -283,8 +283,8 @@ export const COOKIE_OPTS = {
 };
 
 // Max age for the refresh-token cookie. Bounded to the realm's
-// ssoSessionMaxLifespan (24h) — a longer cookie life is pointless because
+// ssoSessionMaxLifespan (72h) — a longer cookie life is pointless because
 // Keycloak will reject the refresh token once the SSO session ends, and an
-// over-long cookie just misleads. Idle timeout (8h) is enforced server-side
+// over-long cookie just misleads. Idle timeout (24h) is enforced server-side
 // by Keycloak regardless.
-export const REFRESH_COOKIE_MAX_AGE = 86400;
+export const REFRESH_COOKIE_MAX_AGE = 259200;
