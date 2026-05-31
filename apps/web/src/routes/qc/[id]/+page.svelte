@@ -294,7 +294,7 @@
                 <div class="mt-3 flex items-center gap-3">
                   <span class="text-2xl font-bold text-slate-950">{confidencePct}%</span>
                   <div class="h-2 flex-1 overflow-hidden rounded-full bg-white">
-                    <div class="h-full rounded-full bg-purple-600 transition-all" style="width: {confidencePct}%"></div>
+                    <div class="h-full rounded-full bg-blue-600 transition-all" style="width: {confidencePct}%"></div>
                   </div>
                 </div>
               </div>
