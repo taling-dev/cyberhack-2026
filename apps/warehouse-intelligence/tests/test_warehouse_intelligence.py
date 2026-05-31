@@ -357,3 +357,19 @@ class TestDrumSegregation:
         assert not e.validate_drum_placement("HAZARD_CLASS_IBC", ["IPPC"], []).is_approved
         # Zone whitelist excludes the hazard class -> rejected.
         assert not e.validate_drum_placement("HAZARD_CLASS_IBC", ["IBC"], ["IPPC"]).is_approved
+
+
+class TestPerZoneThresholds:
+    """Per-equipment (zone-type) temperature thresholds."""
+
+    def test_ambient_zone_rejects_freezing_temp(self):
+        e = ColdChainMonitoringEngine()
+        # Ambient zone: 15–25 °C acceptable, critical outside 10–30.
+        e.equipment_thresholds["A"] = {
+            "OPTIMAL_MIN": 15, "OPTIMAL_MAX": 25, "ACCEPTABLE_MIN": 13,
+            "ACCEPTABLE_MAX": 27, "CRITICAL_MIN": 10, "CRITICAL_MAX": 30,
+        }
+        ok = e.process_sensor_reading(SensorReading(sensor_id="s-A", equipment_id="A", temperature=20.0, timestamp=datetime.now()))
+        assert ok is None  # 20°C is fine for ambient
+        bad = e.process_sensor_reading(SensorReading(sensor_id="s-A", equipment_id="A", temperature=-3.0, timestamp=datetime.now()))
+        assert bad is not None and bad.severity == AlertSeverity.CRITICAL  # freezing in ambient = critical
