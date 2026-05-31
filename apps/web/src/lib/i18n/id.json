@@ -163,6 +163,8 @@
     "model": "Model",
     "findings": "Temuan",
     "anomaly": "anomali",
+    "normal": "Normal",
+    "pending": "Menunggu",
     "supervisor_decision": "Keputusan Supervisor",
     "approve": "✓ Setujui",
     "reject": "✗ Tolak",

@@ -115,7 +115,7 @@
     if (value === 1) return 'PASS';
     if (value === 2) return 'REVIEW';
     if (value === 3) return 'FAIL';
-    return 'Pending';
+    return $t('qc.pending');
   }
 
   function recommendationClass(value?: number) {
@@ -318,7 +318,7 @@
                         </div>
                         <span class="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold {finding.isAnomaly ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">
                           <span class="size-1.5 rounded-full {finding.isAnomaly ? 'bg-red-500' : 'bg-emerald-500'}"></span>
-                          {finding.isAnomaly ? $t('qc.anomaly') : 'Normal'}
+                          {finding.isAnomaly ? $t('qc.anomaly') : $t('qc.normal')}
                         </span>
                       </div>
                     {/each}

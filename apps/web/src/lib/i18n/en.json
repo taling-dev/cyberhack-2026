@@ -163,6 +163,8 @@
     "model": "Model",
     "findings": "Findings",
     "anomaly": "anomaly",
+    "normal": "Normal",
+    "pending": "Pending",
     "supervisor_decision": "Supervisor Decision",
     "approve": "✓ Approve",
     "reject": "✗ Reject",
