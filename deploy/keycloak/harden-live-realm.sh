@@ -31,8 +31,10 @@ NS="${KC_NAMESPACE:-platform}"
 REALM="simaops"
 KCADM=/opt/keycloak/bin/kcadm.sh
 
-POD=$(kubectl -n "$NS" get pods -l app.kubernetes.io/name=keycloak -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
-[ -z "$POD" ] && POD=$(kubectl -n "$NS" get pods 2>/dev/null | grep -i keycloak | awk '{print $1}' | head -1)
+POD=$(kubectl -n "$NS" get pods -l app=keycloak -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+if [ -z "$POD" ]; then
+  POD=$(kubectl -n "$NS" get pods 2>/dev/null | grep -i keycloak | awk '{print $1}' | head -1 || true)
+fi
 [ -z "$POD" ] && { echo "keycloak pod not found in ns $NS" >&2; exit 1; }
 echo "Using Keycloak pod: $POD"
 
@@ -57,11 +59,13 @@ rotate() { # <username> <password>
   echo "==> rotating password for $1 (temporary)"
   kx "$KCADM" set-password -r "$REALM" --username "$1" --new-password "$2" --temporary
 }
-rotate operator      "$SIMAOPS_SEED_OPERATOR_PASSWORD"
-rotate qc_supervisor "$SIMAOPS_SEED_QC_PASSWORD"
-rotate warehouse     "$SIMAOPS_SEED_WAREHOUSE_PASSWORD"
-rotate manager       "$SIMAOPS_SEED_MANAGER_PASSWORD"
-rotate admin         "$SIMAOPS_SEED_ADMIN_PASSWORD"
+# Note: live realm usernames are budi/siti/agus/dewi/admin (the deployed realm
+# diverged from the import's operator/qc_supervisor/... names).
+rotate budi  "$SIMAOPS_SEED_OPERATOR_PASSWORD"
+rotate siti  "$SIMAOPS_SEED_QC_PASSWORD"
+rotate agus  "$SIMAOPS_SEED_WAREHOUSE_PASSWORD"
+rotate dewi  "$SIMAOPS_SEED_MANAGER_PASSWORD"
+rotate admin "$SIMAOPS_SEED_ADMIN_PASSWORD"
 
 echo
 echo "Done. Next steps:"
