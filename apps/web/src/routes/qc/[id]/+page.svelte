@@ -105,7 +105,7 @@
       queryClient.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
       queryClient.invalidateQueries({ queryKey: ['qc-job-for-lot', lotId] });
     } catch (e: any) {
-      reviewError = e.message || $t('qc.review_failed');
+      reviewError = $t('qc.request_error');
     } finally {
       submitting = false;
     }
@@ -126,14 +126,7 @@
   }
 
   function jobStatusLabel(value?: number) {
-    if (value === 1) return 'Queued';
-    if (value === 2) return 'Processing';
-    if (value === 3) return 'AI Completed';
-    if (value === 4) return 'Needs Review';
-    if (value === 5) return 'Approved';
-    if (value === 6) return 'Rejected';
-    if (value === 7) return 'Failed';
-    return 'Unknown';
+    return value && value >= 1 && value <= 7 ? $t(`qc.job_status.${value}`) : $t('common.unknown');
   }
 
   function decisionLabel(value: number) {

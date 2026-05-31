@@ -67,6 +67,7 @@
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
+    "unknown": "Unknown",
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -176,6 +177,16 @@
     "reason_placeholder": "Explain your decision...",
     "submitting": "Submitting...",
     "review_failed": "Review failed",
+    "request_error": "Something went wrong processing your request. Please try again.",
+    "job_status": {
+      "1": "Queued",
+      "2": "Processing",
+      "3": "AI Completed",
+      "4": "Needs Review",
+      "5": "Approved",
+      "6": "Rejected",
+      "7": "Failed"
+    },
     "review_for": "QC Review",
     "review_decision_approved": "Approved",
     "review_decision_rejected": "Rejected",

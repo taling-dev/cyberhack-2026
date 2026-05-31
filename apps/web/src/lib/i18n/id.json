@@ -67,6 +67,7 @@
   "common": {
     "loading": "Memuat...",
     "error": "Terjadi kesalahan",
+    "unknown": "Tidak diketahui",
     "save": "Simpan",
     "cancel": "Batal",
     "confirm": "Konfirmasi",
@@ -176,6 +177,16 @@
     "reason_placeholder": "Jelaskan keputusan Anda...",
     "submitting": "Mengirim...",
     "review_failed": "Tinjauan gagal",
+    "request_error": "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.",
+    "job_status": {
+      "1": "Antre",
+      "2": "Memproses",
+      "3": "AI Selesai",
+      "4": "Perlu Ditinjau",
+      "5": "Disetujui",
+      "6": "Ditolak",
+      "7": "Gagal"
+    },
     "review_for": "Tinjauan QC",
     "review_decision_approved": "Disetujui",
     "review_decision_rejected": "Ditolak",
