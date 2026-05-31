@@ -509,6 +509,12 @@ type Role struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	IsSystem    bool   `json:"is_system"`
+}
+
+type RolePermission struct {
+	RoleID  string `json:"role_id"`
+	RpcPath string `json:"rpc_path"`
 }
 
 type UserRole struct {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 
@@ -20,6 +21,9 @@ import (
 // hub is optional — pass nil if SSE/event integration is not wired (eg in tests).
 func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.MinIOClient, hub *events.Hub) {
 	queries := db.New(dbConn)
+
+	// Load the data-driven RBAC grant table into the auth permStore at startup.
+	refreshRolePermissions(context.Background(), queries)
 
 	// LotService
 	lotPath, lotHandler := lotv1connect.NewLotServiceHandler(NewLotService(queries, dbConn))

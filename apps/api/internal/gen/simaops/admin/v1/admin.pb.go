@@ -80,13 +80,16 @@ func (Role) EnumDescriptor() ([]byte, []int) {
 }
 
 type User struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
-	FullName      string                 `protobuf:"bytes,4,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	Roles         []Role                 `protobuf:"varint,5,rep,packed,name=roles,proto3,enum=simaops.admin.v1.Role" json:"roles,omitempty"`
-	Active        bool                   `protobuf:"varint,6,opt,name=active,proto3" json:"active,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Id       string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Email    string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	FullName string                 `protobuf:"bytes,4,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	Roles    []Role                 `protobuf:"varint,5,rep,packed,name=roles,proto3,enum=simaops.admin.v1.Role" json:"roles,omitempty"`
+	Active   bool                   `protobuf:"varint,6,opt,name=active,proto3" json:"active,omitempty"`
+	// Custom roles aren't in the Role enum; role_names is the authoritative,
+	// enum-independent role list (includes builtin + custom).
+	RoleNames     []string `protobuf:"bytes,7,rep,name=role_names,json=roleNames,proto3" json:"role_names,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -163,11 +166,21 @@ func (x *User) GetActive() bool {
 	return false
 }
 
+func (x *User) GetRoleNames() []string {
+	if x != nil {
+		return x.RoleNames
+	}
+	return nil
+}
+
 type RoleDefinition struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Role          Role                   `protobuf:"varint,1,opt,name=role,proto3,enum=simaops.admin.v1.Role" json:"role,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	IsSystem      bool                   `protobuf:"varint,4,opt,name=is_system,json=isSystem,proto3" json:"is_system,omitempty"` // builtin roles cannot be deleted
+	Permissions   []string               `protobuf:"bytes,5,rep,name=permissions,proto3" json:"permissions,omitempty"`            // granted RPC paths (custom roles)
+	Id            string                 `protobuf:"bytes,6,opt,name=id,proto3" json:"id,omitempty"`                              // DB role id (for DeleteRole)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -219,6 +232,27 @@ func (x *RoleDefinition) GetName() string {
 func (x *RoleDefinition) GetDescription() string {
 	if x != nil {
 		return x.Description
+	}
+	return ""
+}
+
+func (x *RoleDefinition) GetIsSystem() bool {
+	if x != nil {
+		return x.IsSystem
+	}
+	return false
+}
+
+func (x *RoleDefinition) GetPermissions() []string {
+	if x != nil {
+		return x.Permissions
+	}
+	return nil
+}
+
+func (x *RoleDefinition) GetId() string {
+	if x != nil {
+		return x.Id
 	}
 	return ""
 }
@@ -348,6 +382,7 @@ type AssignRoleRequest struct {
 	UserId         string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Role           Role                   `protobuf:"varint,2,opt,name=role,proto3,enum=simaops.admin.v1.Role" json:"role,omitempty"`
 	IdempotencyKey string                 `protobuf:"bytes,3,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	RoleName       string                 `protobuf:"bytes,4,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"` // preferred; supports custom roles. Falls back to enum.
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -403,6 +438,13 @@ func (x *AssignRoleRequest) GetIdempotencyKey() string {
 	return ""
 }
 
+func (x *AssignRoleRequest) GetRoleName() string {
+	if x != nil {
+		return x.RoleName
+	}
+	return ""
+}
+
 type AssignRoleResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
@@ -452,6 +494,7 @@ type RevokeRoleRequest struct {
 	UserId         string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Role           Role                   `protobuf:"varint,2,opt,name=role,proto3,enum=simaops.admin.v1.Role" json:"role,omitempty"`
 	IdempotencyKey string                 `protobuf:"bytes,3,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	RoleName       string                 `protobuf:"bytes,4,opt,name=role_name,json=roleName,proto3" json:"role_name,omitempty"` // preferred; supports custom roles. Falls back to enum.
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -503,6 +546,13 @@ func (x *RevokeRoleRequest) GetRole() Role {
 func (x *RevokeRoleRequest) GetIdempotencyKey() string {
 	if x != nil {
 		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *RevokeRoleRequest) GetRoleName() string {
+	if x != nil {
+		return x.RoleName
 	}
 	return ""
 }
@@ -631,22 +681,419 @@ func (x *ListRolesResponse) GetRoles() []*RoleDefinition {
 	return nil
 }
 
+type CreateRoleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Permissions   []string               `protobuf:"bytes,3,rep,name=permissions,proto3" json:"permissions,omitempty"` // RPC paths this role may call
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateRoleRequest) Reset() {
+	*x = CreateRoleRequest{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateRoleRequest) ProtoMessage() {}
+
+func (x *CreateRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateRoleRequest.ProtoReflect.Descriptor instead.
+func (*CreateRoleRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateRoleRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateRoleRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *CreateRoleRequest) GetPermissions() []string {
+	if x != nil {
+		return x.Permissions
+	}
+	return nil
+}
+
+type CreateRoleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Role          *RoleDefinition        `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateRoleResponse) Reset() {
+	*x = CreateRoleResponse{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateRoleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateRoleResponse) ProtoMessage() {}
+
+func (x *CreateRoleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateRoleResponse.ProtoReflect.Descriptor instead.
+func (*CreateRoleResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CreateRoleResponse) GetRole() *RoleDefinition {
+	if x != nil {
+		return x.Role
+	}
+	return nil
+}
+
+type DeleteRoleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RoleId        string                 `protobuf:"bytes,1,opt,name=role_id,json=roleId,proto3" json:"role_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteRoleRequest) Reset() {
+	*x = DeleteRoleRequest{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteRoleRequest) ProtoMessage() {}
+
+func (x *DeleteRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteRoleRequest.ProtoReflect.Descriptor instead.
+func (*DeleteRoleRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *DeleteRoleRequest) GetRoleId() string {
+	if x != nil {
+		return x.RoleId
+	}
+	return ""
+}
+
+type DeleteRoleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Deleted       bool                   `protobuf:"varint,1,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteRoleResponse) Reset() {
+	*x = DeleteRoleResponse{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteRoleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteRoleResponse) ProtoMessage() {}
+
+func (x *DeleteRoleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteRoleResponse.ProtoReflect.Descriptor instead.
+func (*DeleteRoleResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeleteRoleResponse) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
+type ListProceduresRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListProceduresRequest) Reset() {
+	*x = ListProceduresRequest{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListProceduresRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListProceduresRequest) ProtoMessage() {}
+
+func (x *ListProceduresRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListProceduresRequest.ProtoReflect.Descriptor instead.
+func (*ListProceduresRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{14}
+}
+
+type ListProceduresResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Procedures    []string               `protobuf:"bytes,1,rep,name=procedures,proto3" json:"procedures,omitempty"` // grantable RPC paths
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListProceduresResponse) Reset() {
+	*x = ListProceduresResponse{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListProceduresResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListProceduresResponse) ProtoMessage() {}
+
+func (x *ListProceduresResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListProceduresResponse.ProtoReflect.Descriptor instead.
+func (*ListProceduresResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListProceduresResponse) GetProcedures() []string {
+	if x != nil {
+		return x.Procedures
+	}
+	return nil
+}
+
+type CreateUserRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	FullName      string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	TempPassword  string                 `protobuf:"bytes,4,opt,name=temp_password,json=tempPassword,proto3" json:"temp_password,omitempty"`
+	RoleNames     []string               `protobuf:"bytes,5,rep,name=role_names,json=roleNames,proto3" json:"role_names,omitempty"` // initial roles to assign
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateUserRequest) Reset() {
+	*x = CreateUserRequest{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateUserRequest) ProtoMessage() {}
+
+func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateUserRequest.ProtoReflect.Descriptor instead.
+func (*CreateUserRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CreateUserRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetTempPassword() string {
+	if x != nil {
+		return x.TempPassword
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetRoleNames() []string {
+	if x != nil {
+		return x.RoleNames
+	}
+	return nil
+}
+
+type CreateUserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateUserResponse) Reset() {
+	*x = CreateUserResponse{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateUserResponse) ProtoMessage() {}
+
+func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateUserResponse.ProtoReflect.Descriptor instead.
+func (*CreateUserResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CreateUserResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
 var File_simaops_admin_v1_admin_proto protoreflect.FileDescriptor
 
 const file_simaops_admin_v1_admin_proto_rawDesc = "" +
 	"\n" +
-	"\x1csimaops/admin/v1/admin.proto\x12\x10simaops.admin.v1\"\xab\x01\n" +
+	"\x1csimaops/admin/v1/admin.proto\x12\x10simaops.admin.v1\"\xca\x01\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x1b\n" +
 	"\tfull_name\x18\x04 \x01(\tR\bfullName\x12,\n" +
 	"\x05roles\x18\x05 \x03(\x0e2\x16.simaops.admin.v1.RoleR\x05roles\x12\x16\n" +
-	"\x06active\x18\x06 \x01(\bR\x06active\"r\n" +
+	"\x06active\x18\x06 \x01(\bR\x06active\x12\x1d\n" +
+	"\n" +
+	"role_names\x18\a \x03(\tR\troleNames\"\xc1\x01\n" +
 	"\x0eRoleDefinition\x12*\n" +
 	"\x04role\x18\x01 \x01(\x0e2\x16.simaops.admin.v1.RoleR\x04role\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"\x87\x01\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1b\n" +
+	"\tis_system\x18\x04 \x01(\bR\bisSystem\x12 \n" +
+	"\vpermissions\x18\x05 \x03(\tR\vpermissions\x12\x0e\n" +
+	"\x02id\x18\x06 \x01(\tR\x02id\"\x87\x01\n" +
 	"\x10ListUsersRequest\x12\x1b\n" +
 	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
@@ -657,22 +1104,48 @@ const file_simaops_admin_v1_admin_proto_rawDesc = "" +
 	"\x05users\x18\x01 \x03(\v2\x16.simaops.admin.v1.UserR\x05users\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1f\n" +
 	"\vtotal_count\x18\x03 \x01(\x05R\n" +
-	"totalCount\"\x81\x01\n" +
+	"totalCount\"\x9e\x01\n" +
 	"\x11AssignRoleRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12*\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x16.simaops.admin.v1.RoleR\x04role\x12'\n" +
-	"\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"@\n" +
+	"\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\x12\x1b\n" +
+	"\trole_name\x18\x04 \x01(\tR\broleName\"@\n" +
 	"\x12AssignRoleResponse\x12*\n" +
-	"\x04user\x18\x01 \x01(\v2\x16.simaops.admin.v1.UserR\x04user\"\x81\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x16.simaops.admin.v1.UserR\x04user\"\x9e\x01\n" +
 	"\x11RevokeRoleRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12*\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x16.simaops.admin.v1.RoleR\x04role\x12'\n" +
-	"\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"@\n" +
+	"\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\x12\x1b\n" +
+	"\trole_name\x18\x04 \x01(\tR\broleName\"@\n" +
 	"\x12RevokeRoleResponse\x12*\n" +
 	"\x04user\x18\x01 \x01(\v2\x16.simaops.admin.v1.UserR\x04user\"\x12\n" +
 	"\x10ListRolesRequest\"K\n" +
 	"\x11ListRolesResponse\x126\n" +
-	"\x05roles\x18\x01 \x03(\v2 .simaops.admin.v1.RoleDefinitionR\x05roles*\x83\x01\n" +
+	"\x05roles\x18\x01 \x03(\v2 .simaops.admin.v1.RoleDefinitionR\x05roles\"k\n" +
+	"\x11CreateRoleRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12 \n" +
+	"\vpermissions\x18\x03 \x03(\tR\vpermissions\"J\n" +
+	"\x12CreateRoleResponse\x124\n" +
+	"\x04role\x18\x01 \x01(\v2 .simaops.admin.v1.RoleDefinitionR\x04role\",\n" +
+	"\x11DeleteRoleRequest\x12\x17\n" +
+	"\arole_id\x18\x01 \x01(\tR\x06roleId\".\n" +
+	"\x12DeleteRoleResponse\x12\x18\n" +
+	"\adeleted\x18\x01 \x01(\bR\adeleted\"\x17\n" +
+	"\x15ListProceduresRequest\"8\n" +
+	"\x16ListProceduresResponse\x12\x1e\n" +
+	"\n" +
+	"procedures\x18\x01 \x03(\tR\n" +
+	"procedures\"\xa6\x01\n" +
+	"\x11CreateUserRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1b\n" +
+	"\tfull_name\x18\x03 \x01(\tR\bfullName\x12#\n" +
+	"\rtemp_password\x18\x04 \x01(\tR\ftempPassword\x12\x1d\n" +
+	"\n" +
+	"role_names\x18\x05 \x03(\tR\troleNames\"@\n" +
+	"\x12CreateUserResponse\x12*\n" +
+	"\x04user\x18\x01 \x01(\v2\x16.simaops.admin.v1.UserR\x04user*\x83\x01\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rROLE_OPERATOR\x10\x01\x12\x16\n" +
@@ -680,14 +1153,21 @@ const file_simaops_admin_v1_admin_proto_rawDesc = "" +
 	"\x14ROLE_WAREHOUSE_STAFF\x10\x03\x12\x10\n" +
 	"\fROLE_MANAGER\x10\x04\x12\x0e\n" +
 	"\n" +
-	"ROLE_ADMIN\x10\x052\xec\x02\n" +
+	"ROLE_ADMIN\x10\x052\xdc\x05\n" +
 	"\fAdminService\x12T\n" +
 	"\tListUsers\x12\".simaops.admin.v1.ListUsersRequest\x1a#.simaops.admin.v1.ListUsersResponse\x12W\n" +
 	"\n" +
 	"AssignRole\x12#.simaops.admin.v1.AssignRoleRequest\x1a$.simaops.admin.v1.AssignRoleResponse\x12W\n" +
 	"\n" +
 	"RevokeRole\x12#.simaops.admin.v1.RevokeRoleRequest\x1a$.simaops.admin.v1.RevokeRoleResponse\x12T\n" +
-	"\tListRoles\x12\".simaops.admin.v1.ListRolesRequest\x1a#.simaops.admin.v1.ListRolesResponseB\xd9\x01\n" +
+	"\tListRoles\x12\".simaops.admin.v1.ListRolesRequest\x1a#.simaops.admin.v1.ListRolesResponse\x12W\n" +
+	"\n" +
+	"CreateRole\x12#.simaops.admin.v1.CreateRoleRequest\x1a$.simaops.admin.v1.CreateRoleResponse\x12W\n" +
+	"\n" +
+	"DeleteRole\x12#.simaops.admin.v1.DeleteRoleRequest\x1a$.simaops.admin.v1.DeleteRoleResponse\x12c\n" +
+	"\x0eListProcedures\x12'.simaops.admin.v1.ListProceduresRequest\x1a(.simaops.admin.v1.ListProceduresResponse\x12W\n" +
+	"\n" +
+	"CreateUser\x12#.simaops.admin.v1.CreateUserRequest\x1a$.simaops.admin.v1.CreateUserResponseB\xd9\x01\n" +
 	"\x14com.simaops.admin.v1B\n" +
 	"AdminProtoP\x01ZSgithub.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1;adminv1\xa2\x02\x03SAX\xaa\x02\x10Simaops.Admin.V1\xca\x02\x10Simaops\\Admin\\V1\xe2\x02\x1cSimaops\\Admin\\V1\\GPBMetadata\xea\x02\x12Simaops::Admin::V1b\x06proto3"
 
@@ -704,19 +1184,27 @@ func file_simaops_admin_v1_admin_proto_rawDescGZIP() []byte {
 }
 
 var file_simaops_admin_v1_admin_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_simaops_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_simaops_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_simaops_admin_v1_admin_proto_goTypes = []any{
-	(Role)(0),                  // 0: simaops.admin.v1.Role
-	(*User)(nil),               // 1: simaops.admin.v1.User
-	(*RoleDefinition)(nil),     // 2: simaops.admin.v1.RoleDefinition
-	(*ListUsersRequest)(nil),   // 3: simaops.admin.v1.ListUsersRequest
-	(*ListUsersResponse)(nil),  // 4: simaops.admin.v1.ListUsersResponse
-	(*AssignRoleRequest)(nil),  // 5: simaops.admin.v1.AssignRoleRequest
-	(*AssignRoleResponse)(nil), // 6: simaops.admin.v1.AssignRoleResponse
-	(*RevokeRoleRequest)(nil),  // 7: simaops.admin.v1.RevokeRoleRequest
-	(*RevokeRoleResponse)(nil), // 8: simaops.admin.v1.RevokeRoleResponse
-	(*ListRolesRequest)(nil),   // 9: simaops.admin.v1.ListRolesRequest
-	(*ListRolesResponse)(nil),  // 10: simaops.admin.v1.ListRolesResponse
+	(Role)(0),                      // 0: simaops.admin.v1.Role
+	(*User)(nil),                   // 1: simaops.admin.v1.User
+	(*RoleDefinition)(nil),         // 2: simaops.admin.v1.RoleDefinition
+	(*ListUsersRequest)(nil),       // 3: simaops.admin.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),      // 4: simaops.admin.v1.ListUsersResponse
+	(*AssignRoleRequest)(nil),      // 5: simaops.admin.v1.AssignRoleRequest
+	(*AssignRoleResponse)(nil),     // 6: simaops.admin.v1.AssignRoleResponse
+	(*RevokeRoleRequest)(nil),      // 7: simaops.admin.v1.RevokeRoleRequest
+	(*RevokeRoleResponse)(nil),     // 8: simaops.admin.v1.RevokeRoleResponse
+	(*ListRolesRequest)(nil),       // 9: simaops.admin.v1.ListRolesRequest
+	(*ListRolesResponse)(nil),      // 10: simaops.admin.v1.ListRolesResponse
+	(*CreateRoleRequest)(nil),      // 11: simaops.admin.v1.CreateRoleRequest
+	(*CreateRoleResponse)(nil),     // 12: simaops.admin.v1.CreateRoleResponse
+	(*DeleteRoleRequest)(nil),      // 13: simaops.admin.v1.DeleteRoleRequest
+	(*DeleteRoleResponse)(nil),     // 14: simaops.admin.v1.DeleteRoleResponse
+	(*ListProceduresRequest)(nil),  // 15: simaops.admin.v1.ListProceduresRequest
+	(*ListProceduresResponse)(nil), // 16: simaops.admin.v1.ListProceduresResponse
+	(*CreateUserRequest)(nil),      // 17: simaops.admin.v1.CreateUserRequest
+	(*CreateUserResponse)(nil),     // 18: simaops.admin.v1.CreateUserResponse
 }
 var file_simaops_admin_v1_admin_proto_depIdxs = []int32{
 	0,  // 0: simaops.admin.v1.User.roles:type_name -> simaops.admin.v1.Role
@@ -728,19 +1216,29 @@ var file_simaops_admin_v1_admin_proto_depIdxs = []int32{
 	0,  // 6: simaops.admin.v1.RevokeRoleRequest.role:type_name -> simaops.admin.v1.Role
 	1,  // 7: simaops.admin.v1.RevokeRoleResponse.user:type_name -> simaops.admin.v1.User
 	2,  // 8: simaops.admin.v1.ListRolesResponse.roles:type_name -> simaops.admin.v1.RoleDefinition
-	3,  // 9: simaops.admin.v1.AdminService.ListUsers:input_type -> simaops.admin.v1.ListUsersRequest
-	5,  // 10: simaops.admin.v1.AdminService.AssignRole:input_type -> simaops.admin.v1.AssignRoleRequest
-	7,  // 11: simaops.admin.v1.AdminService.RevokeRole:input_type -> simaops.admin.v1.RevokeRoleRequest
-	9,  // 12: simaops.admin.v1.AdminService.ListRoles:input_type -> simaops.admin.v1.ListRolesRequest
-	4,  // 13: simaops.admin.v1.AdminService.ListUsers:output_type -> simaops.admin.v1.ListUsersResponse
-	6,  // 14: simaops.admin.v1.AdminService.AssignRole:output_type -> simaops.admin.v1.AssignRoleResponse
-	8,  // 15: simaops.admin.v1.AdminService.RevokeRole:output_type -> simaops.admin.v1.RevokeRoleResponse
-	10, // 16: simaops.admin.v1.AdminService.ListRoles:output_type -> simaops.admin.v1.ListRolesResponse
-	13, // [13:17] is the sub-list for method output_type
-	9,  // [9:13] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	2,  // 9: simaops.admin.v1.CreateRoleResponse.role:type_name -> simaops.admin.v1.RoleDefinition
+	1,  // 10: simaops.admin.v1.CreateUserResponse.user:type_name -> simaops.admin.v1.User
+	3,  // 11: simaops.admin.v1.AdminService.ListUsers:input_type -> simaops.admin.v1.ListUsersRequest
+	5,  // 12: simaops.admin.v1.AdminService.AssignRole:input_type -> simaops.admin.v1.AssignRoleRequest
+	7,  // 13: simaops.admin.v1.AdminService.RevokeRole:input_type -> simaops.admin.v1.RevokeRoleRequest
+	9,  // 14: simaops.admin.v1.AdminService.ListRoles:input_type -> simaops.admin.v1.ListRolesRequest
+	11, // 15: simaops.admin.v1.AdminService.CreateRole:input_type -> simaops.admin.v1.CreateRoleRequest
+	13, // 16: simaops.admin.v1.AdminService.DeleteRole:input_type -> simaops.admin.v1.DeleteRoleRequest
+	15, // 17: simaops.admin.v1.AdminService.ListProcedures:input_type -> simaops.admin.v1.ListProceduresRequest
+	17, // 18: simaops.admin.v1.AdminService.CreateUser:input_type -> simaops.admin.v1.CreateUserRequest
+	4,  // 19: simaops.admin.v1.AdminService.ListUsers:output_type -> simaops.admin.v1.ListUsersResponse
+	6,  // 20: simaops.admin.v1.AdminService.AssignRole:output_type -> simaops.admin.v1.AssignRoleResponse
+	8,  // 21: simaops.admin.v1.AdminService.RevokeRole:output_type -> simaops.admin.v1.RevokeRoleResponse
+	10, // 22: simaops.admin.v1.AdminService.ListRoles:output_type -> simaops.admin.v1.ListRolesResponse
+	12, // 23: simaops.admin.v1.AdminService.CreateRole:output_type -> simaops.admin.v1.CreateRoleResponse
+	14, // 24: simaops.admin.v1.AdminService.DeleteRole:output_type -> simaops.admin.v1.DeleteRoleResponse
+	16, // 25: simaops.admin.v1.AdminService.ListProcedures:output_type -> simaops.admin.v1.ListProceduresResponse
+	18, // 26: simaops.admin.v1.AdminService.CreateUser:output_type -> simaops.admin.v1.CreateUserResponse
+	19, // [19:27] is the sub-list for method output_type
+	11, // [11:19] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_simaops_admin_v1_admin_proto_init() }
@@ -754,7 +1252,7 @@ func file_simaops_admin_v1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_simaops_admin_v1_admin_proto_rawDesc), len(file_simaops_admin_v1_admin_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   10,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -10,6 +10,7 @@ import (
 )
 
 type Querier interface {
+	AddRolePermission(ctx context.Context, arg AddRolePermissionParams) error
 	AssignUserRole(ctx context.Context, arg AssignUserRoleParams) error
 	AvgQCConfidence(ctx context.Context, createdAt time.Time) (interface{}, error)
 	// Atomically transitions a batch of PENDING events to PUBLISHING. Combined
@@ -35,6 +36,7 @@ type Querier interface {
 	CountLotsByStatus(ctx context.Context, status LotsStatus) (int64, error)
 	CountLotsByStatusGroup(ctx context.Context) ([]CountLotsByStatusGroupRow, error)
 	CountQCByRecommendation(ctx context.Context, createdAt time.Time) ([]CountQCByRecommendationRow, error)
+	CountRoleMembers(ctx context.Context, roleID string) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) error
 	CreateDispatch(ctx context.Context, arg CreateDispatchParams) error
@@ -43,10 +45,13 @@ type Querier interface {
 	CreateOutboxEvent(ctx context.Context, arg CreateOutboxEventParams) error
 	CreateQCJob(ctx context.Context, arg CreateQCJobParams) error
 	CreateQCResult(ctx context.Context, arg CreateQCResultParams) error
+	CreateRole(ctx context.Context, arg CreateRoleParams) error
+	CreateUserProfile(ctx context.Context, arg CreateUserProfileParams) error
 	CreateWarehouseAssignment(ctx context.Context, arg CreateWarehouseAssignmentParams) error
 	DecrementLocationCapacity(ctx context.Context, id string) error
 	DecrementLocationCapacityAtomic(ctx context.Context, id string) (int64, error)
 	DeleteExpiredIdempotencyKeys(ctx context.Context) error
+	DeleteRole(ctx context.Context, id string) error
 	GetDispatch(ctx context.Context, id string) (Dispatch, error)
 	// Locks the row for the duration of the transaction (TiDB pessimistic mode).
 	// Used by UpdateDispatchStatus to close the same TOCTOU race the lot FSM
@@ -63,6 +68,7 @@ type Querier interface {
 	GetLotForUpdate(ctx context.Context, id string) (Lot, error)
 	GetQCJob(ctx context.Context, id string) (QcJob, error)
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
+	GetRoleByID(ctx context.Context, id string) (Role, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
 	GetUserByID(ctx context.Context, id string) (UsersProfile, error)
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
@@ -70,6 +76,7 @@ type Querier interface {
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)
 	IncrementLocationCapacity(ctx context.Context, id string) (int64, error)
 	IncrementOutboxRetry(ctx context.Context, id string) error
+	ListAllRolePermissions(ctx context.Context) ([]ListAllRolePermissionsRow, error)
 	ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]AuditLog, error)
 	ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByActorParams) ([]AuditLog, error)
 	ListAuditLogsByEntity(ctx context.Context, arg ListAuditLogsByEntityParams) ([]AuditLog, error)

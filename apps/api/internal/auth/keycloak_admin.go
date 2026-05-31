@@ -185,3 +185,71 @@ func (k *KeycloakAdmin) RemoveRealmRole(ctx context.Context, username, roleName 
 	}
 	return k.roleMapping(ctx, http.MethodDelete, username, roleName)
 }
+
+// CreateRealmRole creates a realm role in Keycloak so a custom SimaOps role
+// lands in users' JWTs (realm_access.roles) once assigned. Treats 409 Conflict
+// (already exists) as success. No-op if disabled.
+func (k *KeycloakAdmin) CreateRealmRole(ctx context.Context, roleName, description string) error {
+	if !k.Enabled() {
+		return nil
+	}
+	token, err := k.token(ctx)
+	if err != nil {
+		return err
+	}
+	payload, _ := json.Marshal(map[string]string{"name": roleName, "description": description})
+	endpoint := fmt.Sprintf("%s/admin/realms/%s/roles", k.serverURL, k.realm)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	res, err := k.hc.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusCreated && res.StatusCode != http.StatusConflict {
+		return fmt.Errorf("create realm role %q: status %d", roleName, res.StatusCode)
+	}
+	return nil
+}
+
+// CreateUser provisions a Keycloak user with a temporary password (the user
+// must reset it at first login). Treats 409 Conflict as success. No-op if
+// disabled (the local profile row is still written by the caller).
+func (k *KeycloakAdmin) CreateUser(ctx context.Context, username, email, fullName, tempPassword string) error {
+	if !k.Enabled() {
+		return nil
+	}
+	token, err := k.token(ctx)
+	if err != nil {
+		return err
+	}
+	first, last := fullName, ""
+	if i := strings.IndexByte(fullName, ' '); i >= 0 {
+		first, last = fullName[:i], fullName[i+1:]
+	}
+	payload, _ := json.Marshal(map[string]any{
+		"username":      username,
+		"email":         email,
+		"firstName":     first,
+		"lastName":      last,
+		"enabled":       true,
+		"emailVerified": true,
+		"credentials": []map[string]any{
+			{"type": "password", "value": tempPassword, "temporary": true},
+		},
+	})
+	endpoint := fmt.Sprintf("%s/admin/realms/%s/users", k.serverURL, k.realm)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	res, err := k.hc.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusCreated && res.StatusCode != http.StatusConflict {
+		return fmt.Errorf("create user %q: status %d", username, res.StatusCode)
+	}
+	return nil
+}

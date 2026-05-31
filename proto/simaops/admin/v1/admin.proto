@@ -7,6 +7,10 @@ service AdminService {
   rpc AssignRole(AssignRoleRequest) returns (AssignRoleResponse);
   rpc RevokeRole(RevokeRoleRequest) returns (RevokeRoleResponse);
   rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc CreateRole(CreateRoleRequest) returns (CreateRoleResponse);
+  rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
+  rpc ListProcedures(ListProceduresRequest) returns (ListProceduresResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
 }
 
 // ─── Enums ───────────────────────────────────────────────────────
@@ -29,12 +33,18 @@ message User {
   string full_name = 4;
   repeated Role roles = 5;
   bool active = 6;
+  // Custom roles aren't in the Role enum; role_names is the authoritative,
+  // enum-independent role list (includes builtin + custom).
+  repeated string role_names = 7;
 }
 
 message RoleDefinition {
   Role role = 1;
   string name = 2;
   string description = 3;
+  bool is_system = 4;            // builtin roles cannot be deleted
+  repeated string permissions = 5; // granted RPC paths (custom roles)
+  string id = 6;                 // DB role id (for DeleteRole)
 }
 
 // ─── Requests / Responses ────────────────────────────────────────
@@ -55,6 +65,7 @@ message AssignRoleRequest {
   string user_id = 1;
   Role role = 2;
   string idempotency_key = 3;
+  string role_name = 4; // preferred; supports custom roles. Falls back to enum.
 }
 
 message AssignRoleResponse {
@@ -65,6 +76,7 @@ message RevokeRoleRequest {
   string user_id = 1;
   Role role = 2;
   string idempotency_key = 3;
+  string role_name = 4; // preferred; supports custom roles. Falls back to enum.
 }
 
 message RevokeRoleResponse {
@@ -75,4 +87,40 @@ message ListRolesRequest {}
 
 message ListRolesResponse {
   repeated RoleDefinition roles = 1;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+  string description = 2;
+  repeated string permissions = 3; // RPC paths this role may call
+}
+
+message CreateRoleResponse {
+  RoleDefinition role = 1;
+}
+
+message DeleteRoleRequest {
+  string role_id = 1;
+}
+
+message DeleteRoleResponse {
+  bool deleted = 1;
+}
+
+message ListProceduresRequest {}
+
+message ListProceduresResponse {
+  repeated string procedures = 1; // grantable RPC paths
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  string full_name = 3;
+  string temp_password = 4;
+  repeated string role_names = 5; // initial roles to assign
+}
+
+message CreateUserResponse {
+  User user = 1;
 }

@@ -3,58 +3,105 @@ package auth
 import (
 	"net/http"
 	"strings"
+	"sync"
 )
 
-// rpcRoles maps Connect RPC procedure paths to the roles allowed to call them.
-// Empty slice = public (any authenticated user). Nil = no restriction (health endpoints).
-var rpcRoles = map[string][]string{
-	// LotService — OPERATOR, ADMIN can create; all authenticated can read
-	"/simaops.lot.v1.LotService/CreateLot":       {"OPERATOR", "ADMIN"},
-	"/simaops.lot.v1.LotService/GetLot":          {},
-	"/simaops.lot.v1.LotService/ListLots":        {},
-	"/simaops.lot.v1.LotService/UpdateLotStatus": {"OPERATOR", "ADMIN"},
-	"/simaops.lot.v1.LotService/GetLotTimeline":  {},
+// publicProcedures are callable by any authenticated user (read-only or
+// universally-needed RPCs). These stay in code: they are not a per-role grant.
+var publicProcedures = map[string]bool{
+	"/simaops.lot.v1.LotService/GetLot":                            true,
+	"/simaops.lot.v1.LotService/ListLots":                          true,
+	"/simaops.lot.v1.LotService/GetLotTimeline":                    true,
+	"/simaops.qc.v1.QCService/CreateQCViewUrl":                     true,
+	"/simaops.qc.v1.QCService/GetQCJob":                            true,
+	"/simaops.qc.v1.QCService/GetQCResult":                         true,
+	"/simaops.warehouse.v1.WarehouseService/ListLocations":         true,
+	"/simaops.warehouse.v1.WarehouseService/GetWarehouseAssignments": true,
+	"/simaops.dispatch.v1.DispatchService/GetDispatch":             true,
+	"/simaops.dispatch.v1.DispatchService/ListDispatches":          true,
+	"/simaops.dashboard.v1.DashboardService/GetOpsDashboard":       true,
+	"/simaops.dashboard.v1.DashboardService/GetQCMetrics":          true,
+	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics":   true,
+}
 
-	// QCService — OPERATOR uploads/creates; QC_SUPERVISOR reviews
-	"/simaops.qc.v1.QCService/CreateQCUploadUrl": {"OPERATOR", "ADMIN"},
-	"/simaops.qc.v1.QCService/CreateQCViewUrl":   {},
-	"/simaops.qc.v1.QCService/CreateQCJob":       {"OPERATOR", "ADMIN"},
-	"/simaops.qc.v1.QCService/GetQCJob":          {},
-	"/simaops.qc.v1.QCService/GetQCResult":       {},
-	"/simaops.qc.v1.QCService/ReviewQC":          {"QC_SUPERVISOR", "ADMIN"},
-	"/simaops.qc.v1.QCService/RetryQCJob":        {"QC_SUPERVISOR", "ADMIN"},
+// adminOnlyProcedures require ADMIN specifically (admin console). Kept in code
+// so a custom role can never be granted user/role administration.
+var adminOnlyProcedures = map[string]bool{
+	"/simaops.admin.v1.AdminService/ListUsers":      true,
+	"/simaops.admin.v1.AdminService/AssignRole":     true,
+	"/simaops.admin.v1.AdminService/RevokeRole":     true,
+	"/simaops.admin.v1.AdminService/ListRoles":      true,
+	"/simaops.admin.v1.AdminService/CreateRole":     true,
+	"/simaops.admin.v1.AdminService/DeleteRole":     true,
+	"/simaops.admin.v1.AdminService/ListProcedures": true,
+	"/simaops.admin.v1.AdminService/CreateUser":     true,
+}
 
-	// WarehouseService — WAREHOUSE_STAFF assigns
-	"/simaops.warehouse.v1.WarehouseService/ListLocations":          {},
-	"/simaops.warehouse.v1.WarehouseService/RecommendSlot":          {"WAREHOUSE_STAFF", "ADMIN"},
-	"/simaops.warehouse.v1.WarehouseService/AssignSlot":             {"WAREHOUSE_STAFF", "ADMIN"},
-	"/simaops.warehouse.v1.WarehouseService/GetWarehouseAssignments": {},
+// AllGrantableProcedures is the set of RPCs a custom role can be granted (the
+// non-public, non-admin procedures). Exposed via AdminService.ListProcedures
+// so the admin UI offers a valid checklist. Order-stable for display.
+var AllGrantableProcedures = []string{
+	"/simaops.lot.v1.LotService/CreateLot",
+	"/simaops.lot.v1.LotService/UpdateLotStatus",
+	"/simaops.qc.v1.QCService/CreateQCUploadUrl",
+	"/simaops.qc.v1.QCService/CreateQCJob",
+	"/simaops.qc.v1.QCService/ReviewQC",
+	"/simaops.qc.v1.QCService/RetryQCJob",
+	"/simaops.warehouse.v1.WarehouseService/RecommendSlot",
+	"/simaops.warehouse.v1.WarehouseService/AssignSlot",
+	"/simaops.dispatch.v1.DispatchService/CreateDispatch",
+	"/simaops.dispatch.v1.DispatchService/UpdateDispatchStatus",
+	"/simaops.audit.v1.AuditService/ListAuditLogs",
+	"/simaops.audit.v1.AuditService/GetEntityAuditTrail",
+}
 
-	// DispatchService — WAREHOUSE_STAFF/MANAGER create & advance shipments of
-	// production-ready lots; all authenticated users may read.
-	"/simaops.dispatch.v1.DispatchService/CreateDispatch":       {"WAREHOUSE_STAFF", "MANAGER", "ADMIN"},
-	"/simaops.dispatch.v1.DispatchService/GetDispatch":          {},
-	"/simaops.dispatch.v1.DispatchService/ListDispatches":       {},
-	"/simaops.dispatch.v1.DispatchService/UpdateDispatchStatus": {"WAREHOUSE_STAFF", "MANAGER", "ADMIN"},
+// permStore holds the data-driven role->procedures grants, refreshable at
+// runtime when an admin mutates roles. Reads are lock-free-ish via RWMutex.
+type permStore struct {
+	mu    sync.RWMutex
+	grant map[string]map[string]bool // rpc_path -> set of role names allowed
+}
 
-	// AuditService — MANAGER, ADMIN
-	"/simaops.audit.v1.AuditService/ListAuditLogs":       {"MANAGER", "ADMIN"},
-	"/simaops.audit.v1.AuditService/GetEntityAuditTrail": {"MANAGER", "ADMIN"},
+var perms = &permStore{grant: map[string]map[string]bool{}}
 
-	// DashboardService — read-only aggregate operational metrics. The
-	// dashboard is the universal post-login landing page for every role
-	// (see web nav: /dashboard is visible to all roles), and these RPCs
-	// return only non-sensitive summary counts, so any authenticated user
-	// may read them — same pattern as GetLot/ListLots/ListLocations.
-	"/simaops.dashboard.v1.DashboardService/GetOpsDashboard":    {},
-	"/simaops.dashboard.v1.DashboardService/GetQCMetrics":       {},
-	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics": {},
+// SetRolePermissions replaces the in-memory grant table. Pairs is a flat list
+// of (roleName, rpcPath). Called at startup and after any role mutation.
+func SetRolePermissions(pairs [][2]string) {
+	g := make(map[string]map[string]bool)
+	for _, p := range pairs {
+		roleName, rpc := p[0], p[1]
+		if g[rpc] == nil {
+			g[rpc] = map[string]bool{}
+		}
+		g[rpc][roleName] = true
+	}
+	perms.mu.Lock()
+	perms.grant = g
+	perms.mu.Unlock()
+}
 
-	// AdminService — ADMIN only
-	"/simaops.admin.v1.AdminService/ListUsers":  {"ADMIN"},
-	"/simaops.admin.v1.AdminService/AssignRole": {"ADMIN"},
-	"/simaops.admin.v1.AdminService/RevokeRole": {"ADMIN"},
-	"/simaops.admin.v1.AdminService/ListRoles":  {"ADMIN"},
+func (s *permStore) allows(rpc string, userRoles []string) bool {
+	s.mu.RLock()
+	allowed := s.grant[rpc]
+	s.mu.RUnlock()
+	for _, ur := range userRoles {
+		if allowed[ur] {
+			return true
+		}
+	}
+	return false
+}
+
+func isKnownProcedure(path string) bool {
+	if publicProcedures[path] || adminOnlyProcedures[path] {
+		return true
+	}
+	for _, p := range AllGrantableProcedures {
+		if p == path {
+			return true
+		}
+	}
+	return false
 }
 
 // RBACMiddleware enforces role-based access on Connect RPC procedures.
@@ -68,47 +115,43 @@ func RBACMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		requiredRoles, exists := rpcRoles[path]
-		if !exists {
-			// Unknown RPC — deny by default
+		if !isKnownProcedure(path) {
 			http.Error(w, `{"code":"permission_denied","message":"unknown procedure"}`, http.StatusForbidden)
 			return
 		}
 
-		// Empty slice = any authenticated user
-		if len(requiredRoles) == 0 {
-			claims := GetClaims(r.Context())
-			if claims == nil {
-				http.Error(w, `{"code":"unauthenticated","message":"authentication required"}`, http.StatusUnauthorized)
-				return
-			}
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Check role membership
 		claims := GetClaims(r.Context())
 		if claims == nil {
 			http.Error(w, `{"code":"unauthenticated","message":"authentication required"}`, http.StatusUnauthorized)
 			return
 		}
 
-		if !hasAnyRole(claims.Roles, requiredRoles) {
+		// ADMIN bypasses all non-public checks.
+		for _, role := range claims.Roles {
+			if role == "ADMIN" {
+				next.ServeHTTP(w, r)
+				return
+			}
+		}
+
+		// Public procedures: any authenticated user.
+		if publicProcedures[path] {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Admin-only procedures: only ADMIN (handled above) may pass.
+		if adminOnlyProcedures[path] {
+			http.Error(w, `{"code":"permission_denied","message":"insufficient role"}`, http.StatusForbidden)
+			return
+		}
+
+		// Data-driven per-role grants for everything else.
+		if !perms.allows(path, claims.Roles) {
 			http.Error(w, `{"code":"permission_denied","message":"insufficient role"}`, http.StatusForbidden)
 			return
 		}
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-func hasAnyRole(userRoles, required []string) bool {
-	for _, req := range required {
-		for _, ur := range userRoles {
-			if ur == req {
-				return true
-			}
-		}
-	}
-	return false
 }

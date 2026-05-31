@@ -11,6 +11,20 @@ import (
 	"time"
 )
 
+const addRolePermission = `-- name: AddRolePermission :exec
+INSERT IGNORE INTO role_permissions (role_id, rpc_path) VALUES (?, ?)
+`
+
+type AddRolePermissionParams struct {
+	RoleID  string `json:"role_id"`
+	RpcPath string `json:"rpc_path"`
+}
+
+func (q *Queries) AddRolePermission(ctx context.Context, arg AddRolePermissionParams) error {
+	_, err := q.db.ExecContext(ctx, addRolePermission, arg.RoleID, arg.RpcPath)
+	return err
+}
+
 const assignUserRole = `-- name: AssignUserRole :exec
 INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)
 `
@@ -25,6 +39,17 @@ func (q *Queries) AssignUserRole(ctx context.Context, arg AssignUserRoleParams) 
 	return err
 }
 
+const countRoleMembers = `-- name: CountRoleMembers :one
+SELECT COUNT(*) FROM user_roles WHERE role_id = ?
+`
+
+func (q *Queries) CountRoleMembers(ctx context.Context, roleID string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countRoleMembers, roleID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users_profile
 `
@@ -36,14 +61,80 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const createRole = `-- name: CreateRole :exec
+INSERT INTO roles (id, name, description, is_system) VALUES (?, ?, ?, FALSE)
+`
+
+type CreateRoleParams struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) error {
+	_, err := q.db.ExecContext(ctx, createRole, arg.ID, arg.Name, arg.Description)
+	return err
+}
+
+const createUserProfile = `-- name: CreateUserProfile :exec
+INSERT INTO users_profile (id, username, email, full_name, active) VALUES (?, ?, ?, ?, TRUE)
+`
+
+type CreateUserProfileParams struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	FullName string `json:"full_name"`
+}
+
+func (q *Queries) CreateUserProfile(ctx context.Context, arg CreateUserProfileParams) error {
+	_, err := q.db.ExecContext(ctx, createUserProfile,
+		arg.ID,
+		arg.Username,
+		arg.Email,
+		arg.FullName,
+	)
+	return err
+}
+
+const deleteRole = `-- name: DeleteRole :exec
+DELETE FROM roles WHERE id = ? AND is_system = FALSE
+`
+
+func (q *Queries) DeleteRole(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, deleteRole, id)
+	return err
+}
+
+const getRoleByID = `-- name: GetRoleByID :one
+SELECT id, name, description, is_system FROM roles WHERE id = ?
+`
+
+func (q *Queries) GetRoleByID(ctx context.Context, id string) (Role, error) {
+	row := q.db.QueryRowContext(ctx, getRoleByID, id)
+	var i Role
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.IsSystem,
+	)
+	return i, err
+}
+
 const getRoleByName = `-- name: GetRoleByName :one
-SELECT id, name, description FROM roles WHERE name = ?
+SELECT id, name, description, is_system FROM roles WHERE name = ?
 `
 
 func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) {
 	row := q.db.QueryRowContext(ctx, getRoleByName, name)
 	var i Role
-	err := row.Scan(&i.ID, &i.Name, &i.Description)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.IsSystem,
+	)
 	return i, err
 }
 
@@ -85,8 +176,41 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (Users
 	return i, err
 }
 
+const listAllRolePermissions = `-- name: ListAllRolePermissions :many
+SELECT r.name AS role_name, rp.rpc_path
+FROM role_permissions rp JOIN roles r ON r.id = rp.role_id
+`
+
+type ListAllRolePermissionsRow struct {
+	RoleName string `json:"role_name"`
+	RpcPath  string `json:"rpc_path"`
+}
+
+func (q *Queries) ListAllRolePermissions(ctx context.Context) ([]ListAllRolePermissionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllRolePermissions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAllRolePermissionsRow
+	for rows.Next() {
+		var i ListAllRolePermissionsRow
+		if err := rows.Scan(&i.RoleName, &i.RpcPath); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listRoles = `-- name: ListRoles :many
-SELECT id, name, description FROM roles ORDER BY name
+SELECT id, name, description, is_system FROM roles ORDER BY name
 `
 
 func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
@@ -98,7 +222,12 @@ func (q *Queries) ListRoles(ctx context.Context) ([]Role, error) {
 	var items []Role
 	for rows.Next() {
 		var i Role
-		if err := rows.Scan(&i.ID, &i.Name, &i.Description); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.IsSystem,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
