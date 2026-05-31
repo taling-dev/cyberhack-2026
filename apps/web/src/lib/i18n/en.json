@@ -10,6 +10,7 @@
     "warehouse": "Warehouse",
     "audit": "Audit Log",
     "dispatch": "Dispatch",
+    "reports": "Reports",
     "admin": "Admin",
     "login": "Login",
     "logout": "Logout",

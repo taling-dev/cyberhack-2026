@@ -38,6 +38,7 @@
     { href: '/warehouse', icon: 'warehouse', key: 'nav.warehouse', roles: ['WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'] },
     { href: '/dispatch', icon: 'dispatch', key: 'nav.dispatch', roles: ['WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'] },
     { href: '/audit', icon: 'audit', key: 'nav.audit', roles: ['MANAGER', 'ADMIN'] },
+    { href: '/reports', icon: 'reports', key: 'nav.reports', roles: ['MANAGER', 'ADMIN'] },
     { href: '/admin', icon: 'settings', key: 'nav.admin', roles: ['ADMIN'] },
   ];
 
@@ -256,6 +257,13 @@
                   <path d="M6 4H5a2 2 0 0 0-2 2v14h18V6a2 2 0 0 0-2-2h-1" />
                   <path d="M8 12h8" />
                   <path d="M8 16h5" />
+                {:else if item.icon === 'reports'}
+                  <path d="M4 19V5" />
+                  <path d="M4 19h16" />
+                  <path d="M8 15v-4" />
+                  <path d="M12 15V8" />
+                  <path d="M16 15v-7" />
+                  <path d="M8 11l4-3 4 1" />
                 {:else if item.icon === 'settings'}
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.1 2.1-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20h-3v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L6.6 16.6l.1-.1A1.7 1.7 0 0 0 7 14.6a1.7 1.7 0 0 0-1.5-1H5v-3h.5A1.7 1.7 0 0 0 7 9.5a1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.1-2.1.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h3v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.1 2.1-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.5v3h-.5a1.7 1.7 0 0 0-1.5 1Z" />
