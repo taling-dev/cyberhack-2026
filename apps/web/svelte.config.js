@@ -1,6 +1,13 @@
 import adapter from '@sveltejs/adapter-node';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
+// Browser uploads/downloads QC images directly to/from MinIO via presigned
+// URLs, so the MinIO origin must be allowed in connect-src (XHR PUT) and
+// img-src (annotated image <img>). Overridable per-deployment; defaults to the
+// staging MinIO ingress.
+const MINIO_ORIGIN =
+  process.env.PUBLIC_MINIO_ORIGIN || 'https://minio.161.118.244.229.sslip.io';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
@@ -20,7 +27,7 @@ const config = {
         'style-src': ['self', 'unsafe-inline'],
         'img-src': ['self', 'blob:', 'data:', 'https:'],
         'font-src': ['self', 'data:'],
-        'connect-src': ['self'],
+        'connect-src': ['self', MINIO_ORIGIN],
         'frame-src': ['self'],
         'frame-ancestors': ['none'],
         'base-uri': ['self'],
