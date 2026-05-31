@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file simaops/admin/v1/admin.proto.
  */
 export const file_simaops_admin_v1_admin: GenFile = /*@__PURE__*/
-  fileDesc("ChxzaW1hb3BzL2FkbWluL3YxL2FkbWluLnByb3RvEhBzaW1hb3BzLmFkbWluLnYxIpEBCgRVc2VyEgoKAmlkGAEgASgJEhAKCHVzZXJuYW1lGAIgASgJEg0KBWVtYWlsGAMgASgJEhEKCWZ1bGxfbmFtZRgEIAEoCRIlCgVyb2xlcxgFIAMoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZRIOCgZhY3RpdmUYBiABKAgSEgoKcm9sZV9uYW1lcxgHIAMoCSKNAQoOUm9sZURlZmluaXRpb24SJAoEcm9sZRgBIAEoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhEKCWlzX3N5c3RlbRgEIAEoCBITCgtwZXJtaXNzaW9ucxgFIAMoCRIKCgJpZBgGIAEoCSJmChBMaXN0VXNlcnNSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJEisKC3JvbGVfZmlsdGVyGAMgASgOMhYuc2ltYW9wcy5hZG1pbi52MS5Sb2xlImgKEUxpc3RVc2Vyc1Jlc3BvbnNlEiUKBXVzZXJzGAEgAygLMhYuc2ltYW9wcy5hZG1pbi52MS5Vc2VyEhcKD25leHRfcGFnZV90b2tlbhgCIAEoCRITCgt0b3RhbF9jb3VudBgDIAEoBSJ2ChFBc3NpZ25Sb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEhEKCXJvbGVfbmFtZRgEIAEoCSI6ChJBc3NpZ25Sb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciJ2ChFSZXZva2VSb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEhEKCXJvbGVfbmFtZRgEIAEoCSI6ChJSZXZva2VSb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciISChBMaXN0Um9sZXNSZXF1ZXN0IkQKEUxpc3RSb2xlc1Jlc3BvbnNlEi8KBXJvbGVzGAEgAygLMiAuc2ltYW9wcy5hZG1pbi52MS5Sb2xlRGVmaW5pdGlvbiJLChFDcmVhdGVSb2xlUmVxdWVzdBIMCgRuYW1lGAEgASgJEhMKC2Rlc2NyaXB0aW9uGAIgASgJEhMKC3Blcm1pc3Npb25zGAMgAygJIkQKEkNyZWF0ZVJvbGVSZXNwb25zZRIuCgRyb2xlGAEgASgLMiAuc2ltYW9wcy5hZG1pbi52MS5Sb2xlRGVmaW5pdGlvbiIkChFEZWxldGVSb2xlUmVxdWVzdBIPCgdyb2xlX2lkGAEgASgJIiUKEkRlbGV0ZVJvbGVSZXNwb25zZRIPCgdkZWxldGVkGAEgASgIIhcKFUxpc3RQcm9jZWR1cmVzUmVxdWVzdCIsChZMaXN0UHJvY2VkdXJlc1Jlc3BvbnNlEhIKCnByb2NlZHVyZXMYASADKAkicgoRQ3JlYXRlVXNlclJlcXVlc3QSEAoIdXNlcm5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhUKDXRlbXBfcGFzc3dvcmQYBCABKAkSEgoKcm9sZV9uYW1lcxgFIAMoCSI6ChJDcmVhdGVVc2VyUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciqDAQoEUm9sZRIUChBST0xFX1VOU1BFQ0lGSUVEEAASEQoNUk9MRV9PUEVSQVRPUhABEhYKElJPTEVfUUNfU1VQRVJWSVNPUhACEhgKFFJPTEVfV0FSRUhPVVNFX1NUQUZGEAMSEAoMUk9MRV9NQU5BR0VSEAQSDgoKUk9MRV9BRE1JThAFMtwFCgxBZG1pblNlcnZpY2USVAoJTGlzdFVzZXJzEiIuc2ltYW9wcy5hZG1pbi52MS5MaXN0VXNlcnNSZXF1ZXN0GiMuc2ltYW9wcy5hZG1pbi52MS5MaXN0VXNlcnNSZXNwb25zZRJXCgpBc3NpZ25Sb2xlEiMuc2ltYW9wcy5hZG1pbi52MS5Bc3NpZ25Sb2xlUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuQXNzaWduUm9sZVJlc3BvbnNlElcKClJldm9rZVJvbGUSIy5zaW1hb3BzLmFkbWluLnYxLlJldm9rZVJvbGVSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5SZXZva2VSb2xlUmVzcG9uc2USVAoJTGlzdFJvbGVzEiIuc2ltYW9wcy5hZG1pbi52MS5MaXN0Um9sZXNSZXF1ZXN0GiMuc2ltYW9wcy5hZG1pbi52MS5MaXN0Um9sZXNSZXNwb25zZRJXCgpDcmVhdGVSb2xlEiMuc2ltYW9wcy5hZG1pbi52MS5DcmVhdGVSb2xlUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuQ3JlYXRlUm9sZVJlc3BvbnNlElcKCkRlbGV0ZVJvbGUSIy5zaW1hb3BzLmFkbWluLnYxLkRlbGV0ZVJvbGVSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5EZWxldGVSb2xlUmVzcG9uc2USYwoOTGlzdFByb2NlZHVyZXMSJy5zaW1hb3BzLmFkbWluLnYxLkxpc3RQcm9jZWR1cmVzUmVxdWVzdBooLnNpbWFvcHMuYWRtaW4udjEuTGlzdFByb2NlZHVyZXNSZXNwb25zZRJXCgpDcmVhdGVVc2VyEiMuc2ltYW9wcy5hZG1pbi52MS5DcmVhdGVVc2VyUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuQ3JlYXRlVXNlclJlc3BvbnNlQtkBChRjb20uc2ltYW9wcy5hZG1pbi52MUIKQWRtaW5Qcm90b1ABWlNnaXRodWIuY29tL3RhbGluZy1kZXYvQ1lCRVJIQUNLLTIwMjYvYXBwcy9hcGkvaW50ZXJuYWwvZ2VuL3NpbWFvcHMvYWRtaW4vdjE7YWRtaW52MaICA1NBWKoCEFNpbWFvcHMuQWRtaW4uVjHKAhBTaW1hb3BzXEFkbWluXFYx4gIcU2ltYW9wc1xBZG1pblxWMVxHUEJNZXRhZGF0YeoCElNpbWFvcHM6OkFkbWluOjpWMWIGcHJvdG8z");
+  fileDesc("ChxzaW1hb3BzL2FkbWluL3YxL2FkbWluLnByb3RvEhBzaW1hb3BzLmFkbWluLnYxIpEBCgRVc2VyEgoKAmlkGAEgASgJEhAKCHVzZXJuYW1lGAIgASgJEg0KBWVtYWlsGAMgASgJEhEKCWZ1bGxfbmFtZRgEIAEoCRIlCgVyb2xlcxgFIAMoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZRIOCgZhY3RpdmUYBiABKAgSEgoKcm9sZV9uYW1lcxgHIAMoCSKNAQoOUm9sZURlZmluaXRpb24SJAoEcm9sZRgBIAEoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhEKCWlzX3N5c3RlbRgEIAEoCBITCgtwZXJtaXNzaW9ucxgFIAMoCRIKCgJpZBgGIAEoCSJmChBMaXN0VXNlcnNSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJEisKC3JvbGVfZmlsdGVyGAMgASgOMhYuc2ltYW9wcy5hZG1pbi52MS5Sb2xlImgKEUxpc3RVc2Vyc1Jlc3BvbnNlEiUKBXVzZXJzGAEgAygLMhYuc2ltYW9wcy5hZG1pbi52MS5Vc2VyEhcKD25leHRfcGFnZV90b2tlbhgCIAEoCRITCgt0b3RhbF9jb3VudBgDIAEoBSJ2ChFBc3NpZ25Sb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEhEKCXJvbGVfbmFtZRgEIAEoCSI6ChJBc3NpZ25Sb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciJ2ChFSZXZva2VSb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEhEKCXJvbGVfbmFtZRgEIAEoCSI6ChJSZXZva2VSb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciISChBMaXN0Um9sZXNSZXF1ZXN0IkQKEUxpc3RSb2xlc1Jlc3BvbnNlEi8KBXJvbGVzGAEgAygLMiAuc2ltYW9wcy5hZG1pbi52MS5Sb2xlRGVmaW5pdGlvbiJLChFDcmVhdGVSb2xlUmVxdWVzdBIMCgRuYW1lGAEgASgJEhMKC2Rlc2NyaXB0aW9uGAIgASgJEhMKC3Blcm1pc3Npb25zGAMgAygJIkQKEkNyZWF0ZVJvbGVSZXNwb25zZRIuCgRyb2xlGAEgASgLMiAuc2ltYW9wcy5hZG1pbi52MS5Sb2xlRGVmaW5pdGlvbiIkChFEZWxldGVSb2xlUmVxdWVzdBIPCgdyb2xlX2lkGAEgASgJIiUKEkRlbGV0ZVJvbGVSZXNwb25zZRIPCgdkZWxldGVkGAEgASgIIhcKFUxpc3RQcm9jZWR1cmVzUmVxdWVzdCIsChZMaXN0UHJvY2VkdXJlc1Jlc3BvbnNlEhIKCnByb2NlZHVyZXMYASADKAkicgoRQ3JlYXRlVXNlclJlcXVlc3QSEAoIdXNlcm5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhUKDXRlbXBfcGFzc3dvcmQYBCABKAkSEgoKcm9sZV9uYW1lcxgFIAMoCSI6ChJDcmVhdGVVc2VyUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciJxChFVcGRhdGVVc2VyUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEhEKCWZ1bGxfbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIOCgZhY3RpdmUYBCABKAgSGQoRbmV3X3RlbXBfcGFzc3dvcmQYBSABKAkiOgoSVXBkYXRlVXNlclJlc3BvbnNlEiQKBHVzZXIYASABKAsyFi5zaW1hb3BzLmFkbWluLnYxLlVzZXIiTgoRVXBkYXRlUm9sZVJlcXVlc3QSDwoHcm9sZV9pZBgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRITCgtwZXJtaXNzaW9ucxgDIAMoCSJEChJVcGRhdGVSb2xlUmVzcG9uc2USLgoEcm9sZRgBIAEoCzIgLnNpbWFvcHMuYWRtaW4udjEuUm9sZURlZmluaXRpb24qgwEKBFJvbGUSFAoQUk9MRV9VTlNQRUNJRklFRBAAEhEKDVJPTEVfT1BFUkFUT1IQARIWChJST0xFX1FDX1NVUEVSVklTT1IQAhIYChRST0xFX1dBUkVIT1VTRV9TVEFGRhADEhAKDFJPTEVfTUFOQUdFUhAEEg4KClJPTEVfQURNSU4QBTKOBwoMQWRtaW5TZXJ2aWNlElQKCUxpc3RVc2VycxIiLnNpbWFvcHMuYWRtaW4udjEuTGlzdFVzZXJzUmVxdWVzdBojLnNpbWFvcHMuYWRtaW4udjEuTGlzdFVzZXJzUmVzcG9uc2USVwoKQXNzaWduUm9sZRIjLnNpbWFvcHMuYWRtaW4udjEuQXNzaWduUm9sZVJlcXVlc3QaJC5zaW1hb3BzLmFkbWluLnYxLkFzc2lnblJvbGVSZXNwb25zZRJXCgpSZXZva2VSb2xlEiMuc2ltYW9wcy5hZG1pbi52MS5SZXZva2VSb2xlUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuUmV2b2tlUm9sZVJlc3BvbnNlElQKCUxpc3RSb2xlcxIiLnNpbWFvcHMuYWRtaW4udjEuTGlzdFJvbGVzUmVxdWVzdBojLnNpbWFvcHMuYWRtaW4udjEuTGlzdFJvbGVzUmVzcG9uc2USVwoKQ3JlYXRlUm9sZRIjLnNpbWFvcHMuYWRtaW4udjEuQ3JlYXRlUm9sZVJlcXVlc3QaJC5zaW1hb3BzLmFkbWluLnYxLkNyZWF0ZVJvbGVSZXNwb25zZRJXCgpEZWxldGVSb2xlEiMuc2ltYW9wcy5hZG1pbi52MS5EZWxldGVSb2xlUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuRGVsZXRlUm9sZVJlc3BvbnNlEmMKDkxpc3RQcm9jZWR1cmVzEicuc2ltYW9wcy5hZG1pbi52MS5MaXN0UHJvY2VkdXJlc1JlcXVlc3QaKC5zaW1hb3BzLmFkbWluLnYxLkxpc3RQcm9jZWR1cmVzUmVzcG9uc2USVwoKQ3JlYXRlVXNlchIjLnNpbWFvcHMuYWRtaW4udjEuQ3JlYXRlVXNlclJlcXVlc3QaJC5zaW1hb3BzLmFkbWluLnYxLkNyZWF0ZVVzZXJSZXNwb25zZRJXCgpVcGRhdGVVc2VyEiMuc2ltYW9wcy5hZG1pbi52MS5VcGRhdGVVc2VyUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuVXBkYXRlVXNlclJlc3BvbnNlElcKClVwZGF0ZVJvbGUSIy5zaW1hb3BzLmFkbWluLnYxLlVwZGF0ZVJvbGVSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5VcGRhdGVSb2xlUmVzcG9uc2VC2QEKFGNvbS5zaW1hb3BzLmFkbWluLnYxQgpBZG1pblByb3RvUAFaU2dpdGh1Yi5jb20vdGFsaW5nLWRldi9DWUJFUkhBQ0stMjAyNi9hcHBzL2FwaS9pbnRlcm5hbC9nZW4vc2ltYW9wcy9hZG1pbi92MTthZG1pbnYxogIDU0FYqgIQU2ltYW9wcy5BZG1pbi5WMcoCEFNpbWFvcHNcQWRtaW5cVjHiAhxTaW1hb3BzXEFkbWluXFYxXEdQQk1ldGFkYXRh6gISU2ltYW9wczo6QWRtaW46OlYxYgZwcm90bzM");
 
 /**
  * @generated from message simaops.admin.v1.User
@@ -465,6 +465,108 @@ export const CreateUserResponseSchema: GenMessage<CreateUserResponse> = /*@__PUR
   messageDesc(file_simaops_admin_v1_admin, 17);
 
 /**
+ * @generated from message simaops.admin.v1.UpdateUserRequest
+ */
+export type UpdateUserRequest = Message<"simaops.admin.v1.UpdateUserRequest"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string full_name = 2;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: string email = 3;
+   */
+  email: string;
+
+  /**
+   * @generated from field: bool active = 4;
+   */
+  active: boolean;
+
+  /**
+   * optional; resets password (temporary) when set
+   *
+   * @generated from field: string new_temp_password = 5;
+   */
+  newTempPassword: string;
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateUserRequest.
+ * Use `create(UpdateUserRequestSchema)` to create a new message.
+ */
+export const UpdateUserRequestSchema: GenMessage<UpdateUserRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 18);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateUserResponse
+ */
+export type UpdateUserResponse = Message<"simaops.admin.v1.UpdateUserResponse"> & {
+  /**
+   * @generated from field: simaops.admin.v1.User user = 1;
+   */
+  user?: User | undefined;
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateUserResponse.
+ * Use `create(UpdateUserResponseSchema)` to create a new message.
+ */
+export const UpdateUserResponseSchema: GenMessage<UpdateUserResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 19);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateRoleRequest
+ */
+export type UpdateRoleRequest = Message<"simaops.admin.v1.UpdateRoleRequest"> & {
+  /**
+   * @generated from field: string role_id = 1;
+   */
+  roleId: string;
+
+  /**
+   * @generated from field: string description = 2;
+   */
+  description: string;
+
+  /**
+   * replaces the role's granted RPC paths
+   *
+   * @generated from field: repeated string permissions = 3;
+   */
+  permissions: string[];
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateRoleRequest.
+ * Use `create(UpdateRoleRequestSchema)` to create a new message.
+ */
+export const UpdateRoleRequestSchema: GenMessage<UpdateRoleRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 20);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateRoleResponse
+ */
+export type UpdateRoleResponse = Message<"simaops.admin.v1.UpdateRoleResponse"> & {
+  /**
+   * @generated from field: simaops.admin.v1.RoleDefinition role = 1;
+   */
+  role?: RoleDefinition | undefined;
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateRoleResponse.
+ * Use `create(UpdateRoleResponseSchema)` to create a new message.
+ */
+export const UpdateRoleResponseSchema: GenMessage<UpdateRoleResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 21);
+
+/**
  * @generated from enum simaops.admin.v1.Role
  */
 export enum Role {
@@ -572,6 +674,22 @@ export const AdminService: GenService<{
     methodKind: "unary";
     input: typeof CreateUserRequestSchema;
     output: typeof CreateUserResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.UpdateUser
+   */
+  updateUser: {
+    methodKind: "unary";
+    input: typeof UpdateUserRequestSchema;
+    output: typeof UpdateUserResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.UpdateRole
+   */
+  updateRole: {
+    methodKind: "unary";
+    input: typeof UpdateRoleRequestSchema;
+    output: typeof UpdateRoleResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_simaops_admin_v1_admin, 0);

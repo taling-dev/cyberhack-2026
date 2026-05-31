@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strings"
 	"time"
 )
 
@@ -189,6 +190,56 @@ func (q *Queries) GetQCResult(ctx context.Context, qcJobID string) (QcResult, er
 	return i, err
 }
 
+const latestQCResultsForLots = `-- name: LatestQCResultsForLots :many
+SELECT r.lot_id, r.recommendation, r.confidence
+FROM qc_results r
+JOIN (
+  SELECT q.lot_id AS lid, MAX(q.created_at) AS max_created
+  FROM qc_results q
+  WHERE q.lot_id IN (/*SLICE:lot_ids*/?)
+  GROUP BY q.lot_id
+) latest ON latest.lid = r.lot_id AND latest.max_created = r.created_at
+`
+
+type LatestQCResultsForLotsRow struct {
+	LotID          string                  `json:"lot_id"`
+	Recommendation QcResultsRecommendation `json:"recommendation"`
+	Confidence     string                  `json:"confidence"`
+}
+
+func (q *Queries) LatestQCResultsForLots(ctx context.Context, lotIds []string) ([]LatestQCResultsForLotsRow, error) {
+	query := latestQCResultsForLots
+	var queryParams []interface{}
+	if len(lotIds) > 0 {
+		for _, v := range lotIds {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:lot_ids*/?", strings.Repeat(",?", len(lotIds))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:lot_ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []LatestQCResultsForLotsRow
+	for rows.Next() {
+		var i LatestQCResultsForLotsRow
+		if err := rows.Scan(&i.LotID, &i.Recommendation, &i.Confidence); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listQCJobsByLot = `-- name: ListQCJobsByLot :many
 SELECT id, lot_id, image_object_key, status, requested_by, failure_reason, started_at, completed_at, created_at, updated_at FROM qc_jobs WHERE lot_id = ? ORDER BY created_at DESC
 `
@@ -257,6 +308,52 @@ func (q *Queries) ListQCJobsByStatus(ctx context.Context, arg ListQCJobsByStatus
 			&i.CompletedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const qCTrendByDay = `-- name: QCTrendByDay :many
+SELECT DATE(created_at) AS day,
+       SUM(recommendation = 'PASS')   AS pass_count,
+       SUM(recommendation = 'REVIEW') AS review_count,
+       SUM(recommendation = 'FAIL')   AS fail_count
+FROM qc_results
+WHERE created_at >= ?
+GROUP BY DATE(created_at)
+ORDER BY day
+`
+
+type QCTrendByDayRow struct {
+	Day         time.Time   `json:"day"`
+	PassCount   interface{} `json:"pass_count"`
+	ReviewCount interface{} `json:"review_count"`
+	FailCount   interface{} `json:"fail_count"`
+}
+
+func (q *Queries) QCTrendByDay(ctx context.Context, createdAt time.Time) ([]QCTrendByDayRow, error) {
+	rows, err := q.db.QueryContext(ctx, qCTrendByDay, createdAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QCTrendByDayRow
+	for rows.Next() {
+		var i QCTrendByDayRow
+		if err := rows.Scan(
+			&i.Day,
+			&i.PassCount,
+			&i.ReviewCount,
+			&i.FailCount,
 		); err != nil {
 			return nil, err
 		}

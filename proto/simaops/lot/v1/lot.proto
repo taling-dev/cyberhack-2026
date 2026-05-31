@@ -70,6 +70,9 @@ message Lot {
   string created_by = 11;
   google.protobuf.Timestamp created_at = 12;
   google.protobuf.Timestamp updated_at = 13;
+  // Latest QC result for this lot, when one exists (for list display).
+  double qc_confidence = 14;       // 0..1; 0 when no QC result yet
+  string qc_recommendation = 15;   // "PASS"|"REVIEW"|"FAIL"; empty when none
 }
 
 // ─── Requests / Responses ────────────────────────────────────────

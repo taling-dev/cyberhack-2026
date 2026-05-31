@@ -210,7 +210,6 @@
         <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('qc.qc_image')}</h2>
-            <p class="mt-1 text-xs text-slate-500">Material evidence used by the AI inspection.</p>
           </div>
           <DashboardIcon name="bot" class="size-5 text-slate-400" />
         </div>
@@ -245,7 +244,6 @@
         <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">AI Decision Panel</h2>
-            <p class="mt-1 text-xs text-slate-500">Review model output before making a human decision.</p>
           </div>
           <span class="rounded-md bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
             {jobStatusLabel(qcJobQuery.data?.job?.status)}
@@ -335,7 +333,6 @@
           {#if !reviewSuccess && qcJobId && lot.status === 4}
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <h3 class="text-sm font-bold text-slate-950">{$t('qc.supervisor_decision')}</h3>
-              <p class="mt-1 text-xs text-slate-500">Record a human decision for this AI inspection result.</p>
               <div class="mt-4 flex flex-wrap gap-2">
                 <button onclick={() => openReview(1)} class="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                   <DashboardIcon name="check-circle" class="size-4" />

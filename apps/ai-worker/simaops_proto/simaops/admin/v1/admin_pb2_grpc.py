@@ -54,6 +54,16 @@ class AdminServiceStub(object):
                 request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserResponse.FromString,
                 _registered_method=True)
+        self.UpdateUser = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/UpdateUser',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserResponse.FromString,
+                _registered_method=True)
+        self.UpdateRole = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/UpdateRole',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.FromString,
+                _registered_method=True)
 
 
 class AdminServiceServicer(object):
@@ -107,6 +117,18 @@ class AdminServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateRole(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AdminServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -149,6 +171,16 @@ def add_AdminServiceServicer_to_server(servicer, server):
                     servicer.CreateUser,
                     request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserRequest.FromString,
                     response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserResponse.SerializeToString,
+            ),
+            'UpdateUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateUser,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserResponse.SerializeToString,
+            ),
+            'UpdateRole': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateRole,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -367,6 +399,60 @@ class AdminService(object):
             '/simaops.admin.v1.AdminService/CreateUser',
             simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserRequest.SerializeToString,
             simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/UpdateUser',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateRole(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/UpdateRole',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.FromString,
             options,
             channel_credentials,
             insecure,

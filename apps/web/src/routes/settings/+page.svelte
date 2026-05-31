@@ -55,7 +55,6 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Workspace Preferences</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">{$t('nav.settings')}</h1>
-      <p class="mt-1 text-sm text-slate-600">Manage platform preferences, access, and operational configuration.</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -155,7 +154,6 @@
         <div>
           <p class="text-xs font-semibold uppercase tracking-normal text-emerald-600">Session</p>
           <h2 class="mt-1 text-lg font-bold text-slate-950">Authentication</h2>
-          <p class="mt-1 text-sm text-slate-500">Session recovery and logout use the existing secure auth flow.</p>
         </div>
         <DashboardIcon name="shield" class="size-5 text-slate-400" />
       </div>
@@ -166,7 +164,7 @@
           <span class="size-2 rounded-full bg-emerald-500"></span>
         </div>
         <p class="text-sm leading-6 text-slate-600">
-          SimaOps automatically refreshes active sessions and shows the existing re-authentication modal if recovery is needed.
+          Your session refreshes automatically. If it expires, you'll be prompted to sign in again without losing your work.
         </p>
       </div>
     </section>
@@ -176,14 +174,12 @@
         <div>
           <p class="text-xs font-semibold uppercase tracking-normal text-purple-600">Notifications</p>
           <h2 class="mt-1 text-lg font-bold text-slate-950">Realtime alerts</h2>
-          <p class="mt-1 text-sm text-slate-500">Operational toasts are currently assigned by role.</p>
         </div>
         <DashboardIcon name="bell" class="size-5 text-slate-400" />
       </div>
 
       <div class="mt-5 space-y-2 text-sm text-slate-600">
-        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">QC, warehouse, production, and dispatch alerts remain enabled.</div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">Per-user notification preferences are not exposed by the current API.</div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">You receive QC, warehouse, production, and dispatch alerts relevant to your role.</div>
       </div>
     </section>
 
@@ -192,14 +188,13 @@
         <div>
           <p class="text-xs font-semibold uppercase tracking-normal text-orange-600">AI/QC</p>
           <h2 class="mt-1 text-lg font-bold text-slate-950">Thresholds</h2>
-          <p class="mt-1 text-sm text-slate-500">AI review thresholds are backend-managed in this MVP.</p>
         </div>
         <DashboardIcon name="bot" class="size-5 text-slate-400" />
       </div>
 
       <div class="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <p class="text-sm font-semibold text-slate-950">Read-only configuration</p>
-        <p class="mt-1 text-sm leading-6 text-slate-500">No settings API exists for confidence limits, anomaly thresholds, or automatic review rules yet.</p>
+        <p class="text-sm font-semibold text-slate-950">Managed by the system</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600">AI confidence and anomaly thresholds that route a lot to PASS, REVIEW, or FAIL are set centrally and applied to every inspection.</p>
       </div>
     </section>
   </div>

@@ -110,7 +110,6 @@
     <div class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
       <div>
         <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">AI Review Queue</h2>
-        <p class="mt-1 text-xs text-slate-500">Lots with completed AI checks waiting for supervisor decision.</p>
       </div>
       <div class="flex items-center gap-3">
         <span class="hidden text-xs text-slate-400 sm:inline">

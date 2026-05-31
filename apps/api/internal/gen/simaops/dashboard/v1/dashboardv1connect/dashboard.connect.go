@@ -42,6 +42,9 @@ const (
 	// DashboardServiceGetWarehouseMetricsProcedure is the fully-qualified name of the
 	// DashboardService's GetWarehouseMetrics RPC.
 	DashboardServiceGetWarehouseMetricsProcedure = "/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics"
+	// DashboardServiceGetQCTrendProcedure is the fully-qualified name of the DashboardService's
+	// GetQCTrend RPC.
+	DashboardServiceGetQCTrendProcedure = "/simaops.dashboard.v1.DashboardService/GetQCTrend"
 )
 
 // DashboardServiceClient is a client for the simaops.dashboard.v1.DashboardService service.
@@ -49,6 +52,7 @@ type DashboardServiceClient interface {
 	GetOpsDashboard(context.Context, *connect.Request[v1.GetOpsDashboardRequest]) (*connect.Response[v1.GetOpsDashboardResponse], error)
 	GetQCMetrics(context.Context, *connect.Request[v1.GetQCMetricsRequest]) (*connect.Response[v1.GetQCMetricsResponse], error)
 	GetWarehouseMetrics(context.Context, *connect.Request[v1.GetWarehouseMetricsRequest]) (*connect.Response[v1.GetWarehouseMetricsResponse], error)
+	GetQCTrend(context.Context, *connect.Request[v1.GetQCTrendRequest]) (*connect.Response[v1.GetQCTrendResponse], error)
 }
 
 // NewDashboardServiceClient constructs a client for the simaops.dashboard.v1.DashboardService
@@ -80,6 +84,12 @@ func NewDashboardServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(dashboardServiceMethods.ByName("GetWarehouseMetrics")),
 			connect.WithClientOptions(opts...),
 		),
+		getQCTrend: connect.NewClient[v1.GetQCTrendRequest, v1.GetQCTrendResponse](
+			httpClient,
+			baseURL+DashboardServiceGetQCTrendProcedure,
+			connect.WithSchema(dashboardServiceMethods.ByName("GetQCTrend")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -88,6 +98,7 @@ type dashboardServiceClient struct {
 	getOpsDashboard     *connect.Client[v1.GetOpsDashboardRequest, v1.GetOpsDashboardResponse]
 	getQCMetrics        *connect.Client[v1.GetQCMetricsRequest, v1.GetQCMetricsResponse]
 	getWarehouseMetrics *connect.Client[v1.GetWarehouseMetricsRequest, v1.GetWarehouseMetricsResponse]
+	getQCTrend          *connect.Client[v1.GetQCTrendRequest, v1.GetQCTrendResponse]
 }
 
 // GetOpsDashboard calls simaops.dashboard.v1.DashboardService.GetOpsDashboard.
@@ -105,12 +116,18 @@ func (c *dashboardServiceClient) GetWarehouseMetrics(ctx context.Context, req *c
 	return c.getWarehouseMetrics.CallUnary(ctx, req)
 }
 
+// GetQCTrend calls simaops.dashboard.v1.DashboardService.GetQCTrend.
+func (c *dashboardServiceClient) GetQCTrend(ctx context.Context, req *connect.Request[v1.GetQCTrendRequest]) (*connect.Response[v1.GetQCTrendResponse], error) {
+	return c.getQCTrend.CallUnary(ctx, req)
+}
+
 // DashboardServiceHandler is an implementation of the simaops.dashboard.v1.DashboardService
 // service.
 type DashboardServiceHandler interface {
 	GetOpsDashboard(context.Context, *connect.Request[v1.GetOpsDashboardRequest]) (*connect.Response[v1.GetOpsDashboardResponse], error)
 	GetQCMetrics(context.Context, *connect.Request[v1.GetQCMetricsRequest]) (*connect.Response[v1.GetQCMetricsResponse], error)
 	GetWarehouseMetrics(context.Context, *connect.Request[v1.GetWarehouseMetricsRequest]) (*connect.Response[v1.GetWarehouseMetricsResponse], error)
+	GetQCTrend(context.Context, *connect.Request[v1.GetQCTrendRequest]) (*connect.Response[v1.GetQCTrendResponse], error)
 }
 
 // NewDashboardServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -138,6 +155,12 @@ func NewDashboardServiceHandler(svc DashboardServiceHandler, opts ...connect.Han
 		connect.WithSchema(dashboardServiceMethods.ByName("GetWarehouseMetrics")),
 		connect.WithHandlerOptions(opts...),
 	)
+	dashboardServiceGetQCTrendHandler := connect.NewUnaryHandler(
+		DashboardServiceGetQCTrendProcedure,
+		svc.GetQCTrend,
+		connect.WithSchema(dashboardServiceMethods.ByName("GetQCTrend")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/simaops.dashboard.v1.DashboardService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case DashboardServiceGetOpsDashboardProcedure:
@@ -146,6 +169,8 @@ func NewDashboardServiceHandler(svc DashboardServiceHandler, opts ...connect.Han
 			dashboardServiceGetQCMetricsHandler.ServeHTTP(w, r)
 		case DashboardServiceGetWarehouseMetricsProcedure:
 			dashboardServiceGetWarehouseMetricsHandler.ServeHTTP(w, r)
+		case DashboardServiceGetQCTrendProcedure:
+			dashboardServiceGetQCTrendHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -165,4 +190,8 @@ func (UnimplementedDashboardServiceHandler) GetQCMetrics(context.Context, *conne
 
 func (UnimplementedDashboardServiceHandler) GetWarehouseMetrics(context.Context, *connect.Request[v1.GetWarehouseMetricsRequest]) (*connect.Response[v1.GetWarehouseMetricsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.dashboard.v1.DashboardService.GetWarehouseMetrics is not implemented"))
+}
+
+func (UnimplementedDashboardServiceHandler) GetQCTrend(context.Context, *connect.Request[v1.GetQCTrendRequest]) (*connect.Response[v1.GetQCTrendResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.dashboard.v1.DashboardService.GetQCTrend is not implemented"))
 }

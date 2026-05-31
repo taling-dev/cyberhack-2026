@@ -185,6 +185,28 @@ func (s *LotService) ListLots(ctx context.Context, req *connect.Request[lotv1.Li
 		protoLots[i] = dbLotToProto(l)
 	}
 
+	// Enrich with each lot's latest QC result (confidence + recommendation) so
+	// the lots list can show an AI Score column. Best-effort: on error the
+	// lots still return without QC fields.
+	if len(protoLots) > 0 {
+		ids := make([]string, len(protoLots))
+		for i, p := range protoLots {
+			ids[i] = p.Id
+		}
+		if qcRows, qErr := s.q.LatestQCResultsForLots(ctx, ids); qErr == nil {
+			byLot := make(map[string]db.LatestQCResultsForLotsRow, len(qcRows))
+			for _, r := range qcRows {
+				byLot[r.LotID] = r
+			}
+			for _, p := range protoLots {
+				if r, ok := byLot[p.Id]; ok {
+					p.QcConfidence = parseFloat(r.Confidence)
+					p.QcRecommendation = string(r.Recommendation)
+				}
+			}
+		}
+	}
+
 	nextToken := ""
 	if int32(len(lots)) == pageSize {
 		nextToken = fmt.Sprintf("%d", offset+pageSize)

@@ -55,3 +55,12 @@ SELECT COUNT(*) FROM user_roles WHERE role_id = ?;
 
 -- name: CreateUserProfile :exec
 INSERT INTO users_profile (id, username, email, full_name, active) VALUES (?, ?, ?, ?, TRUE);
+
+-- name: UpdateUserProfile :exec
+UPDATE users_profile SET full_name = ?, email = ?, active = ? WHERE id = ?;
+
+-- name: UpdateRoleDescription :exec
+UPDATE roles SET description = ? WHERE id = ? AND is_system = FALSE;
+
+-- name: ClearRolePermissions :exec
+DELETE FROM role_permissions WHERE role_id = ?;

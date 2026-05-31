@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { t, locale } from 'svelte-i18n';
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
@@ -10,7 +9,6 @@
   import AIQueueCard from '$lib/components/dashboard/AIQueueCard.svelte';
   import CompactLotTable from '$lib/components/dashboard/CompactLotTable.svelte';
   import DashboardIcon from '$lib/components/dashboard/DashboardIcon.svelte';
-  import FeatureStrip from '$lib/components/dashboard/FeatureStrip.svelte';
   import KpiCard from '$lib/components/dashboard/KpiCard.svelte';
   import LatestInspectionCard from '$lib/components/dashboard/LatestInspectionCard.svelte';
   import QCMetricsTrendCard from '$lib/components/dashboard/QCMetricsTrendCard.svelte';
@@ -32,6 +30,12 @@
     queryKey: ['dashboard-qc'],
     queryFn: () => dashboardClient.getQCMetrics({ hours: 24 }),
     refetchInterval: 30_000,
+  }));
+
+  const qcTrendQuery = createQuery(() => ({
+    queryKey: ['dashboard-qc-trend'],
+    queryFn: () => dashboardClient.getQCTrend({ days: 7 }),
+    refetchInterval: 60_000,
   }));
 
   const whQuery = createQuery(() => ({
@@ -89,7 +93,7 @@
 
   const isLoading = $derived(opsQuery.isLoading || qcQuery.isLoading || whQuery.isLoading);
   const isError = $derived(opsQuery.isError || qcQuery.isError || whQuery.isError);
-  const userName = $derived($page.data.user?.name ?? 'Operator');
+
   const dateLabel = new Intl.DateTimeFormat('en-US', {
     day: '2-digit',
     month: 'short',
@@ -113,7 +117,6 @@
   <header class="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
     <div>
       <h1 class="text-[28px] font-bold tracking-normal text-slate-950">{$t('nav.dashboard')}</h1>
-      <p class="mt-1 text-sm text-slate-600">Welcome back, {userName}</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -144,7 +147,8 @@
     </div>
   {/if}
 
-  <section class="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+  <section class="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">
+    <KpiCard title="Today's Intake" value={formatNumber(opsQuery.data?.todayIntakeCount)} icon="cube" tone="blue" loading={opsQuery.isLoading} href="/lots" emphasis />
     <KpiCard title="Total Lot" value={formatNumber(opsQuery.data?.totalLots)} icon="cube" tone="purple" loading={opsQuery.isLoading} href="/lots" emphasis />
     <KpiCard title="Waiting for QC" value={formatNumber(opsQuery.data?.lotsAwaitingQc)} icon="clock" tone="orange" loading={opsQuery.isLoading} href="/qc" emphasis />
     <KpiCard title="Production Ready" value={formatNumber(opsQuery.data?.lotsReadyForProduction)} icon="check-circle" tone="green" loading={opsQuery.isLoading} href="/warehouse" emphasis />
@@ -153,13 +157,11 @@
     <KpiCard title="Warehouse Utilization" value={formatPercentRatio(warehouseUtilization)} icon="warehouse" tone="emerald" loading={whQuery.isLoading} href="/warehouse" />
   </section>
 
-  <div class="grid flex-1 grid-cols-1 gap-3 overflow-visible xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:overflow-hidden">
+  <div class="grid flex-1 grid-cols-1 gap-3 overflow-visible xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] xl:overflow-hidden">
     <div class="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1.15fr_.95fr_.95fr]">
       <QCMetricsTrendCard
-        passCount={qcQuery.data?.passCount ?? 0}
-        reviewCount={qcQuery.data?.reviewCount ?? 0}
-        failCount={qcQuery.data?.failCount ?? 0}
-        loading={qcQuery.isLoading}
+        days={qcTrendQuery.data?.days ?? []}
+        loading={qcTrendQuery.isLoading}
       />
       <StatusDistributionCard
         statuses={opsQuery.data?.lotsByStatus ?? []}
@@ -184,10 +186,6 @@
         unavailable={!latestReviewLot || latestQcJobQuery.isError || latestQcResultQuery.isError}
       />
       <CompactLotTable lots={newestLotsQuery.data?.lots ?? []} loading={newestLotsQuery.isLoading} />
-    </div>
-
-    <div class="hidden shrink-0 overflow-hidden xl:block">
-      <FeatureStrip />
     </div>
   </div>
 </div>

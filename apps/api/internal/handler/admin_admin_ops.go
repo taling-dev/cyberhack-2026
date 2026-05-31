@@ -91,6 +91,74 @@ func (s *AdminService) DeleteRole(ctx context.Context, req *connect.Request[admi
 	return connect.NewResponse(&adminv1.DeleteRoleResponse{Deleted: true}), nil
 }
 
+func (s *AdminService) UpdateUser(ctx context.Context, req *connect.Request[adminv1.UpdateUserRequest]) (*connect.Response[adminv1.UpdateUserResponse], error) {
+	if req.Msg.UserId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id required"))
+	}
+	u, err := s.q.GetUserByID(ctx, req.Msg.UserId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("user not found"))
+	}
+	email := strings.TrimSpace(req.Msg.Email)
+	if email == "" {
+		email = u.Email
+	}
+	// Keycloak first (source of truth for auth); on failure, abort before DB.
+	if err := s.kc.UpdateUser(ctx, u.Username, email, req.Msg.FullName, req.Msg.Active, req.Msg.NewTempPassword); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("keycloak update user: %w", err))
+	}
+	if err := s.q.UpdateUserProfile(ctx, db.UpdateUserProfileParams{
+		FullName: req.Msg.FullName, Email: email, Active: req.Msg.Active, ID: req.Msg.UserId,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update user profile: %w", err))
+	}
+	roleNames, _ := s.q.ListUserRoleNames(ctx, req.Msg.UserId)
+	roles := make([]adminv1.Role, 0, len(roleNames))
+	for _, rn := range roleNames {
+		roles = append(roles, roleNameToProto(rn))
+	}
+	return connect.NewResponse(&adminv1.UpdateUserResponse{
+		User: &adminv1.User{
+			Id: req.Msg.UserId, Username: u.Username, Email: email, FullName: req.Msg.FullName,
+			Roles: roles, RoleNames: roleNames, Active: req.Msg.Active,
+		},
+	}), nil
+}
+
+func (s *AdminService) UpdateRole(ctx context.Context, req *connect.Request[adminv1.UpdateRoleRequest]) (*connect.Response[adminv1.UpdateRoleResponse], error) {
+	role, err := s.q.GetRoleByID(ctx, req.Msg.RoleId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("role not found"))
+	}
+	if role.IsSystem {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("cannot edit a system role"))
+	}
+	for _, p := range req.Msg.Permissions {
+		if !grantable[p] {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("not a grantable procedure: %s", p))
+		}
+	}
+	if err := s.q.UpdateRoleDescription(ctx, db.UpdateRoleDescriptionParams{Description: req.Msg.Description, ID: req.Msg.RoleId}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update role: %w", err))
+	}
+	// Replace the permission set.
+	if err := s.q.ClearRolePermissions(ctx, req.Msg.RoleId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("clear permissions: %w", err))
+	}
+	for _, p := range req.Msg.Permissions {
+		if err := s.q.AddRolePermission(ctx, db.AddRolePermissionParams{RoleID: req.Msg.RoleId, RpcPath: p}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("grant permission: %w", err))
+		}
+	}
+	refreshRolePermissions(ctx, s.q)
+	return connect.NewResponse(&adminv1.UpdateRoleResponse{
+		Role: &adminv1.RoleDefinition{
+			Id: req.Msg.RoleId, Name: role.Name, Description: req.Msg.Description,
+			IsSystem: false, Permissions: req.Msg.Permissions,
+		},
+	}), nil
+}
+
 func (s *AdminService) CreateUser(ctx context.Context, req *connect.Request[adminv1.CreateUserRequest]) (*connect.Response[adminv1.CreateUserResponse], error) {
 	username := strings.TrimSpace(req.Msg.Username)
 	email := strings.TrimSpace(req.Msg.Email)

@@ -139,8 +139,8 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Governance</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">Audit Logs</h1>
-      <p class="mt-1 text-sm text-slate-600">Track system events, user actions, and operational changes.</p>
     </div>
+
 
     <div class="flex flex-wrap items-center gap-3">
       <span class="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 shadow-sm">

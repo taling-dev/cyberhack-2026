@@ -88,6 +88,14 @@
     return statusMeta[status]?.dot ?? statusMeta[1].dot;
   }
 
+  // AI Score badge tone from the lot's latest QC recommendation.
+  function qcTone(rec: string) {
+    if (rec === 'PASS') return 'bg-emerald-100 text-emerald-700';
+    if (rec === 'REVIEW') return 'bg-orange-100 text-orange-700';
+    if (rec === 'FAIL') return 'bg-red-100 text-red-700';
+    return 'bg-slate-100 text-slate-500';
+  }
+
   const lots = $derived(lotsQuery.data?.lots ?? []);
   const hasNext = $derived(!!lotsQuery.data?.nextPageToken);
   const hasPrev = $derived(pageHistory.length > 1);
@@ -103,7 +111,6 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Operations</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">{$t('lot.list_title')}</h1>
-      <p class="mt-1 text-sm text-slate-600">Manage incoming material lots and production readiness.</p>
     </div>
 
     <div class="flex items-center gap-3">
@@ -239,7 +246,14 @@
                   {formatQuantity(lot.quantity)} {lot.unit}
                 </td>
                 <td class="px-4 py-3 align-middle">
-                  <span class="inline-flex rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">N/A</span>
+                  {#if lot.qcRecommendation}
+                    <span class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold {qcTone(lot.qcRecommendation)}">
+                      {lot.qcRecommendation}
+                      <span class="font-mono">{Math.round(lot.qcConfidence * 100)}%</span>
+                    </span>
+                  {:else}
+                    <span class="text-xs text-slate-400">—</span>
+                  {/if}
                 </td>
                 <td class="px-4 py-3 align-middle">
                   <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {statusClass(lot.status)}">

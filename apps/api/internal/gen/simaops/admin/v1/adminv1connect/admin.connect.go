@@ -50,6 +50,10 @@ const (
 	AdminServiceListProceduresProcedure = "/simaops.admin.v1.AdminService/ListProcedures"
 	// AdminServiceCreateUserProcedure is the fully-qualified name of the AdminService's CreateUser RPC.
 	AdminServiceCreateUserProcedure = "/simaops.admin.v1.AdminService/CreateUser"
+	// AdminServiceUpdateUserProcedure is the fully-qualified name of the AdminService's UpdateUser RPC.
+	AdminServiceUpdateUserProcedure = "/simaops.admin.v1.AdminService/UpdateUser"
+	// AdminServiceUpdateRoleProcedure is the fully-qualified name of the AdminService's UpdateRole RPC.
+	AdminServiceUpdateRoleProcedure = "/simaops.admin.v1.AdminService/UpdateRole"
 )
 
 // AdminServiceClient is a client for the simaops.admin.v1.AdminService service.
@@ -62,6 +66,8 @@ type AdminServiceClient interface {
 	DeleteRole(context.Context, *connect.Request[v1.DeleteRoleRequest]) (*connect.Response[v1.DeleteRoleResponse], error)
 	ListProcedures(context.Context, *connect.Request[v1.ListProceduresRequest]) (*connect.Response[v1.ListProceduresResponse], error)
 	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
+	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
+	UpdateRole(context.Context, *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error)
 }
 
 // NewAdminServiceClient constructs a client for the simaops.admin.v1.AdminService service. By
@@ -123,6 +129,18 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("CreateUser")),
 			connect.WithClientOptions(opts...),
 		),
+		updateUser: connect.NewClient[v1.UpdateUserRequest, v1.UpdateUserResponse](
+			httpClient,
+			baseURL+AdminServiceUpdateUserProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateUser")),
+			connect.WithClientOptions(opts...),
+		),
+		updateRole: connect.NewClient[v1.UpdateRoleRequest, v1.UpdateRoleResponse](
+			httpClient,
+			baseURL+AdminServiceUpdateRoleProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateRole")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -136,6 +154,8 @@ type adminServiceClient struct {
 	deleteRole     *connect.Client[v1.DeleteRoleRequest, v1.DeleteRoleResponse]
 	listProcedures *connect.Client[v1.ListProceduresRequest, v1.ListProceduresResponse]
 	createUser     *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
+	updateUser     *connect.Client[v1.UpdateUserRequest, v1.UpdateUserResponse]
+	updateRole     *connect.Client[v1.UpdateRoleRequest, v1.UpdateRoleResponse]
 }
 
 // ListUsers calls simaops.admin.v1.AdminService.ListUsers.
@@ -178,6 +198,16 @@ func (c *adminServiceClient) CreateUser(ctx context.Context, req *connect.Reques
 	return c.createUser.CallUnary(ctx, req)
 }
 
+// UpdateUser calls simaops.admin.v1.AdminService.UpdateUser.
+func (c *adminServiceClient) UpdateUser(ctx context.Context, req *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
+	return c.updateUser.CallUnary(ctx, req)
+}
+
+// UpdateRole calls simaops.admin.v1.AdminService.UpdateRole.
+func (c *adminServiceClient) UpdateRole(ctx context.Context, req *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error) {
+	return c.updateRole.CallUnary(ctx, req)
+}
+
 // AdminServiceHandler is an implementation of the simaops.admin.v1.AdminService service.
 type AdminServiceHandler interface {
 	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
@@ -188,6 +218,8 @@ type AdminServiceHandler interface {
 	DeleteRole(context.Context, *connect.Request[v1.DeleteRoleRequest]) (*connect.Response[v1.DeleteRoleResponse], error)
 	ListProcedures(context.Context, *connect.Request[v1.ListProceduresRequest]) (*connect.Response[v1.ListProceduresResponse], error)
 	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
+	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
+	UpdateRole(context.Context, *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -245,6 +277,18 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("CreateUser")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceUpdateUserHandler := connect.NewUnaryHandler(
+		AdminServiceUpdateUserProcedure,
+		svc.UpdateUser,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdateRoleHandler := connect.NewUnaryHandler(
+		AdminServiceUpdateRoleProcedure,
+		svc.UpdateRole,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateRole")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/simaops.admin.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceListUsersProcedure:
@@ -263,6 +307,10 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceListProceduresHandler.ServeHTTP(w, r)
 		case AdminServiceCreateUserProcedure:
 			adminServiceCreateUserHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateUserProcedure:
+			adminServiceUpdateUserHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateRoleProcedure:
+			adminServiceUpdateRoleHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -302,4 +350,12 @@ func (UnimplementedAdminServiceHandler) ListProcedures(context.Context, *connect
 
 func (UnimplementedAdminServiceHandler) CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.CreateUser is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.UpdateUser is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateRole(context.Context, *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.UpdateRole is not implemented"))
 }

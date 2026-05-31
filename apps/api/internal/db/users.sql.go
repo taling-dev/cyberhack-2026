@@ -39,6 +39,15 @@ func (q *Queries) AssignUserRole(ctx context.Context, arg AssignUserRoleParams) 
 	return err
 }
 
+const clearRolePermissions = `-- name: ClearRolePermissions :exec
+DELETE FROM role_permissions WHERE role_id = ?
+`
+
+func (q *Queries) ClearRolePermissions(ctx context.Context, roleID string) error {
+	_, err := q.db.ExecContext(ctx, clearRolePermissions, roleID)
+	return err
+}
+
 const countRoleMembers = `-- name: CountRoleMembers :one
 SELECT COUNT(*) FROM user_roles WHERE role_id = ?
 `
@@ -356,5 +365,40 @@ type RevokeUserRoleParams struct {
 
 func (q *Queries) RevokeUserRole(ctx context.Context, arg RevokeUserRoleParams) error {
 	_, err := q.db.ExecContext(ctx, revokeUserRole, arg.UserID, arg.RoleID)
+	return err
+}
+
+const updateRoleDescription = `-- name: UpdateRoleDescription :exec
+UPDATE roles SET description = ? WHERE id = ? AND is_system = FALSE
+`
+
+type UpdateRoleDescriptionParams struct {
+	Description string `json:"description"`
+	ID          string `json:"id"`
+}
+
+func (q *Queries) UpdateRoleDescription(ctx context.Context, arg UpdateRoleDescriptionParams) error {
+	_, err := q.db.ExecContext(ctx, updateRoleDescription, arg.Description, arg.ID)
+	return err
+}
+
+const updateUserProfile = `-- name: UpdateUserProfile :exec
+UPDATE users_profile SET full_name = ?, email = ?, active = ? WHERE id = ?
+`
+
+type UpdateUserProfileParams struct {
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Active   bool   `json:"active"`
+	ID       string `json:"id"`
+}
+
+func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserProfile,
+		arg.FullName,
+		arg.Email,
+		arg.Active,
+		arg.ID,
+	)
 	return err
 }

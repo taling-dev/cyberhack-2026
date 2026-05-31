@@ -493,6 +493,162 @@ func (x *GetWarehouseMetricsResponse) GetTotalAvailable() int32 {
 	return 0
 }
 
+type GetQCTrendRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Days          int32                  `protobuf:"varint,1,opt,name=days,proto3" json:"days,omitempty"` // lookback window in days, default 7
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetQCTrendRequest) Reset() {
+	*x = GetQCTrendRequest{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetQCTrendRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetQCTrendRequest) ProtoMessage() {}
+
+func (x *GetQCTrendRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetQCTrendRequest.ProtoReflect.Descriptor instead.
+func (*GetQCTrendRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetQCTrendRequest) GetDays() int32 {
+	if x != nil {
+		return x.Days
+	}
+	return 0
+}
+
+type QCTrendDay struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"` // YYYY-MM-DD
+	PassCount     int32                  `protobuf:"varint,2,opt,name=pass_count,json=passCount,proto3" json:"pass_count,omitempty"`
+	ReviewCount   int32                  `protobuf:"varint,3,opt,name=review_count,json=reviewCount,proto3" json:"review_count,omitempty"`
+	FailCount     int32                  `protobuf:"varint,4,opt,name=fail_count,json=failCount,proto3" json:"fail_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QCTrendDay) Reset() {
+	*x = QCTrendDay{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QCTrendDay) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QCTrendDay) ProtoMessage() {}
+
+func (x *QCTrendDay) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QCTrendDay.ProtoReflect.Descriptor instead.
+func (*QCTrendDay) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *QCTrendDay) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *QCTrendDay) GetPassCount() int32 {
+	if x != nil {
+		return x.PassCount
+	}
+	return 0
+}
+
+func (x *QCTrendDay) GetReviewCount() int32 {
+	if x != nil {
+		return x.ReviewCount
+	}
+	return 0
+}
+
+func (x *QCTrendDay) GetFailCount() int32 {
+	if x != nil {
+		return x.FailCount
+	}
+	return 0
+}
+
+type GetQCTrendResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Days          []*QCTrendDay          `protobuf:"bytes,1,rep,name=days,proto3" json:"days,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetQCTrendResponse) Reset() {
+	*x = GetQCTrendResponse{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetQCTrendResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetQCTrendResponse) ProtoMessage() {}
+
+func (x *GetQCTrendResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetQCTrendResponse.ProtoReflect.Descriptor instead.
+func (*GetQCTrendResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetQCTrendResponse) GetDays() []*QCTrendDay {
+	if x != nil {
+		return x.Days
+	}
+	return nil
+}
+
 var File_simaops_dashboard_v1_dashboard_proto protoreflect.FileDescriptor
 
 const file_simaops_dashboard_v1_dashboard_proto_rawDesc = "" +
@@ -532,11 +688,25 @@ const file_simaops_dashboard_v1_dashboard_proto_rawDesc = "" +
 	"\x05zones\x18\x01 \x03(\v2!.simaops.dashboard.v1.ZoneMetricsR\x05zones\x12%\n" +
 	"\x0etotal_capacity\x18\x02 \x01(\x05R\rtotalCapacity\x12%\n" +
 	"\x0etotal_occupied\x18\x03 \x01(\x05R\rtotalOccupied\x12'\n" +
-	"\x0ftotal_available\x18\x04 \x01(\x05R\x0etotalAvailable2\xe5\x02\n" +
+	"\x0ftotal_available\x18\x04 \x01(\x05R\x0etotalAvailable\"'\n" +
+	"\x11GetQCTrendRequest\x12\x12\n" +
+	"\x04days\x18\x01 \x01(\x05R\x04days\"\x81\x01\n" +
+	"\n" +
+	"QCTrendDay\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x12\x1d\n" +
+	"\n" +
+	"pass_count\x18\x02 \x01(\x05R\tpassCount\x12!\n" +
+	"\freview_count\x18\x03 \x01(\x05R\vreviewCount\x12\x1d\n" +
+	"\n" +
+	"fail_count\x18\x04 \x01(\x05R\tfailCount\"J\n" +
+	"\x12GetQCTrendResponse\x124\n" +
+	"\x04days\x18\x01 \x03(\v2 .simaops.dashboard.v1.QCTrendDayR\x04days2\xc6\x03\n" +
 	"\x10DashboardService\x12n\n" +
 	"\x0fGetOpsDashboard\x12,.simaops.dashboard.v1.GetOpsDashboardRequest\x1a-.simaops.dashboard.v1.GetOpsDashboardResponse\x12e\n" +
 	"\fGetQCMetrics\x12).simaops.dashboard.v1.GetQCMetricsRequest\x1a*.simaops.dashboard.v1.GetQCMetricsResponse\x12z\n" +
-	"\x13GetWarehouseMetrics\x120.simaops.dashboard.v1.GetWarehouseMetricsRequest\x1a1.simaops.dashboard.v1.GetWarehouseMetricsResponseB\xf9\x01\n" +
+	"\x13GetWarehouseMetrics\x120.simaops.dashboard.v1.GetWarehouseMetricsRequest\x1a1.simaops.dashboard.v1.GetWarehouseMetricsResponse\x12_\n" +
+	"\n" +
+	"GetQCTrend\x12'.simaops.dashboard.v1.GetQCTrendRequest\x1a(.simaops.dashboard.v1.GetQCTrendResponseB\xf9\x01\n" +
 	"\x18com.simaops.dashboard.v1B\x0eDashboardProtoP\x01Z[github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/dashboard/v1;dashboardv1\xa2\x02\x03SDX\xaa\x02\x14Simaops.Dashboard.V1\xca\x02\x14Simaops\\Dashboard\\V1\xe2\x02 Simaops\\Dashboard\\V1\\GPBMetadata\xea\x02\x16Simaops::Dashboard::V1b\x06proto3"
 
 var (
@@ -551,7 +721,7 @@ func file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP() []byte {
 	return file_simaops_dashboard_v1_dashboard_proto_rawDescData
 }
 
-var file_simaops_dashboard_v1_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_simaops_dashboard_v1_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_simaops_dashboard_v1_dashboard_proto_goTypes = []any{
 	(*StatusCount)(nil),                 // 0: simaops.dashboard.v1.StatusCount
 	(*GetOpsDashboardRequest)(nil),      // 1: simaops.dashboard.v1.GetOpsDashboardRequest
@@ -561,21 +731,27 @@ var file_simaops_dashboard_v1_dashboard_proto_goTypes = []any{
 	(*GetWarehouseMetricsRequest)(nil),  // 5: simaops.dashboard.v1.GetWarehouseMetricsRequest
 	(*ZoneMetrics)(nil),                 // 6: simaops.dashboard.v1.ZoneMetrics
 	(*GetWarehouseMetricsResponse)(nil), // 7: simaops.dashboard.v1.GetWarehouseMetricsResponse
+	(*GetQCTrendRequest)(nil),           // 8: simaops.dashboard.v1.GetQCTrendRequest
+	(*QCTrendDay)(nil),                  // 9: simaops.dashboard.v1.QCTrendDay
+	(*GetQCTrendResponse)(nil),          // 10: simaops.dashboard.v1.GetQCTrendResponse
 }
 var file_simaops_dashboard_v1_dashboard_proto_depIdxs = []int32{
-	0, // 0: simaops.dashboard.v1.GetOpsDashboardResponse.lots_by_status:type_name -> simaops.dashboard.v1.StatusCount
-	6, // 1: simaops.dashboard.v1.GetWarehouseMetricsResponse.zones:type_name -> simaops.dashboard.v1.ZoneMetrics
-	1, // 2: simaops.dashboard.v1.DashboardService.GetOpsDashboard:input_type -> simaops.dashboard.v1.GetOpsDashboardRequest
-	3, // 3: simaops.dashboard.v1.DashboardService.GetQCMetrics:input_type -> simaops.dashboard.v1.GetQCMetricsRequest
-	5, // 4: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:input_type -> simaops.dashboard.v1.GetWarehouseMetricsRequest
-	2, // 5: simaops.dashboard.v1.DashboardService.GetOpsDashboard:output_type -> simaops.dashboard.v1.GetOpsDashboardResponse
-	4, // 6: simaops.dashboard.v1.DashboardService.GetQCMetrics:output_type -> simaops.dashboard.v1.GetQCMetricsResponse
-	7, // 7: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:output_type -> simaops.dashboard.v1.GetWarehouseMetricsResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0,  // 0: simaops.dashboard.v1.GetOpsDashboardResponse.lots_by_status:type_name -> simaops.dashboard.v1.StatusCount
+	6,  // 1: simaops.dashboard.v1.GetWarehouseMetricsResponse.zones:type_name -> simaops.dashboard.v1.ZoneMetrics
+	9,  // 2: simaops.dashboard.v1.GetQCTrendResponse.days:type_name -> simaops.dashboard.v1.QCTrendDay
+	1,  // 3: simaops.dashboard.v1.DashboardService.GetOpsDashboard:input_type -> simaops.dashboard.v1.GetOpsDashboardRequest
+	3,  // 4: simaops.dashboard.v1.DashboardService.GetQCMetrics:input_type -> simaops.dashboard.v1.GetQCMetricsRequest
+	5,  // 5: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:input_type -> simaops.dashboard.v1.GetWarehouseMetricsRequest
+	8,  // 6: simaops.dashboard.v1.DashboardService.GetQCTrend:input_type -> simaops.dashboard.v1.GetQCTrendRequest
+	2,  // 7: simaops.dashboard.v1.DashboardService.GetOpsDashboard:output_type -> simaops.dashboard.v1.GetOpsDashboardResponse
+	4,  // 8: simaops.dashboard.v1.DashboardService.GetQCMetrics:output_type -> simaops.dashboard.v1.GetQCMetricsResponse
+	7,  // 9: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:output_type -> simaops.dashboard.v1.GetWarehouseMetricsResponse
+	10, // 10: simaops.dashboard.v1.DashboardService.GetQCTrend:output_type -> simaops.dashboard.v1.GetQCTrendResponse
+	7,  // [7:11] is the sub-list for method output_type
+	3,  // [3:7] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_simaops_dashboard_v1_dashboard_proto_init() }
@@ -589,7 +765,7 @@ func file_simaops_dashboard_v1_dashboard_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_simaops_dashboard_v1_dashboard_proto_rawDesc), len(file_simaops_dashboard_v1_dashboard_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

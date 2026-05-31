@@ -86,7 +86,6 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Management Analytics</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">{$t('nav.reports')}</h1>
-      <p class="mt-1 text-sm text-slate-600">Analyze QC performance, warehouse utilization, and production readiness.</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -190,7 +189,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p class="text-sm font-semibold text-slate-950">{formatNumber(qcTotal)} total QC jobs</p>
-              <p class="mt-1 text-xs text-slate-500">Trend history is not exposed by the current API, so this report shows the selected window snapshot only.</p>
+              <p class="mt-1 text-xs text-slate-500">Showing the selected time window.</p>
             </div>
             <span class="rounded-md bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
               {formatPercentRatio(qcQuery.data?.averageConfidence)} confidence
@@ -219,7 +218,6 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Production Readiness</h2>
-          <p class="mt-1 text-xs text-slate-500">Operational readiness from current lot status counts.</p>
         </div>
         <DashboardIcon name="activity" class="size-5 text-slate-400" />
       </div>
@@ -284,19 +282,5 @@
       {/if}
     </section>
   </div>
-
-  <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-      <div>
-        <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Available Report Scope</h2>
-        <p class="mt-1 text-xs text-slate-500">This page uses live operational APIs only. Unsupported exports and historical trend charts are intentionally not shown.</p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <span class="rounded-md bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">Dashboard metrics</span>
-        <span class="rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Live refresh</span>
-        <span class="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">No fabricated data</span>
-      </div>
-    </div>
-  </section>
 </div>
 

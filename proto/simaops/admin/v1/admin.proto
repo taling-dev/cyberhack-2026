@@ -11,6 +11,8 @@ service AdminService {
   rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
   rpc ListProcedures(ListProceduresRequest) returns (ListProceduresResponse);
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+  rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse);
 }
 
 // ─── Enums ───────────────────────────────────────────────────────
@@ -123,4 +125,26 @@ message CreateUserRequest {
 
 message CreateUserResponse {
   User user = 1;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  string full_name = 2;
+  string email = 3;
+  bool active = 4;
+  string new_temp_password = 5; // optional; resets password (temporary) when set
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message UpdateRoleRequest {
+  string role_id = 1;
+  string description = 2;
+  repeated string permissions = 3; // replaces the role's granted RPC paths
+}
+
+message UpdateRoleResponse {
+  RoleDefinition role = 1;
 }

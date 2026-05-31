@@ -213,6 +213,57 @@ func (k *KeycloakAdmin) CreateRealmRole(ctx context.Context, roleName, descripti
 	return nil
 }
 
+// UpdateUser updates a Keycloak user's profile + enabled state, and optionally
+// resets the password (temporary). No-op if disabled.
+func (k *KeycloakAdmin) UpdateUser(ctx context.Context, username, email, fullName string, enabled bool, newTempPassword string) error {
+	if !k.Enabled() {
+		return nil
+	}
+	token, err := k.token(ctx)
+	if err != nil {
+		return err
+	}
+	userID, err := k.getUserIDByUsername(ctx, token, username)
+	if err != nil {
+		return err
+	}
+	first, last := fullName, ""
+	if i := strings.IndexByte(fullName, ' '); i >= 0 {
+		first, last = fullName[:i], fullName[i+1:]
+	}
+	payload, _ := json.Marshal(map[string]any{
+		"email": email, "firstName": first, "lastName": last, "enabled": enabled,
+	})
+	endpoint := fmt.Sprintf("%s/admin/realms/%s/users/%s", k.serverURL, k.realm, url.PathEscape(userID))
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, bytes.NewReader(payload))
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+	res, err := k.hc.Do(req)
+	if err != nil {
+		return err
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusNoContent && res.StatusCode != http.StatusOK {
+		return fmt.Errorf("update user %q: status %d", username, res.StatusCode)
+	}
+	if newTempPassword != "" {
+		pwPayload, _ := json.Marshal(map[string]any{"type": "password", "value": newTempPassword, "temporary": true})
+		pwEndpoint := fmt.Sprintf("%s/admin/realms/%s/users/%s/reset-password", k.serverURL, k.realm, url.PathEscape(userID))
+		pwReq, _ := http.NewRequestWithContext(ctx, http.MethodPut, pwEndpoint, bytes.NewReader(pwPayload))
+		pwReq.Header.Set("Authorization", "Bearer "+token)
+		pwReq.Header.Set("Content-Type", "application/json")
+		pwRes, pErr := k.hc.Do(pwReq)
+		if pErr != nil {
+			return pErr
+		}
+		pwRes.Body.Close()
+		if pwRes.StatusCode != http.StatusNoContent && pwRes.StatusCode != http.StatusOK {
+			return fmt.Errorf("reset password for %q: status %d", username, pwRes.StatusCode)
+		}
+	}
+	return nil
+}
+
 // CreateUser provisions a Keycloak user with a temporary password (the user
 // must reset it at first login). Treats 409 Conflict as success. No-op if
 // disabled (the local profile row is still written by the caller).

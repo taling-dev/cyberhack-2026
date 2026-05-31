@@ -141,7 +141,6 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Storage Operations</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">{$t('nav.warehouse')}</h1>
-      <p class="mt-1 text-sm text-slate-600">Monitor storage zones and capacity allocation.</p>
     </div>
 
     <div class="flex items-center gap-3">

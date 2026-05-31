@@ -132,6 +132,46 @@
       refetchAll();
     } catch { /* surfaced via list refetch */ }
   }
+
+  // ── Edit user ─────────────────────────────────────────────────────
+  let showEditUser = $state(false);
+  let euId = $state(''); let euUsername = $state(''); let euName = $state(''); let euEmail = $state('');
+  let euActive = $state(true); let euPassword = $state(''); let euBusy = $state(false); let euError = $state('');
+
+  function openEditUser(u: any) {
+    euId = u.id; euUsername = u.username; euName = u.fullName ?? ''; euEmail = u.email ?? '';
+    euActive = u.active; euPassword = ''; euError = '';
+    showEditUser = true;
+  }
+  async function submitEditUser() {
+    euBusy = true; euError = '';
+    try {
+      await client.updateUser({ userId: euId, fullName: euName.trim(), email: euEmail.trim(), active: euActive, newTempPassword: euPassword });
+      showEditUser = false;
+      refetchAll();
+    } catch (e: any) { euError = e?.message || $t('admin.eu_failed'); } finally { euBusy = false; }
+  }
+
+  // ── Edit role ─────────────────────────────────────────────────────
+  let showEditRole = $state(false);
+  let erId = $state(''); let erName = $state(''); let erDesc = $state(''); let erPerms = $state<string[]>([]);
+  let erBusy = $state(false); let erError = $state('');
+
+  function openEditRole(role: any) {
+    erId = role.id; erName = role.name; erDesc = role.description ?? ''; erPerms = [...(role.permissions ?? [])]; erError = '';
+    showEditRole = true;
+  }
+  function toggleErPerm(p: string) {
+    erPerms = erPerms.includes(p) ? erPerms.filter((x) => x !== p) : [...erPerms, p];
+  }
+  async function submitEditRole() {
+    erBusy = true; erError = '';
+    try {
+      await client.updateRole({ roleId: erId, description: erDesc.trim(), permissions: erPerms });
+      showEditRole = false;
+      refetchAll();
+    } catch (e: any) { erError = e?.message || $t('admin.er_failed'); } finally { erBusy = false; }
+  }
 </script>
 
 <div class="space-y-5">
@@ -207,7 +247,10 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-right align-middle">
-                  <button onclick={() => openManage(user)} class="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">{$t('admin.manage_roles')}</button>
+                  <div class="inline-flex gap-2">
+                    <button onclick={() => openEditUser(user)} class="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">{$t('admin.edit')}</button>
+                    <button onclick={() => openManage(user)} class="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">{$t('admin.manage_roles')}</button>
+                  </div>
                 </td>
               </tr>
             {:else}
@@ -231,7 +274,10 @@
             {#if role.isSystem}
               <span class="text-[10px] font-semibold uppercase tracking-normal text-slate-400">{$t('admin.system_role')}</span>
             {:else}
-              <button onclick={() => deleteRole(role.id, role.name)} class="text-xs font-medium text-red-600 hover:underline">{$t('admin.delete')}</button>
+              <div class="flex gap-2">
+                <button onclick={() => openEditRole(role)} class="text-xs font-medium text-blue-600 hover:underline">{$t('admin.edit')}</button>
+                <button onclick={() => deleteRole(role.id, role.name)} class="text-xs font-medium text-red-600 hover:underline">{$t('admin.delete')}</button>
+              </div>
             {/if}
           </div>
           <p class="mt-2 text-xs text-slate-600">{role.description}</p>
@@ -329,6 +375,62 @@
       <div class="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
         <button onclick={() => showCreateRole = false} class="h-9 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">{$t('common.cancel')}</button>
         <button onclick={submitCreateRole} disabled={crBusy} class="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50">{crBusy ? $t('admin.saving') : $t('admin.create_role')}</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+
+<!-- Edit user modal -->
+{#if showEditUser}
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4" role="dialog" aria-modal="true" tabindex="-1" use:focusTrap onclick={(e) => { if (e.target === e.currentTarget) showEditUser = false; }} onkeydown={(e) => { if (e.key === 'Escape') showEditUser = false; }}>
+    <div class="max-h-[90vh] w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+      <div class="border-b border-slate-200 px-5 py-4">
+        <h2 class="text-lg font-bold text-slate-950">{$t('admin.edit_user')}</h2>
+        <p class="mt-0.5 font-mono text-xs text-slate-500">{euUsername}</p>
+      </div>
+      <div class="max-h-[62vh] space-y-3 overflow-y-auto px-5 py-4 text-sm">
+        <label class="block"><span class="mb-1 block font-medium text-slate-700">{$t('admin.name')}</span><input bind:value={euName} class="w-full rounded-md border border-slate-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" /></label>
+        <label class="block"><span class="mb-1 block font-medium text-slate-700">{$t('admin.email')}</span><input bind:value={euEmail} type="email" class="w-full rounded-md border border-slate-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" /></label>
+        <label class="flex items-center gap-2"><input type="checkbox" bind:checked={euActive} class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" /><span class="font-medium text-slate-700">{$t('admin.active')}</span></label>
+        <label class="block"><span class="mb-1 block font-medium text-slate-700">{$t('admin.reset_password')}</span><input bind:value={euPassword} type="text" placeholder={$t('admin.reset_password_ph')} class="w-full rounded-md border border-slate-200 px-3 py-2 font-mono focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" /><span class="mt-1 block text-xs text-slate-400">{$t('admin.reset_password_hint')}</span></label>
+        {#if euError}<p class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700" role="alert">{euError}</p>{/if}
+      </div>
+      <div class="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+        <button onclick={() => showEditUser = false} class="h-9 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">{$t('common.cancel')}</button>
+        <button onclick={submitEditUser} disabled={euBusy} class="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50">{euBusy ? $t('admin.saving') : $t('admin.save')}</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Edit role modal -->
+{#if showEditRole}
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4" role="dialog" aria-modal="true" tabindex="-1" use:focusTrap onclick={(e) => { if (e.target === e.currentTarget) showEditRole = false; }} onkeydown={(e) => { if (e.key === 'Escape') showEditRole = false; }}>
+    <div class="max-h-[90vh] w-full max-w-lg overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+      <div class="border-b border-slate-200 px-5 py-4">
+        <h2 class="text-lg font-bold text-slate-950">{$t('admin.edit_role')}</h2>
+        <p class="mt-0.5 font-semibold text-xs uppercase tracking-normal text-slate-500">{erName}</p>
+      </div>
+      <div class="max-h-[62vh] space-y-3 overflow-y-auto px-5 py-4 text-sm">
+        <label class="block"><span class="mb-1 block font-medium text-slate-700">{$t('admin.description')}</span><input bind:value={erDesc} class="w-full rounded-md border border-slate-200 px-3 py-2 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" /></label>
+        <div>
+          <span class="mb-1 block font-medium text-slate-700">{$t('admin.permissions')}</span>
+          <div class="space-y-1.5 rounded-lg border border-slate-200 p-2">
+            {#each proceduresQuery.data?.procedures ?? [] as p}
+              <label class="flex items-center gap-2 rounded px-1.5 py-1 hover:bg-slate-50">
+                <input type="checkbox" checked={erPerms.includes(p)} onchange={() => toggleErPerm(p)} class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                <span class="text-xs text-slate-700">{procLabel(p)}</span>
+              </label>
+            {/each}
+          </div>
+          <p class="mt-1 text-xs text-slate-400">{$t('admin.perm_note')}</p>
+        </div>
+        {#if erError}<p class="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700" role="alert">{erError}</p>{/if}
+      </div>
+      <div class="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">
+        <button onclick={() => showEditRole = false} class="h-9 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">{$t('common.cancel')}</button>
+        <button onclick={submitEditRole} disabled={erBusy} class="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50">{erBusy ? $t('admin.saving') : $t('admin.save')}</button>
       </div>
     </div>
   </div>

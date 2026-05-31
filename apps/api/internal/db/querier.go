@@ -19,6 +19,7 @@ type Querier interface {
 	// election handoff) or this same leader (after a recovered crash) from
 	// re-publishing a row that was already taken.
 	ClaimOutboxBatch(ctx context.Context, limit int32) (int64, error)
+	ClearRolePermissions(ctx context.Context, roleID string) error
 	// A lot may only have one non-cancelled dispatch at a time. Used to reject a
 	// duplicate CreateDispatch for a lot already being shipped.
 	CountActiveDispatchesForLot(ctx context.Context, lotID string) (int64, error)
@@ -77,6 +78,7 @@ type Querier interface {
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)
 	IncrementLocationCapacity(ctx context.Context, id string) (int64, error)
 	IncrementOutboxRetry(ctx context.Context, id string) error
+	LatestQCResultsForLots(ctx context.Context, lotIds []string) ([]LatestQCResultsForLotsRow, error)
 	ListAllRolePermissions(ctx context.Context) ([]ListAllRolePermissionsRow, error)
 	ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]AuditLog, error)
 	ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByActorParams) ([]AuditLog, error)
@@ -106,6 +108,7 @@ type Querier interface {
 	// manually resets it (e.g., after a NATS / config fix).
 	MarkOutboxFailed(ctx context.Context, id string) error
 	MarkOutboxPublished(ctx context.Context, id string) error
+	QCTrendByDay(ctx context.Context, createdAt time.Time) ([]QCTrendByDayRow, error)
 	// Returns a single claimed event back to PENDING with retry_count incremented.
 	// Used when the publish call to NATS fails but the event hasn't yet exhausted
 	// its retry budget — the next poll cycle will pick it up again.
@@ -131,6 +134,8 @@ type Querier interface {
 	UpdateQCJobStarted(ctx context.Context, id string) error
 	UpdateQCJobStatus(ctx context.Context, arg UpdateQCJobStatusParams) error
 	UpdateQCResultReview(ctx context.Context, arg UpdateQCResultReviewParams) error
+	UpdateRoleDescription(ctx context.Context, arg UpdateRoleDescriptionParams) error
+	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
 	// `capacity` is REMAINING slots (AssignSlot decrements it), so it equals
 	// "available". Occupancy is the count of ACTIVE assignments for the zone's
 	// locations; total = remaining + occupied, which stays stable as lots are

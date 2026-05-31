@@ -22,6 +22,7 @@ var publicProcedures = map[string]bool{
 	"/simaops.dashboard.v1.DashboardService/GetOpsDashboard":       true,
 	"/simaops.dashboard.v1.DashboardService/GetQCMetrics":          true,
 	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics":   true,
+	"/simaops.dashboard.v1.DashboardService/GetQCTrend":            true,
 }
 
 // adminOnlyProcedures require ADMIN specifically (admin console). Kept in code
@@ -35,6 +36,8 @@ var adminOnlyProcedures = map[string]bool{
 	"/simaops.admin.v1.AdminService/DeleteRole":     true,
 	"/simaops.admin.v1.AdminService/ListProcedures": true,
 	"/simaops.admin.v1.AdminService/CreateUser":     true,
+	"/simaops.admin.v1.AdminService/UpdateUser":     true,
+	"/simaops.admin.v1.AdminService/UpdateRole":     true,
 }
 
 // AllGrantableProcedures is the set of RPCs a custom role can be granted (the
