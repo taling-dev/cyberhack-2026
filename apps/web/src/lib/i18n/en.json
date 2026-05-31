@@ -185,6 +185,8 @@
   "warehouse": {
     "subtitle": "QC-approved lots awaiting slot assignment",
     "storage_req": "Storage Req",
+    "coldchain_title": "Cold-Chain Monitoring",
+    "zone": "Zone",
     "assign_button": "Assign Slot →",
     "no_queue": "No lots awaiting assignment",
     "assigned_msg": "Assigned",

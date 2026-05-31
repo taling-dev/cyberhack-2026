@@ -19,6 +19,16 @@
     refetchInterval: 15_000,
   }));
 
+  const coldChainQuery = createQuery(() => ({
+    queryKey: ['coldchain-status'],
+    queryFn: async () => {
+      const r = await fetch('/api/coldchain');
+      if (!r.ok) throw new Error('coldchain');
+      return r.json();
+    },
+    refetchInterval: 10_000,
+  }));
+
   let showModal = $state(false);
   let selectedLotId = $state('');
   let selectedLotNumber = $state('');
@@ -68,6 +78,7 @@
   }
 
   const lots = $derived(lotsQuery.data?.lots ?? []);
+  const coldChain = $derived(coldChainQuery.data?.equipment ?? []);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -81,6 +92,27 @@
   {#if assignSuccess}
     <div class="p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm" role="status">
       ✓ {$t('warehouse.assigned_msg')}: {assignSuccess}
+    </div>
+  {/if}
+
+  {#if coldChain.length > 0}
+    <div class="border rounded-lg bg-white p-4">
+      <h2 class="text-sm font-semibold text-gray-700 mb-3">🧊 {$t('warehouse.coldchain_title')}</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {#each coldChain as eq}
+          {@const h = eq.health?.status ?? 'NO_DATA'}
+          <div class="border rounded-md p-3 {h === 'CRITICAL' ? 'bg-red-50 border-red-200' : h === 'WARNING' ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'}">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-sm">{$t('warehouse.zone')} {eq.equipment_id}</span>
+              <span class="text-xs font-semibold {h === 'CRITICAL' ? 'text-red-700' : h === 'WARNING' ? 'text-amber-700' : 'text-green-700'}">{eq.health?.health_score ?? '—'}</span>
+            </div>
+            <div class="text-lg font-mono mt-1">{eq.latest_temperature ?? '—'}°C</div>
+            {#if eq.latest_alert}
+              <p class="text-xs text-red-600 mt-1">⚠ {eq.latest_alert.message}</p>
+            {/if}
+          </div>
+        {/each}
+      </div>
     </div>
   {/if}
 
