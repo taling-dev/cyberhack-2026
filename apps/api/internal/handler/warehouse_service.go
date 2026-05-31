@@ -31,6 +31,24 @@ func NewWarehouseService(q *db.Queries, dbx *sql.DB) *WarehouseService {
 	return &WarehouseService{q: q, dbx: dbx, intelligenceURL: os.Getenv("WAREHOUSE_INTELLIGENCE_URL")}
 }
 
+// autoAssign assigns the top-ranked recommended slot to a freshly QC_APPROVED
+// lot. Best-effort: any error (no slot, capacity race) leaves the lot
+// QC_APPROVED for manual assignment from the warehouse queue.
+func (s *WarehouseService) autoAssign(ctx context.Context, lotID string) {
+	recResp, err := s.RecommendSlot(ctx, connect.NewRequest(&whv1.RecommendSlotRequest{LotId: lotID}))
+	if err != nil || len(recResp.Msg.Recommendations) == 0 {
+		return
+	}
+	top := recResp.Msg.Recommendations[0].Location
+	if top == nil {
+		return
+	}
+	_, _ = s.AssignSlot(ctx, connect.NewRequest(&whv1.AssignSlotRequest{
+		LotId:      lotID,
+		LocationId: top.Id,
+	}))
+}
+
 func (s *WarehouseService) ListLocations(ctx context.Context, req *connect.Request[whv1.ListLocationsRequest]) (*connect.Response[whv1.ListLocationsResponse], error) {
 	locations, err := s.q.ListWarehouseLocations(ctx)
 	if err != nil {

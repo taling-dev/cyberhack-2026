@@ -36,10 +36,11 @@ type QCService struct {
 	q     *db.Queries
 	dbx   *sql.DB
 	minio *storage.MinIOClient
+	wh    *WarehouseService
 }
 
-func NewQCService(q *db.Queries, dbx *sql.DB, minio *storage.MinIOClient) *QCService {
-	return &QCService{q: q, dbx: dbx, minio: minio}
+func NewQCService(q *db.Queries, dbx *sql.DB, minio *storage.MinIOClient, wh *WarehouseService) *QCService {
+	return &QCService{q: q, dbx: dbx, minio: minio, wh: wh}
 }
 
 func (s *QCService) CreateQCUploadUrl(ctx context.Context, req *connect.Request[qcv1.CreateQCUploadUrlRequest]) (*connect.Response[qcv1.CreateQCUploadUrlResponse], error) {
@@ -439,6 +440,14 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 
 	if err := tx.Commit(); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
+	}
+
+	// Auto-assign a warehouse slot on approval. Uses the (cold-chain-aware)
+	// recommender and assigns the top-ranked slot. Best-effort: on any failure
+	// (no capacity, service down) the lot stays QC_APPROVED for manual
+	// assignment from the warehouse queue.
+	if msg.Decision == qcv1.SupervisorDecision_SUPERVISOR_DECISION_APPROVED && s.wh != nil {
+		s.wh.autoAssign(ctx, job.LotID)
 	}
 
 	now := time.Now()
