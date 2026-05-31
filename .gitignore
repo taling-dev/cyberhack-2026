@@ -22,12 +22,15 @@ wheels/
 *.egg
 
 # YOLOv8 / Ultralytics
-runs/
+# Allow tracking results and the BEST weight file
+!runs/
+!runs/**/best.pt
+runs/**/*.pt
 *.cache
 
 # Models & Weights
 *.pt
-weights/*.pt
+weights/
 
 # Datasets
 data/yolo_dataset/
