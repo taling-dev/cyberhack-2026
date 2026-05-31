@@ -247,7 +247,7 @@ func (k *KeycloakAdmin) UpdateUser(ctx context.Context, username, email, fullNam
 		return fmt.Errorf("update user %q: status %d", username, res.StatusCode)
 	}
 	if newTempPassword != "" {
-		pwPayload, _ := json.Marshal(map[string]any{"type": "password", "value": newTempPassword, "temporary": true})
+		pwPayload, _ := json.Marshal(map[string]any{"type": "password", "value": newTempPassword, "temporary": false})
 		pwEndpoint := fmt.Sprintf("%s/admin/realms/%s/users/%s/reset-password", k.serverURL, k.realm, url.PathEscape(userID))
 		pwReq, _ := http.NewRequestWithContext(ctx, http.MethodPut, pwEndpoint, bytes.NewReader(pwPayload))
 		pwReq.Header.Set("Authorization", "Bearer "+token)
