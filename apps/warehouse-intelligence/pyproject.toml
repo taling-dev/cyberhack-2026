@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "warehouse-intelligence"
+version = "1.0.0"
+description = "Smart warehouse intelligence system with ML, rule-based, and LSTM modules"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Warehouse Intelligence Team", email = "warehouse@simaops.io"}
+]
+
+keywords = [
+    "warehouse",
+    "supply-chain",
+    "machine-learning",
+    "lstm",
+    "market-basket-analysis",
+    "hazmat-segregation",
+    "cold-chain-monitoring"
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "numpy>=1.24.0",
+    "pandas>=1.5.0",
+    "scikit-learn>=1.3.0",
+    "mlxtend>=0.23.0",
+    "tensorflow>=2.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "flake8>=6.0.0",
+    "mypy>=1.4.0",
+]
+
+api = [
+    "fastapi>=0.100.0",
+    "pydantic>=2.0.0",
+    "uvicorn>=0.23.0",
+]
+
+production = [
+    "gunicorn>=21.0.0",
+    "python-dotenv>=1.0.0",
+    "prometheus-client>=0.17.0",
+]
+
+[project.urls]
+Repository = "https://github.com/simaops/warehouse-intelligence"
+Documentation = "https://warehouse-intelligence.simaops.io"
+Issues = "https://github.com/simaops/warehouse-intelligence/issues"
+
+[tool.setuptools]
+packages = ["warehouse_intelligence"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--cov=src --cov-report=html"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
