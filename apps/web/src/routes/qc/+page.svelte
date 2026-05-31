@@ -3,66 +3,166 @@
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
+  import { DashboardService } from '$lib/gen/simaops/dashboard/v1/dashboard_pb';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import DashboardIcon from '$lib/components/dashboard/DashboardIcon.svelte';
+  import KpiCard from '$lib/components/dashboard/KpiCard.svelte';
   import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
 
-  const client = createClient(LotService, transport);
+  const dashboardClient = createClient(DashboardService, transport);
+  const lotClient = createClient(LotService, transport);
 
   // Status 4 = QC_REVIEW
   const lotsQuery = createQuery(() => ({
     queryKey: ['qc-review-lots'],
-    queryFn: () => client.listLots({ pageSize: 50, statusFilter: 4 }),
+    queryFn: () => lotClient.listLots({ pageSize: 50, statusFilter: 4 }),
     refetchInterval: 15_000,
   }));
 
+  const qcMetricsQuery = createQuery(() => ({
+    queryKey: ['dashboard-qc'],
+    queryFn: () => dashboardClient.getQCMetrics({ hours: 24 }),
+    refetchInterval: 30_000,
+  }));
+
   const lots = $derived(lotsQuery.data?.lots ?? []);
+
+  function formatPercentRatio(value?: number | null) {
+    return value == null ? '-' : `${Math.round(value * 1000) / 10}%`;
+  }
+
+  function formatQuantity(value: number) {
+    return Number.isInteger(value)
+      ? value.toLocaleString('en-US')
+      : value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  }
 </script>
 
-<div class="space-y-4">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">{$t('qc.queue_title')}</h1>
-    <span class="text-sm text-gray-500">{$t('qc.queue_subtitle')} · {lots.length}</span>
-  </div>
-
-  {#if lotsQuery.isLoading}
-    <div class="flex items-center justify-center py-12 text-gray-500">
-      <div class="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3" aria-hidden="true"></div>
-      {$t('common.loading')}
+<div class="space-y-5">
+  <header class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Quality Control</p>
+      <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">QC Review</h1>
+      <p class="mt-1 text-sm text-slate-600">Review AI inspection results before approval.</p>
     </div>
-  {:else if lotsQuery.isError}
-    <div class="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{lotsQuery.error?.message || $t('common.error')}</div>
-  {:else}
-    <div class="overflow-x-auto border rounded-lg bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b">
-          <tr>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.lot_number')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.material')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.type')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.supplier')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('common.actions')}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y">
-          {#each lots as lot}
-            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={lot.id}>
-              <td class="px-4 py-3 font-mono text-xs">{lot.lotNumber}</td>
-              <td class="px-4 py-3">{lot.materialName}</td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-0.5 rounded text-xs bg-gray-100">{$t(`material_type.${lot.materialType}`)}</span>
-              </td>
-              <td class="px-4 py-3">{lot.supplierName}</td>
-              <td class="px-4 py-3">
-                <a href="/qc/{lot.id}" class="px-3 py-1 bg-orange-100 text-orange-700 rounded text-xs font-medium hover:bg-orange-200">
-                  {$t('qc.review_button')}
-                </a>
-              </td>
-            </tr>
-          {:else}
-            <tr><td colspan="5" class="px-4 py-12 text-center text-gray-400">{$t('qc.no_queue')}</td></tr>
-          {/each}
-        </tbody>
-      </table>
+
+    <div class="flex items-center gap-3">
+      <span class="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 shadow-sm">
+        {lots.length} lots awaiting review
+      </span>
+      <button
+        type="button"
+        onclick={() => {
+          lotsQuery.refetch();
+          qcMetricsQuery.refetch();
+        }}
+        class="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950"
+      >
+        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 0 1-15.5 6.2" />
+          <path d="M3 12A9 9 0 0 1 18.5 5.8" />
+          <path d="M18 2v4h4" />
+          <path d="M6 22v-4H2" />
+        </svg>
+        {$t('common.refresh')}
+      </button>
+    </div>
+  </header>
+
+  <section class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <KpiCard title="Waiting Review" value={lotsQuery.isLoading ? '-' : lots.length.toLocaleString('en-US')} icon="clock" tone="orange" loading={lotsQuery.isLoading} />
+    <KpiCard title="Average AI Confidence" value={formatPercentRatio(qcMetricsQuery.data?.averageConfidence)} icon="bot" tone="purple" loading={qcMetricsQuery.isLoading} />
+    <KpiCard title="Approved (24h)" value={(qcMetricsQuery.data?.passCount ?? 0).toLocaleString('en-US')} icon="check-circle" tone="green" loading={qcMetricsQuery.isLoading} />
+    <KpiCard title="Rejected (24h)" value={(qcMetricsQuery.data?.failCount ?? 0).toLocaleString('en-US')} icon="shield" tone="red" loading={qcMetricsQuery.isLoading} />
+  </section>
+
+  {#if qcMetricsQuery.isError}
+    <div class="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-700">
+      QC summary unavailable: {qcMetricsQuery.error?.message || $t('common.error')}
     </div>
   {/if}
+
+  <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+      <div>
+        <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">AI Review Queue</h2>
+        <p class="mt-1 text-xs text-slate-500">Lots with completed AI checks waiting for supervisor decision.</p>
+      </div>
+      <span class="rounded-md bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">{lots.length} pending</span>
+    </div>
+
+    {#if lotsQuery.isLoading}
+      <div class="divide-y divide-slate-100">
+        {#each [1, 2, 3, 4, 5] as _}
+          <div class="grid grid-cols-[1fr_1.15fr_.8fr_1fr_.85fr_.75fr] gap-4 px-4 py-4">
+            {#each [1, 2, 3, 4, 5, 6] as __}
+              <div class="h-4 animate-pulse rounded bg-slate-100"></div>
+            {/each}
+          </div>
+        {/each}
+      </div>
+    {:else if lotsQuery.isError}
+      <div class="m-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {lotsQuery.error?.message || $t('common.error')}
+      </div>
+    {:else}
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[920px] text-left text-sm">
+          <thead class="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+            <tr>
+              <th class="px-4 py-3">Lot No.</th>
+              <th class="px-4 py-3">Material</th>
+              <th class="px-4 py-3">Type</th>
+              <th class="px-4 py-3">Supplier</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {#each lots as lot}
+              <tr class="transition-colors hover:bg-slate-50" use:highlightOnChange={lot.id}>
+                <td class="px-4 py-3 align-middle">
+                  <a href="/qc/{lot.id}" class="font-mono text-xs font-semibold text-blue-600 hover:underline">{lot.lotNumber}</a>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <div class="font-medium text-slate-950">{lot.materialName}</div>
+                  <div class="mt-0.5 text-xs text-slate-500">{formatQuantity(lot.quantity)} {lot.unit}</div>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <span class="inline-flex rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    {$t(`material_type.${lot.materialType}`)}
+                  </span>
+                </td>
+                <td class="px-4 py-3 align-middle text-slate-700">{lot.supplierName}</td>
+                <td class="px-4 py-3 align-middle">
+                  <span class="inline-flex items-center gap-1.5 rounded-md bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700 ring-1 ring-inset ring-orange-200">
+                    <span class="size-1.5 rounded-full bg-orange-500"></span>
+                    {$t('lot_status.4')}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right align-middle">
+                  <a href="/qc/{lot.id}" class="inline-flex h-8 items-center gap-2 rounded-md bg-orange-600 px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-orange-700">
+                    Review
+                    <DashboardIcon name="arrow-right" class="size-3.5" />
+                  </a>
+                </td>
+              </tr>
+            {:else}
+              <tr>
+                <td colspan="6" class="px-4 py-16">
+                  <div class="mx-auto flex max-w-sm flex-col items-center text-center">
+                    <div class="flex size-12 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                      <DashboardIcon name="check-circle" class="size-6" />
+                    </div>
+                    <h2 class="mt-3 text-sm font-semibold text-slate-950">{$t('qc.no_queue')}</h2>
+                    <p class="mt-1 text-sm text-slate-500">New AI inspections will appear here when supervisor review is needed.</p>
+                  </div>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    {/if}
+  </section>
 </div>
