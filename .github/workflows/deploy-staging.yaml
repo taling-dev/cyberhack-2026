@@ -36,7 +36,7 @@ jobs:
       - name: Deploy app Helm charts
         run: |
           SHA=${{ github.event.workflow_run.head_sha }}
-          for app in api web ai-worker outbox-publisher; do
+          for app in api web ai-worker outbox-publisher warehouse-intelligence; do
             helm upgrade --install simaops-$app deploy/helm/simaops-$app \
               --namespace simaops --create-namespace \
               --set image.tag=$SHA \

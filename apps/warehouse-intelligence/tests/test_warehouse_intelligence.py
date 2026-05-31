@@ -239,7 +239,7 @@ class TestColdChainMonitoring:
         reading = SensorReading(
             sensor_id="SENSOR-01",
             equipment_id="FRIDGE-A",
-            temperature=2.0,  # Above safe range!
+            temperature=5.0,  # Above critical max (2.0)!
             humidity=80.0,
             compressor_status="OFF",
             timestamp=datetime.now()

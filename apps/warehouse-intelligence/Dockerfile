@@ -59,7 +59,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 # Run application with gunicorn + uvicorn workers
 CMD ["gunicorn", \
-     "--workers", "4", \
+     "--workers", "2", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--bind", "0.0.0.0:8000", \
      "--timeout", "120", \
@@ -68,7 +68,7 @@ CMD ["gunicorn", \
      "--access-logfile", "-", \
      "--error-logfile", "-", \
      "--log-level", "info", \
-     "warehouse_intelligence.api:app"]
+     "src.api:app"]
 
 # Labels for container metadata
 LABEL maintainer="warehouse@simaops.io" \

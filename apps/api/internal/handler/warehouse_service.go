@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -21,12 +22,13 @@ import (
 var _ warehousev1connect.WarehouseServiceHandler = (*WarehouseService)(nil)
 
 type WarehouseService struct {
-	q   *db.Queries
-	dbx *sql.DB
+	q               *db.Queries
+	dbx             *sql.DB
+	intelligenceURL string
 }
 
 func NewWarehouseService(q *db.Queries, dbx *sql.DB) *WarehouseService {
-	return &WarehouseService{q: q, dbx: dbx}
+	return &WarehouseService{q: q, dbx: dbx, intelligenceURL: os.Getenv("WAREHOUSE_INTELLIGENCE_URL")}
 }
 
 func (s *WarehouseService) ListLocations(ctx context.Context, req *connect.Request[whv1.ListLocationsRequest]) (*connect.Response[whv1.ListLocationsResponse], error) {
@@ -46,22 +48,32 @@ func (s *WarehouseService) RecommendSlot(ctx context.Context, req *connect.Reque
 	if err != nil {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
 	}
+	available, err := s.q.ListAvailableLocations(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
 
-	// Parse storage requirement
+	// Delegate the decision to the warehouse-intelligence service when
+	// configured; on any error fall back to the inline rule logic so slot
+	// recommendation never hard-depends on the Python service being up.
+	if recs, ok := s.recommendSlotViaIntelligence(ctx, lot, available); ok {
+		return connect.NewResponse(&whv1.RecommendSlotResponse{Recommendations: recs}), nil
+	}
+	return connect.NewResponse(&whv1.RecommendSlotResponse{
+		Recommendations: recommendSlotInline(lot, available),
+	}), nil
+}
+
+// recommendSlotInline is the original rule-based recommender, kept as the
+// fallback when the intelligence service is unset or unreachable.
+func recommendSlotInline(lot db.Lot, available []db.WarehouseLocation) []*whv1.SlotRecommendation {
 	var sr struct {
 		TemperatureRange string  `json:"temperature_range"`
 		HazardClass      *string `json:"hazard_class"`
 	}
 	json.Unmarshal(lot.StorageRequirement, &sr)
 
-	// Get temp bounds from range
 	minTemp, maxTemp := tempBounds(sr.TemperatureRange)
-
-	// Get available locations
-	available, err := s.q.ListAvailableLocations(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
 
 	var recs []*whv1.SlotRecommendation
 	for _, loc := range available {
@@ -74,14 +86,6 @@ func (s *WarehouseService) RecommendSlot(ctx context.Context, req *connect.Reque
 		}
 
 		// Filter: drum + hazard compatibility.
-		// The lot stores hazard_class as the proto enum string
-		// ("HAZARD_CLASS_IBC"); the location arrays store the bare drum code
-		// ("IBC"), so normalize before comparing. Rules:
-		//   - drum_compatibility is the PHYSICAL constraint: the slot must be
-		//     able to hold this drum type (required match).
-		//   - hazard_allowed is a SEGREGATION list: when non-empty it whitelists
-		//     which hazard classes the zone accepts; an empty list means the
-		//     zone imposes no hazard restriction.
 		if sr.HazardClass != nil && *sr.HazardClass != "" && *sr.HazardClass != "HAZARD_CLASS_NONE" {
 			drum := strings.TrimPrefix(*sr.HazardClass, "HAZARD_CLASS_")
 			if !jsonArrayContains(loc.DrumCompatibility, drum) {
@@ -105,7 +109,7 @@ func (s *WarehouseService) RecommendSlot(ctx context.Context, req *connect.Reque
 		})
 	}
 
-	return connect.NewResponse(&whv1.RecommendSlotResponse{Recommendations: recs}), nil
+	return recs
 }
 
 func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[whv1.AssignSlotRequest]) (*connect.Response[whv1.AssignSlotResponse], error) {

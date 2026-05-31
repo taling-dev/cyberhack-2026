@@ -37,13 +37,18 @@ classifiers = [
 
 dependencies = [
     "numpy>=1.24.0",
+    "fastapi>=0.100.0",
+    "pydantic>=2.0.0",
+    "uvicorn>=0.23.0",
+]
+
+[project.optional-dependencies]
+ml = [
     "pandas>=1.5.0",
     "scikit-learn>=1.3.0",
     "mlxtend>=0.23.0",
     "tensorflow>=2.12.0",
 ]
-
-[project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
@@ -71,12 +76,11 @@ Documentation = "https://warehouse-intelligence.simaops.io"
 Issues = "https://github.com/simaops/warehouse-intelligence/issues"
 
 [tool.setuptools]
-packages = ["warehouse_intelligence"]
+packages = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "--cov=src --cov-report=html"
 
 [tool.mypy]
 python_version = "3.9"
