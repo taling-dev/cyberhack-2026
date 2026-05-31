@@ -167,6 +167,33 @@ class HazardSegregationEngine:
         self.logger = logging.getLogger(__name__)
         self.validation_history: List[Tuple[str, ComplianceResult]] = []
     
+    def validate_drum_placement(
+        self, hazard_class: str, drum_compatibility: List[str], hazard_allowed: List[str]
+    ) -> ComplianceResult:
+        """SimaOps drum/hazard-class segregation rule (single source of truth).
+
+        hazard_class is the proto enum string ("HAZARD_CLASS_IBC"); the location
+        arrays hold bare drum codes ("IBC"). Rules:
+          - drum_compatibility: PHYSICAL constraint — slot must hold this drum.
+          - hazard_allowed: SEGREGATION whitelist — when non-empty, the zone
+            only accepts the listed hazard classes (empty = no restriction).
+        """
+        result = ComplianceResult(status=ComplianceStatus.APPROVED, is_approved=True)
+        result.checked_rules.append("SIMAOPS_DRUM_001")
+
+        drum = (hazard_class or "").replace("HAZARD_CLASS_", "")
+        if drum and drum != "NONE":
+            if drum not in drum_compatibility:
+                result.violations.append(f"slot cannot hold {drum} drum")
+            elif hazard_allowed and drum not in hazard_allowed:
+                result.violations.append(f"zone segregation rejects hazard class {drum}")
+
+        if result.violations:
+            result.status = ComplianceStatus.REJECTED
+            result.is_approved = False
+        self.validation_history.append((drum or "NONE", result))
+        return result
+    
     def validate_item_placement(
         self,
         item: Item,

@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from .cold_chain_monitoring import ColdChainMonitoringEngine, SensorReading
+from .hazard_segregation import HazardSegregationEngine
 
 logging.basicConfig(level=logging.INFO)
 
@@ -60,26 +61,25 @@ class RecommendResponse(BaseModel):
     recommendations: List[Recommendation]
 
 
-def _recommend(req: RecommendRequest, coldchain: ColdChainMonitoringEngine) -> List[Recommendation]:
+def _recommend(
+    req: RecommendRequest,
+    coldchain: ColdChainMonitoringEngine,
+    hazard: HazardSegregationEngine,
+) -> List[Recommendation]:
     min_temp, max_temp = _TEMP_BOUNDS.get(
         req.storage_requirement.temperature_range, (15.0, 25.0)
     )
-    hz = req.storage_requirement.hazard_class
-    drum = ""
-    if hz and hz not in ("", "HAZARD_CLASS_NONE"):
-        drum = hz.replace("HAZARD_CLASS_", "")
+    hz = req.storage_requirement.hazard_class or ""
+    drum = hz.replace("HAZARD_CLASS_", "") if hz not in ("", "HAZARD_CLASS_NONE") else ""
 
     recs: List[Recommendation] = []
     for loc in req.locations:
         # Temp containment: location range must cover the lot's required range.
         if loc.temperature_min > min_temp or loc.temperature_max < max_temp:
             continue
-        # Drum + hazard segregation rules (same as the Go filter).
-        if drum:
-            if drum not in loc.drum_compatibility:
-                continue
-            if loc.hazard_allowed and drum not in loc.hazard_allowed:
-                continue
+        # Hazard segregation — delegated to the HazardSegregationEngine.
+        if not hazard.validate_drum_placement(hz, loc.drum_compatibility, loc.hazard_allowed).is_approved:
+            continue
 
         # Score: capacity, tighter temp-fit, and cold-chain zone health.
         fit_bonus = max(0.0, 10.0 - (loc.temperature_max - loc.temperature_min))
@@ -103,6 +103,7 @@ def _recommend(req: RecommendRequest, coldchain: ColdChainMonitoringEngine) -> L
 # ── Dummy cold-chain sensor source ──────────────────────────────────────────
 
 _ENGINE = ColdChainMonitoringEngine()
+_HAZARD = HazardSegregationEngine()
 _ZONES = ["A", "B", "C"]
 _latest: dict = {}  # zone -> {"temperature", "timestamp", "alert"}
 
@@ -149,7 +150,7 @@ async def health():
 
 @app.post("/slotting/recommend", response_model=RecommendResponse)
 async def slotting_recommend(req: RecommendRequest):
-    return RecommendResponse(recommendations=_recommend(req, _ENGINE))
+    return RecommendResponse(recommendations=_recommend(req, _ENGINE, _HAZARD))
 
 
 @app.get("/coldchain/status")

@@ -342,3 +342,18 @@ class TestPerformance:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
+
+
+class TestDrumSegregation:
+    """SimaOps drum/hazard-class segregation rule."""
+
+    def test_drum_placement_rules(self):
+        e = HazardSegregationEngine()
+        # No hazard -> always approved.
+        assert e.validate_drum_placement("HAZARD_CLASS_NONE", ["IBC"], []).is_approved
+        # Compatible drum + empty whitelist -> approved.
+        assert e.validate_drum_placement("HAZARD_CLASS_IBC", ["IBC"], []).is_approved
+        # Slot can't hold the drum -> rejected.
+        assert not e.validate_drum_placement("HAZARD_CLASS_IBC", ["IPPC"], []).is_approved
+        # Zone whitelist excludes the hazard class -> rejected.
+        assert not e.validate_drum_placement("HAZARD_CLASS_IBC", ["IBC"], ["IPPC"]).is_approved
