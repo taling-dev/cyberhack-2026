@@ -220,7 +220,15 @@
           {/if}
         </div>
       {:else}
-        <p class="text-sm text-gray-400">{$t('qc.upload_unavailable')}</p>
+        <p class="text-sm text-gray-400">
+          {#if lot.status === 3}
+            {$t('qc.upload_processing')}
+          {:else if [5, 7, 8].includes(lot.status)}
+            {$t('qc.upload_done')}
+          {:else}
+            {$t('qc.upload_unavailable')}
+          {/if}
+        </p>
       {/if}
     </div>
 
