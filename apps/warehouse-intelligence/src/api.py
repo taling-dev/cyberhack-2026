@@ -104,18 +104,28 @@ def _recommend(
 
 _ENGINE = ColdChainMonitoringEngine()
 _HAZARD = HazardSegregationEngine()
-_ZONES = ["A", "B", "C"]
+
+# Per-zone-type config matching the warehouse seed ranges. Each zone has its own
+# target temperature + acceptable/critical thresholds (Ambient / Cold / Freeze).
+_ZONE_CONFIG = {
+    "A": {"target": 20.0, "th": {"OPTIMAL_MIN": 15, "OPTIMAL_MAX": 25, "ACCEPTABLE_MIN": 13, "ACCEPTABLE_MAX": 27, "CRITICAL_MIN": 10, "CRITICAL_MAX": 30}},
+    "B": {"target": 5.0, "th": {"OPTIMAL_MIN": 2, "OPTIMAL_MAX": 8, "ACCEPTABLE_MIN": 0, "ACCEPTABLE_MAX": 10, "CRITICAL_MIN": -2, "CRITICAL_MAX": 12}},
+    "C": {"target": -12.0, "th": {"OPTIMAL_MIN": -20, "OPTIMAL_MAX": -4, "ACCEPTABLE_MIN": -22, "ACCEPTABLE_MAX": -2, "CRITICAL_MIN": -25, "CRITICAL_MAX": 0}},
+}
+_ZONES = list(_ZONE_CONFIG)
+for _z, _c in _ZONE_CONFIG.items():
+    _ENGINE.equipment_thresholds[_z] = _c["th"]
 _latest: dict = {}  # zone -> {"temperature", "timestamp", "alert"}
 
 
 async def _sensor_loop():
     """Emit a synthetic reading per zone every few seconds (demo source)."""
     while True:
-        for zone in _ZONES:
-            # Cold-chain target ~ -3°C; occasional excursion to exercise alerts.
-            temp = round(random.gauss(-3.0, 1.0), 2)
+        for zone, cfg in _ZONE_CONFIG.items():
+            # Each zone fluctuates around its own target; rare excursion.
+            temp = round(random.gauss(cfg["target"], 1.0), 2)
             if random.random() < 0.05:
-                temp = round(random.uniform(3.0, 6.0), 2)  # excursion
+                temp = round(cfg["target"] + random.uniform(8.0, 12.0), 2)  # excursion above range
             reading = SensorReading(
                 sensor_id=f"sensor-{zone}", equipment_id=zone,
                 temperature=temp, timestamp=datetime.now(),

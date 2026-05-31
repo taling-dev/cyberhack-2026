@@ -30,6 +30,16 @@
     refetchInterval: 30_000,
   }));
 
+  const coldChainQuery = createQuery(() => ({
+    queryKey: ['coldchain-status'],
+    queryFn: async () => {
+      const r = await fetch('/api/coldchain');
+      if (!r.ok) throw new Error('coldchain');
+      return r.json();
+    },
+    refetchInterval: 10_000,
+  }));
+
   let showModal = $state(false);
   let selectedLotId = $state('');
   let selectedLotNumber = $state('');
@@ -121,6 +131,7 @@
   const totalOccupied = $derived(warehouseMetricsQuery.data?.totalOccupied ?? 0);
   const totalAvailable = $derived(warehouseMetricsQuery.data?.totalAvailable ?? 0);
   const warehousePct = $derived(utilizationPercent(totalOccupied, totalCapacity));
+  const coldChain = $derived(coldChainQuery.data?.equipment ?? []);
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -236,6 +247,33 @@
       loading={warehouseMetricsQuery.isLoading}
     />
   </div>
+
+  {#if coldChain.length > 0}
+    <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">🧊 {$t('warehouse.coldchain_title')}</h2>
+          <p class="mt-1 text-xs text-slate-500">Live per-zone temperature and equipment health.</p>
+        </div>
+        <DashboardIcon name="warehouse" class="size-5 text-slate-400" />
+      </div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {#each coldChain as eq}
+          {@const h = eq.health?.status ?? 'NO_DATA'}
+          <article class="rounded-lg border p-3 {h === 'CRITICAL' ? 'border-red-200 bg-red-50' : h === 'WARNING' ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-bold text-slate-950">{$t('warehouse.zone')} {eq.equipment_id}</span>
+              <span class="text-xs font-semibold {h === 'CRITICAL' ? 'text-red-700' : h === 'WARNING' ? 'text-amber-700' : 'text-emerald-700'}">{eq.health?.health_score ?? '—'}</span>
+            </div>
+            <div class="mt-1 font-mono text-lg text-slate-950">{eq.latest_temperature ?? '—'}°C</div>
+            {#if eq.latest_alert}
+              <p class="mt-1 text-xs text-red-600">⚠ {eq.latest_alert.message}</p>
+            {/if}
+          </article>
+        {/each}
+      </div>
+    </section>
+  {/if}
 
   <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
     <div class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">

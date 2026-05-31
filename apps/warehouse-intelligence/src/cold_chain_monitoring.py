@@ -302,6 +302,12 @@ class ColdChainMonitoringEngine:
         self.sensor_history: Dict[str, List[SensorReading]] = {}
         self.alerts: List[ColdChainAlert] = []
         self.logger = logging.getLogger(__name__)
+        # Per-equipment threshold overrides (by equipment_id). Falls back to the
+        # global fresh-produce TEMPERATURE_THRESHOLDS when an id is absent.
+        self.equipment_thresholds: Dict[str, dict] = {}
+
+    def _thresholds(self, equipment_id: str) -> dict:
+        return self.equipment_thresholds.get(equipment_id, TEMPERATURE_THRESHOLDS)
     
     def process_sensor_reading(self, reading: SensorReading) -> Optional[ColdChainAlert]:
         """
@@ -378,9 +384,10 @@ class ColdChainMonitoringEngine:
     def _check_current_thresholds(self, reading: SensorReading) -> Optional[ColdChainAlert]:
         """Rule 1: Check if current temperature violates thresholds."""
         
+        th = self._thresholds(reading.equipment_id)
         # Critical violation
-        if reading.temperature < TEMPERATURE_THRESHOLDS["CRITICAL_MIN"] or \
-           reading.temperature > TEMPERATURE_THRESHOLDS["CRITICAL_MAX"]:
+        if reading.temperature < th["CRITICAL_MIN"] or \
+           reading.temperature > th["CRITICAL_MAX"]:
             return self._create_alert(
                 reading.equipment_id,
                 AlertType.CURRENT_THRESHOLD,
@@ -396,8 +403,8 @@ class ColdChainMonitoringEngine:
             )
         
         # Warning - outside acceptable range
-        if reading.temperature < TEMPERATURE_THRESHOLDS["ACCEPTABLE_MIN"] or \
-           reading.temperature > TEMPERATURE_THRESHOLDS["ACCEPTABLE_MAX"]:
+        if reading.temperature < th["ACCEPTABLE_MIN"] or \
+           reading.temperature > th["ACCEPTABLE_MAX"]:
             return self._create_alert(
                 reading.equipment_id,
                 AlertType.CURRENT_THRESHOLD,
@@ -615,8 +622,9 @@ class ColdChainMonitoringEngine:
             issues.append("Moderate temperature variance")
         
         # Check recent violations
+        th = self._thresholds(equipment_id)
         violations = sum(1 for r in recent if not (
-            TEMPERATURE_THRESHOLDS["ACCEPTABLE_MIN"] <= r.temperature <= TEMPERATURE_THRESHOLDS["ACCEPTABLE_MAX"]
+            th["ACCEPTABLE_MIN"] <= r.temperature <= th["ACCEPTABLE_MAX"]
         ))
         
         if violations > 5:

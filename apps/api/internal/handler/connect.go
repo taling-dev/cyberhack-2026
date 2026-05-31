@@ -25,12 +25,15 @@ func RegisterConnectHandlers(mux *http.ServeMux, dbConn *sql.DB, minio *storage.
 	lotPath, lotHandler := lotv1connect.NewLotServiceHandler(NewLotService(queries, dbConn))
 	mux.Handle(lotPath, lotHandler)
 
+	// WarehouseService — shared with QCService so approval can auto-assign.
+	whSvc := NewWarehouseService(queries, dbConn)
+
 	// QCService
-	qcPath, qcHandler := qcv1connect.NewQCServiceHandler(NewQCService(queries, dbConn, minio))
+	qcPath, qcHandler := qcv1connect.NewQCServiceHandler(NewQCService(queries, dbConn, minio, whSvc))
 	mux.Handle(qcPath, qcHandler)
 
 	// WarehouseService
-	whPath, whHandler := warehousev1connect.NewWarehouseServiceHandler(NewWarehouseService(queries, dbConn))
+	whPath, whHandler := warehousev1connect.NewWarehouseServiceHandler(whSvc)
 	mux.Handle(whPath, whHandler)
 
 	// DispatchService — final stage: ships READY_FOR_PRODUCTION lots.

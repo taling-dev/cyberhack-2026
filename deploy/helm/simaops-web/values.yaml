@@ -13,6 +13,7 @@ env:
   KEYCLOAK_CLIENT_ID: "simaops-web"
   PUBLIC_APP_URL: "https://app.161.118.244.229.sslip.io"
   PRIVATE_API_URL: "http://simaops-api.simaops:8080"
+  PRIVATE_WAREHOUSE_INTELLIGENCE_URL: "http://simaops-warehouse-intelligence.simaops:8000"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability:4318"
   OTEL_SERVICE_NAME: "simaops-web"
 

@@ -187,6 +187,8 @@
   "warehouse": {
     "subtitle": "Lot yang disetujui QC menunggu penempatan slot",
     "storage_req": "Syarat Penyimpanan",
+    "coldchain_title": "Pemantauan Rantai Dingin",
+    "zone": "Zona",
     "assign_button": "Tetapkan Slot →",
     "no_queue": "Tidak ada lot menunggu penempatan",
     "assigned_msg": "Ditempatkan",
