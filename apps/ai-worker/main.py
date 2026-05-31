@@ -184,10 +184,16 @@ class ClassifierStrategy(QCStrategy):
             low = name.lower()
             is_defect = any(k in low for k in _DEFECT_KEYWORDS)
             is_healthy = (not is_defect) and any(k in low for k in _HEALTHY_KEYWORDS)
+            # Sum (not max) the softmax mass across all healthy / all defect
+            # classes. The model has duplicate classes per fruit (e.g.
+            # "Apple___healthy" AND "Healthy Apple Fruit") from two merged
+            # datasets, so a confident prediction is SPLIT across them. Taking
+            # the max would discard half the signal and under-report confidence;
+            # summing recovers the true "probability this fruit is healthy".
             if is_healthy:
-                healthy_score = max(healthy_score, score)
+                healthy_score += score
             elif is_defect:
-                defect_score = max(defect_score, score)
+                defect_score += score
             # Only surface the meaningful detections (top class + any notable signal).
             if score >= 0.10:
                 findings.append({
@@ -196,6 +202,10 @@ class ClassifierStrategy(QCStrategy):
                     "confidence": round(float(score), 4),
                     "is_anomaly": bool(is_defect),
                 })
+        # Probabilities are a partition of 1.0, so the summed group scores are
+        # already bounded by 1.0; clamp defensively against float drift.
+        healthy_score = min(healthy_score, 1.0)
+        defect_score = min(defect_score, 1.0)
         findings.sort(key=lambda f: f["confidence"], reverse=True)
         findings = findings[:5]
 
@@ -207,7 +217,7 @@ class ClassifierStrategy(QCStrategy):
             recommendation = "REVIEW"
         else:
             recommendation = "FAIL"
-        # Report the dominant signal's confidence as the headline confidence.
+        # Headline confidence = the dominant aggregated signal.
         confidence = max(healthy_score, defect_score) if (healthy_score or defect_score) else 0.0
         return {
             "recommendation": recommendation,
