@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from 'svelte-i18n';
+  import { goto } from '$app/navigation';
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
@@ -27,6 +28,27 @@
 
   const lots = $derived(lotsQuery.data?.lots ?? []);
 
+  // Power-user keyboard nav: j/k or arrows move the focused row, Enter/o opens
+  // it. Opening still shows the full evidence + decision screen; there is no
+  // blind bulk-approve (it would defeat the evidence-beside-decision rule).
+  let focusedRow = $state(-1);
+
+  function onQueueKeydown(e: KeyboardEvent) {
+    if (lots.length === 0) return;
+    const tag = (e.target as HTMLElement)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === 'j' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusedRow = Math.min(focusedRow + 1, lots.length - 1);
+    } else if (e.key === 'k' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusedRow = Math.max(focusedRow - 1, 0);
+    } else if ((e.key === 'Enter' || e.key === 'o') && focusedRow >= 0) {
+      e.preventDefault();
+      goto(`/qc/${lots[focusedRow].id}`);
+    }
+  }
+
   function formatPercentRatio(value?: number | null) {
     return value == null ? '-' : `${Math.round(value * 1000) / 10}%`;
   }
@@ -37,6 +59,8 @@
       : value.toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
 </script>
+
+<svelte:window onkeydown={onQueueKeydown} />
 
 <div class="space-y-5">
   <header class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
@@ -88,7 +112,13 @@
         <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">AI Review Queue</h2>
         <p class="mt-1 text-xs text-slate-500">Lots with completed AI checks waiting for supervisor decision.</p>
       </div>
-      <span class="rounded-md bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">{lots.length} pending</span>
+      <div class="flex items-center gap-3">
+        <span class="hidden text-xs text-slate-400 sm:inline">
+          <kbd class="rounded border border-slate-200 bg-slate-50 px-1 font-mono">j</kbd>/<kbd class="rounded border border-slate-200 bg-slate-50 px-1 font-mono">k</kbd> move ·
+          <kbd class="rounded border border-slate-200 bg-slate-50 px-1 font-mono">Enter</kbd> open
+        </span>
+        <span class="rounded-md bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">{lots.length} pending</span>
+      </div>
     </div>
 
     {#if lotsQuery.isLoading}
@@ -119,8 +149,11 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            {#each lots as lot}
-              <tr class="transition-colors hover:bg-slate-50" use:highlightOnChange={lot.id}>
+            {#each lots as lot, i}
+              <tr
+                class="transition-colors hover:bg-slate-50 {i === focusedRow ? 'bg-blue-50 ring-2 ring-inset ring-blue-400' : ''}"
+                use:highlightOnChange={lot.id}
+              >
                 <td class="px-4 py-3 align-middle">
                   <a href="/qc/{lot.id}" class="font-mono text-xs font-semibold text-blue-600 hover:underline">{lot.lotNumber}</a>
                 </td>
