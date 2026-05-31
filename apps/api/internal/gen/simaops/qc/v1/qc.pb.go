@@ -1032,6 +1032,10 @@ type ReviewQCRequest struct {
 	Decision       SupervisorDecision     `protobuf:"varint,2,opt,name=decision,proto3,enum=simaops.qc.v1.SupervisorDecision" json:"decision,omitempty"`
 	Reason         string                 `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
 	IdempotencyKey string                 `protobuf:"bytes,4,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	// RECHECK only: when true (default), re-run the AI on the SAME image
+	// immediately. When false, retire the current job and send the lot back to
+	// PENDING_QC so the operator uploads a NEW image (no immediate inference).
+	RecheckRerunAi bool `protobuf:"varint,5,opt,name=recheck_rerun_ai,json=recheckRerunAi,proto3" json:"recheck_rerun_ai,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1092,6 +1096,13 @@ func (x *ReviewQCRequest) GetIdempotencyKey() string {
 		return x.IdempotencyKey
 	}
 	return ""
+}
+
+func (x *ReviewQCRequest) GetRecheckRerunAi() bool {
+	if x != nil {
+		return x.RecheckRerunAi
+	}
+	return false
 }
 
 type ReviewQCResponse struct {
@@ -1338,12 +1349,13 @@ const file_simaops_qc_v1_qc_proto_rawDesc = "" +
 	"\x12GetQCResultRequest\x12\x1a\n" +
 	"\tqc_job_id\x18\x01 \x01(\tR\aqcJobId\"F\n" +
 	"\x13GetQCResultResponse\x12/\n" +
-	"\x06result\x18\x01 \x01(\v2\x17.simaops.qc.v1.QCResultR\x06result\"\xad\x01\n" +
+	"\x06result\x18\x01 \x01(\v2\x17.simaops.qc.v1.QCResultR\x06result\"\xd7\x01\n" +
 	"\x0fReviewQCRequest\x12\x1a\n" +
 	"\tqc_job_id\x18\x01 \x01(\tR\aqcJobId\x12=\n" +
 	"\bdecision\x18\x02 \x01(\x0e2!.simaops.qc.v1.SupervisorDecisionR\bdecision\x12\x16\n" +
 	"\x06reason\x18\x03 \x01(\tR\x06reason\x12'\n" +
-	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\"\xcb\x01\n" +
+	"\x0fidempotency_key\x18\x04 \x01(\tR\x0eidempotencyKey\x12(\n" +
+	"\x10recheck_rerun_ai\x18\x05 \x01(\bR\x0erecheckRerunAi\"\xcb\x01\n" +
 	"\x10ReviewQCResponse\x12\x1a\n" +
 	"\tqc_job_id\x18\x01 \x01(\tR\aqcJobId\x12=\n" +
 	"\bdecision\x18\x02 \x01(\x0e2!.simaops.qc.v1.SupervisorDecisionR\bdecision\x12\x1f\n" +

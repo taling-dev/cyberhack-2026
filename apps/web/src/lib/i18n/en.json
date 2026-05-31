@@ -177,7 +177,10 @@
     "review_for": "QC Review",
     "review_decision_approved": "Approved",
     "review_decision_rejected": "Rejected",
-    "review_decision_recheck": "Recheck"
+    "review_decision_recheck": "Recheck",
+    "recheck_rerun_ai": "Re-run AI immediately on the same image",
+    "recheck_rerun_on_hint": "The AI will re-analyze the current image right away.",
+    "recheck_rerun_off_hint": "The lot returns to Pending QC so the operator can upload a new image."
   },
   "warehouse": {
     "subtitle": "QC-approved lots awaiting slot assignment",

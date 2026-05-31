@@ -177,7 +177,10 @@
     "review_for": "Tinjauan QC",
     "review_decision_approved": "Disetujui",
     "review_decision_rejected": "Ditolak",
-    "review_decision_recheck": "Periksa ulang"
+    "review_decision_recheck": "Periksa ulang",
+    "recheck_rerun_ai": "Jalankan ulang AI segera pada gambar yang sama",
+    "recheck_rerun_on_hint": "AI akan menganalisis ulang gambar saat ini segera.",
+    "recheck_rerun_off_hint": "Lot kembali ke Menunggu QC agar operator dapat mengunggah gambar baru."
   },
   "warehouse": {
     "subtitle": "Lot yang disetujui QC menunggu penempatan slot",

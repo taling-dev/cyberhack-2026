@@ -52,6 +52,7 @@
   let showModal = $state(false);
   let decision = $state(0);
   let reason = $state('');
+  let recheckRerunAi = $state(true);
   let submitting = $state(false);
   let reviewError = $state('');
   let reviewSuccess = $state('');
@@ -72,6 +73,7 @@
     decision = d;
     reason = '';
     reviewError = '';
+    recheckRerunAi = true;
     showModal = true;
   }
 
@@ -93,6 +95,7 @@
         qcJobId,
         decision,
         reason,
+        recheckRerunAi,
         idempotencyKey: crypto.randomUUID()
       });
       showModal = false;
@@ -269,6 +272,18 @@
           placeholder={$t('qc.reason_placeholder')}
         ></textarea>
       </div>
+
+      {#if decision === 3}
+        <label class="flex items-start gap-2 text-sm">
+          <input type="checkbox" bind:checked={recheckRerunAi} class="mt-0.5" />
+          <span>
+            {$t('qc.recheck_rerun_ai')}
+            <span class="block text-xs text-gray-400">
+              {recheckRerunAi ? $t('qc.recheck_rerun_on_hint') : $t('qc.recheck_rerun_off_hint')}
+            </span>
+          </span>
+        </label>
+      {/if}
 
       {#if reviewError}
         <p class="text-sm text-red-600" role="alert">{reviewError}</p>

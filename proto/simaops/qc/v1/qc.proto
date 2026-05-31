@@ -135,6 +135,10 @@ message ReviewQCRequest {
   SupervisorDecision decision = 2;
   string reason = 3;
   string idempotency_key = 4;
+  // RECHECK only: when true (default), re-run the AI on the SAME image
+  // immediately. When false, retire the current job and send the lot back to
+  // PENDING_QC so the operator uploads a NEW image (no immediate inference).
+  bool recheck_rerun_ai = 5;
 }
 
 message ReviewQCResponse {

@@ -340,35 +340,42 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 		}
 		lotStatusAfter = "QC_REJECTED"
 	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK:
-		// Re-run the AI on the SAME image: re-queue the existing job and move
-		// the lot back to PENDING_QC. The qc.job.created event is emitted after
-		// commit (below) so the worker re-processes it; on completion the
-		// worker advances the lot back to QC_REVIEW with a fresh result.
-		if err := qtx.RequeueQCJob(ctx, msg.QcJobId); err != nil {
-			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("requeue qc job: %w", err))
+		// Two recheck modes (controlled by recheck_rerun_ai):
+		if msg.RecheckRerunAi {
+			// Mode A (immediate re-inference): re-queue the existing job and
+			// emit qc.job.created so the worker re-runs AI on the SAME image;
+			// on completion it advances the lot back to QC_REVIEW.
+			if err := qtx.RequeueQCJob(ctx, msg.QcJobId); err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("requeue qc job: %w", err))
+			}
+			recheckPayload, _ := json.Marshal(map[string]string{
+				"qc_job_id":        msg.QcJobId,
+				"lot_id":           job.LotID,
+				"image_object_key": job.ImageObjectKey,
+				"material_type":    string(lot.MaterialType),
+				"owner_user_id":    lot.CreatedBy,
+			})
+			recheckEnv, err := events.NewEnvelope("qc.job.created", reviewer, lot.CreatedBy, msg.QcJobId, json.RawMessage(recheckPayload))
+			if err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build recheck envelope: %w", err))
+			}
+			if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+				ID: uuid.NewString(), EventType: "qc.job.created", PayloadJson: recheckEnv,
+			}); err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create recheck outbox event: %w", err))
+			}
+		} else {
+			// Mode B (await new image): retire the current job (terminal) so the
+			// operator can upload a NEW image, which spawns a fresh job. No
+			// immediate inference is triggered.
+			if err := qtx.UpdateQCJobCompleted(ctx, db.UpdateQCJobCompletedParams{Status: db.QcJobsStatusFAILED, ID: msg.QcJobId}); err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("retire qc job: %w", err))
+			}
 		}
 		if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: job.LotID}); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
 		}
 		lotStatusAfter = "PENDING_QC"
-		// Emit qc.job.created so the AI worker re-runs inference on the same
-		// image (mirrors CreateQCJob's payload shape).
-		recheckPayload, _ := json.Marshal(map[string]string{
-			"qc_job_id":        msg.QcJobId,
-			"lot_id":           job.LotID,
-			"image_object_key": job.ImageObjectKey,
-			"material_type":    string(lot.MaterialType),
-			"owner_user_id":    lot.CreatedBy,
-		})
-		recheckEnv, err := events.NewEnvelope("qc.job.created", reviewer, lot.CreatedBy, msg.QcJobId, json.RawMessage(recheckPayload))
-		if err != nil {
-			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build recheck envelope: %w", err))
-		}
-		if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
-			ID: uuid.NewString(), EventType: "qc.job.created", PayloadJson: recheckEnv,
-		}); err != nil {
-			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create recheck outbox event: %w", err))
-		}
 	}
 
 	// Emit qc.job.reviewed event so the SSE bridge can fan out to QC supervisors
