@@ -140,6 +140,7 @@
     "starting_qc": "Starting QC...",
     "qc_started": "QC job created — lot advanced to QC Review",
     "upload_unavailable": "Upload not available in current status.",
+    "upload_replaces": "Uploading a new image replaces the current QC result and re-runs the AI check.",
     "upload_image_only": "Only image files are allowed",
     "upload_too_large": "File too large (max 10MB)",
     "upload_network_error": "Network error during upload",

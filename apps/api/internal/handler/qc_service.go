@@ -159,12 +159,20 @@ func (s *QCService) CreateQCJob(ctx context.Context, req *connect.Request[qcv1.C
 
 	qtx := s.q.WithTx(tx)
 
-	// Reject a second QC job while one is already in flight for this lot, so a
-	// double-click (or re-upload during PENDING_QC) can't spawn duplicate jobs.
-	if active, err := qtx.CountActiveQCJobsForLot(ctx, msg.LotId); err != nil {
+	// Image-aware duplicate handling:
+	//   - Same lot + SAME image already in flight → reject (a double-click /
+	//     accidental resubmit of the identical image).
+	//   - Same lot + DIFFERENT image → the operator deliberately uploaded a new
+	//     image, which supersedes any in-flight job/result for the lot.
+	if same, err := qtx.CountActiveQCJobsForLotWithImage(ctx, db.CountActiveQCJobsForLotWithImageParams{
+		LotID: msg.LotId, ImageObjectKey: msg.ImageObjectKey,
+	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("count active qc jobs: %w", err))
-	} else if active > 0 {
-		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("lot already has an active QC job"))
+	} else if same > 0 {
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("a QC job for this image is already in progress"))
+	}
+	if err := qtx.SupersedeActiveQCJobsForLot(ctx, msg.LotId); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("supersede prior qc jobs: %w", err))
 	}
 
 	if err := qtx.CreateQCJob(ctx, db.CreateQCJobParams{
@@ -332,10 +340,35 @@ func (s *QCService) ReviewQC(ctx context.Context, req *connect.Request[qcv1.Revi
 		}
 		lotStatusAfter = "QC_REJECTED"
 	case qcv1.SupervisorDecision_SUPERVISOR_DECISION_RECHECK:
+		// Re-run the AI on the SAME image: re-queue the existing job and move
+		// the lot back to PENDING_QC. The qc.job.created event is emitted after
+		// commit (below) so the worker re-processes it; on completion the
+		// worker advances the lot back to QC_REVIEW with a fresh result.
+		if err := qtx.RequeueQCJob(ctx, msg.QcJobId); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("requeue qc job: %w", err))
+		}
 		if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{Status: db.LotsStatusPENDINGQC, ID: job.LotID}); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
 		}
 		lotStatusAfter = "PENDING_QC"
+		// Emit qc.job.created so the AI worker re-runs inference on the same
+		// image (mirrors CreateQCJob's payload shape).
+		recheckPayload, _ := json.Marshal(map[string]string{
+			"qc_job_id":        msg.QcJobId,
+			"lot_id":           job.LotID,
+			"image_object_key": job.ImageObjectKey,
+			"material_type":    string(lot.MaterialType),
+			"owner_user_id":    lot.CreatedBy,
+		})
+		recheckEnv, err := events.NewEnvelope("qc.job.created", reviewer, lot.CreatedBy, msg.QcJobId, json.RawMessage(recheckPayload))
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build recheck envelope: %w", err))
+		}
+		if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+			ID: uuid.NewString(), EventType: "qc.job.created", PayloadJson: recheckEnv,
+		}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create recheck outbox event: %w", err))
+		}
 	}
 
 	// Emit qc.job.reviewed event so the SSE bridge can fan out to QC supervisors

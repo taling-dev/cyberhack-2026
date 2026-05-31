@@ -140,6 +140,7 @@
     "starting_qc": "Memulai QC...",
     "qc_started": "Pekerjaan QC dibuat — lot beralih ke Tinjauan QC",
     "upload_unavailable": "Unggah tidak tersedia pada status ini.",
+    "upload_replaces": "Mengunggah gambar baru menggantikan hasil QC saat ini dan menjalankan ulang pemeriksaan AI.",
     "upload_image_only": "Hanya berkas gambar yang diperbolehkan",
     "upload_too_large": "Berkas terlalu besar (maks 10MB)",
     "upload_network_error": "Kesalahan jaringan saat mengunggah",

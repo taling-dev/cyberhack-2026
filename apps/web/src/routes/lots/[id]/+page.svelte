@@ -115,8 +115,16 @@
     }
   }
 
+  // Statuses where uploading (or re-uploading) a QC image is allowed:
+  // DRAFT(1), PENDING_QC(2), QC_REVIEW(4 — supervisor asked for a recheck or
+  // operator wants a better image), QC_REJECTED(6). A new image supersedes any
+  // in-flight QC job for the lot.
   const uploadAllowed = $derived(
-    [1, 2, 6].includes(lotQuery.data?.lot?.status ?? 0)
+    [1, 2, 4, 6].includes(lotQuery.data?.lot?.status ?? 0)
+  );
+  // True when a QC cycle already happened, so the upload is a replacement.
+  const isResubmit = $derived(
+    [4, 6].includes(lotQuery.data?.lot?.status ?? 0)
   );
 </script>
 
@@ -188,6 +196,11 @@
         {/if}
       {:else if uploadAllowed}
         <div class="space-y-2">
+          {#if isResubmit}
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+              {$t('qc.upload_replaces')}
+            </p>
+          {/if}
           <input
             type="file"
             accept="image/jpeg,image/png"

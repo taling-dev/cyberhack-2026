@@ -14,6 +14,26 @@ SELECT * FROM qc_jobs WHERE lot_id = ? ORDER BY created_at DESC;
 SELECT COUNT(*) FROM qc_jobs
 WHERE lot_id = ? AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW');
 
+-- name: CountActiveQCJobsForLotWithImage :one
+-- Same-image double-click guard: an active job already exists for this lot
+-- AND the same image. Re-submitting the identical image is a no-op we reject;
+-- a DIFFERENT image is a deliberate re-upload that supersedes the old job.
+SELECT COUNT(*) FROM qc_jobs
+WHERE lot_id = ? AND image_object_key = ?
+  AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW');
+
+-- name: SupersedeActiveQCJobsForLot :exec
+-- Terminate any in-flight jobs for a lot (used when a new image is uploaded,
+-- so the stale job/result is retired). FAILED is terminal and excluded from
+-- the dashboard recommendation breakdown, so it doesn't skew metrics.
+UPDATE qc_jobs SET status='FAILED', failure_reason='superseded by new image', completed_at=NOW()
+WHERE lot_id = ? AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW');
+
+-- name: RequeueQCJob :exec
+-- RECHECK: re-queue an existing job so the worker re-runs AI on the SAME image.
+UPDATE qc_jobs SET status='QUEUED', started_at=NULL, completed_at=NULL, failure_reason=NULL
+WHERE id = ?;
+
 -- name: ListQCJobsByStatus :many
 SELECT * FROM qc_jobs WHERE status = ? ORDER BY created_at DESC LIMIT ? OFFSET ?;
 

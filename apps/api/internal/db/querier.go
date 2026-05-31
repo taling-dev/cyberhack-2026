@@ -24,6 +24,10 @@ type Querier interface {
 	// Active = not yet in a terminal state (APPROVED/REJECTED/FAILED). Used to
 	// reject a duplicate CreateQCJob while a job for the lot is still in flight.
 	CountActiveQCJobsForLot(ctx context.Context, lotID string) (int64, error)
+	// Same-image double-click guard: an active job already exists for this lot
+	// AND the same image. Re-submitting the identical image is a no-op we reject;
+	// a DIFFERENT image is a deliberate re-upload that supersedes the old job.
+	CountActiveQCJobsForLotWithImage(ctx context.Context, arg CountActiveQCJobsForLotWithImageParams) (int64, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
 	CountDispatches(ctx context.Context) (int64, error)
 	CountDispatchesByStatus(ctx context.Context, status DispatchesStatus) (int64, error)
@@ -98,12 +102,18 @@ type Querier interface {
 	// Used when the publish call to NATS fails but the event hasn't yet exhausted
 	// its retry budget — the next poll cycle will pick it up again.
 	ReleaseClaimedToPending(ctx context.Context, id string) error
+	// RECHECK: re-queue an existing job so the worker re-runs AI on the SAME image.
+	RequeueQCJob(ctx context.Context, id string) error
 	// Called once on publisher startup. Recovers events left in PUBLISHING by a
 	// prior leader that crashed mid-publish. They go back to PENDING and the
 	// new leader's next poll cycle re-claims and re-publishes them. NATS
 	// `Nats-Msg-Id` dedup ensures stream consumers don't see duplicates.
 	ResetStuckPublishingEvents(ctx context.Context) (int64, error)
 	RevokeUserRole(ctx context.Context, arg RevokeUserRoleParams) error
+	// Terminate any in-flight jobs for a lot (used when a new image is uploaded,
+	// so the stale job/result is retired). FAILED is terminal and excluded from
+	// the dashboard recommendation breakdown, so it doesn't skew metrics.
+	SupersedeActiveQCJobsForLot(ctx context.Context, lotID string) error
 	UpdateDispatchStatus(ctx context.Context, arg UpdateDispatchStatusParams) error
 	UpdateIdempotencyResponse(ctx context.Context, arg UpdateIdempotencyResponseParams) error
 	UpdateLocationStatus(ctx context.Context, arg UpdateLocationStatusParams) error

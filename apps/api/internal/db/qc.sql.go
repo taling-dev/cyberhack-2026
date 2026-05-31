@@ -37,6 +37,27 @@ func (q *Queries) CountActiveQCJobsForLot(ctx context.Context, lotID string) (in
 	return count, err
 }
 
+const countActiveQCJobsForLotWithImage = `-- name: CountActiveQCJobsForLotWithImage :one
+SELECT COUNT(*) FROM qc_jobs
+WHERE lot_id = ? AND image_object_key = ?
+  AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW')
+`
+
+type CountActiveQCJobsForLotWithImageParams struct {
+	LotID          string `json:"lot_id"`
+	ImageObjectKey string `json:"image_object_key"`
+}
+
+// Same-image double-click guard: an active job already exists for this lot
+// AND the same image. Re-submitting the identical image is a no-op we reject;
+// a DIFFERENT image is a deliberate re-upload that supersedes the old job.
+func (q *Queries) CountActiveQCJobsForLotWithImage(ctx context.Context, arg CountActiveQCJobsForLotWithImageParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countActiveQCJobsForLotWithImage, arg.LotID, arg.ImageObjectKey)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countQCByRecommendation = `-- name: CountQCByRecommendation :many
 SELECT recommendation, COUNT(*) as count FROM qc_results WHERE created_at >= ? GROUP BY recommendation
 `
@@ -248,6 +269,30 @@ func (q *Queries) ListQCJobsByStatus(ctx context.Context, arg ListQCJobsByStatus
 		return nil, err
 	}
 	return items, nil
+}
+
+const requeueQCJob = `-- name: RequeueQCJob :exec
+UPDATE qc_jobs SET status='QUEUED', started_at=NULL, completed_at=NULL, failure_reason=NULL
+WHERE id = ?
+`
+
+// RECHECK: re-queue an existing job so the worker re-runs AI on the SAME image.
+func (q *Queries) RequeueQCJob(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, requeueQCJob, id)
+	return err
+}
+
+const supersedeActiveQCJobsForLot = `-- name: SupersedeActiveQCJobsForLot :exec
+UPDATE qc_jobs SET status='FAILED', failure_reason='superseded by new image', completed_at=NOW()
+WHERE lot_id = ? AND status IN ('QUEUED','PROCESSING','AI_COMPLETED','NEEDS_HUMAN_REVIEW')
+`
+
+// Terminate any in-flight jobs for a lot (used when a new image is uploaded,
+// so the stale job/result is retired). FAILED is terminal and excluded from
+// the dashboard recommendation breakdown, so it doesn't skew metrics.
+func (q *Queries) SupersedeActiveQCJobsForLot(ctx context.Context, lotID string) error {
+	_, err := q.db.ExecContext(ctx, supersedeActiveQCJobsForLot, lotID)
+	return err
 }
 
 const updateQCJobCompleted = `-- name: UpdateQCJobCompleted :exec
