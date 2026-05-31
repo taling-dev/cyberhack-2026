@@ -279,6 +279,14 @@
                 <span class="mt-3 inline-flex rounded-md px-2.5 py-1 text-xs font-bold ring-1 ring-inset {recommendationClass(aiResult.recommendation)}">
                   {recommendationLabel(aiResult.recommendation)}
                 </span>
+                <details class="mt-3 text-xs text-slate-500">
+                  <summary class="cursor-pointer font-medium text-slate-600 hover:text-slate-950">{$t('qc.rec_help_label')}</summary>
+                  <ul class="mt-2 space-y-1">
+                    <li class={aiResult.recommendation === 1 ? 'font-semibold text-slate-950' : ''}>{$t('qc.rec_help_pass')}</li>
+                    <li class={aiResult.recommendation === 2 ? 'font-semibold text-slate-950' : ''}>{$t('qc.rec_help_review')}</li>
+                    <li class={aiResult.recommendation === 3 ? 'font-semibold text-slate-950' : ''}>{$t('qc.rec_help_fail')}</li>
+                  </ul>
+                </details>
               </div>
 
               <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-4">

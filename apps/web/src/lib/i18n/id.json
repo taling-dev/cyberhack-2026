@@ -178,6 +178,10 @@
     "submitting": "Mengirim...",
     "review_failed": "Tinjauan gagal",
     "request_error": "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.",
+    "rec_help_label": "Apa arti status ini?",
+    "rec_help_pass": "PASS: AI yakin material memenuhi standar mutu. Menyetujui berisiko rendah.",
+    "rec_help_review": "REVIEW: AI ragu. Periksa gambar lalu putuskan; alasan wajib diisi untuk menyetujui.",
+    "rec_help_fail": "FAIL: AI mendeteksi kemungkinan cacat. Menyetujui menimpa AI dan memerlukan alasan.",
     "job_status": {
       "1": "Antre",
       "2": "Memproses",

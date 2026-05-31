@@ -178,6 +178,10 @@
     "submitting": "Submitting...",
     "review_failed": "Review failed",
     "request_error": "Something went wrong processing your request. Please try again.",
+    "rec_help_label": "What do these mean?",
+    "rec_help_pass": "PASS: AI is confident the material meets quality. Approving is low-risk.",
+    "rec_help_review": "REVIEW: AI is uncertain. Inspect the image and decide; a reason is required to approve.",
+    "rec_help_fail": "FAIL: AI detected a likely defect. Approving overrides the AI and requires a reason.",
     "job_status": {
       "1": "Queued",
       "2": "Processing",
