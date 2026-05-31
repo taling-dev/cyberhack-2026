@@ -1,153 +1,193 @@
 <script lang="ts">
-  import { t } from 'svelte-i18n';
+  import { page } from '$app/stores';
+  import { t, locale } from 'svelte-i18n';
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
   import { DashboardService } from '$lib/gen/simaops/dashboard/v1/dashboard_pb';
+  import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
+  import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
+  import AIQueueCard from '$lib/components/dashboard/AIQueueCard.svelte';
+  import CompactLotTable from '$lib/components/dashboard/CompactLotTable.svelte';
+  import DashboardIcon from '$lib/components/dashboard/DashboardIcon.svelte';
+  import FeatureStrip from '$lib/components/dashboard/FeatureStrip.svelte';
+  import KpiCard from '$lib/components/dashboard/KpiCard.svelte';
+  import LatestInspectionCard from '$lib/components/dashboard/LatestInspectionCard.svelte';
+  import QCMetricsTrendCard from '$lib/components/dashboard/QCMetricsTrendCard.svelte';
+  import StatusDistributionCard from '$lib/components/dashboard/StatusDistributionCard.svelte';
+  import WarehouseCapacityCard from '$lib/components/dashboard/WarehouseCapacityCard.svelte';
 
-  const client = createClient(DashboardService, transport);
+  const dashboardClient = createClient(DashboardService, transport);
+  const lotClient = createClient(LotService, transport);
+  const qcClient = createClient(QCService, transport);
 
-  // Auto-refresh every 30s
+  // Preserve the existing DashboardService queries and query keys.
   const opsQuery = createQuery(() => ({
     queryKey: ['dashboard-ops'],
-    queryFn: () => client.getOpsDashboard({}),
+    queryFn: () => dashboardClient.getOpsDashboard({}),
     refetchInterval: 30_000,
   }));
 
   const qcQuery = createQuery(() => ({
     queryKey: ['dashboard-qc'],
-    queryFn: () => client.getQCMetrics({ hours: 24 }),
+    queryFn: () => dashboardClient.getQCMetrics({ hours: 24 }),
     refetchInterval: 30_000,
   }));
 
   const whQuery = createQuery(() => ({
     queryKey: ['dashboard-warehouse'],
-    queryFn: () => client.getWarehouseMetrics({}),
+    queryFn: () => dashboardClient.getWarehouseMetrics({}),
     refetchInterval: 30_000,
+  }));
+
+  // Dashboard-only supporting reads. These use existing APIs and query-key
+  // prefixes already invalidated by the realtime store.
+  const newestLotsQuery = createQuery(() => ({
+    queryKey: ['lots', 'dashboard-newest'],
+    queryFn: () => lotClient.listLots({ pageSize: 5 }),
+    refetchInterval: 30_000,
+  }));
+
+  const qcQueueQuery = createQuery(() => ({
+    queryKey: ['qc-review-lots', 'dashboard'],
+    queryFn: () => lotClient.listLots({ pageSize: 4, statusFilter: 4 }),
+    refetchInterval: 15_000,
+  }));
+
+  const latestReviewLot = $derived(qcQueueQuery.data?.lots?.[0] ?? null);
+
+  const latestQcJobQuery = createQuery(() => ({
+    queryKey: ['qc-job-for-lot', latestReviewLot?.id],
+    queryFn: () => qcClient.getQCJob({ lotId: latestReviewLot!.id, qcJobId: '' }),
+    enabled: !!latestReviewLot?.id,
+    retry: false,
+    refetchInterval: 30_000,
+  }));
+
+  const latestQcResultQuery = createQuery(() => ({
+    queryKey: ['qc-result', latestQcJobQuery.data?.job?.id],
+    queryFn: () => qcClient.getQCResult({ qcJobId: latestQcJobQuery.data!.job!.id }),
+    enabled: !!latestQcJobQuery.data?.job?.id,
+    retry: false,
+    refetchInterval: (query) => (query.state.data?.result ? false : 15_000),
+  }));
+
+  const latestImageUrlQuery = createQuery(() => ({
+    queryKey: ['qc-image-url', latestQcJobQuery.data?.job?.imageObjectKey],
+    queryFn: () => qcClient.createQCViewUrl({ objectKey: latestQcJobQuery.data!.job!.imageObjectKey }),
+    enabled: !!latestQcJobQuery.data?.job?.imageObjectKey,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
   }));
 
   const lastUpdated = $derived(
     [opsQuery.dataUpdatedAt, qcQuery.dataUpdatedAt, whQuery.dataUpdatedAt]
       .filter(Boolean)
-      .reduce((max, t) => Math.max(max, t), 0)
+      .reduce((max, time) => Math.max(max, time), 0)
   );
-  const lastUpdatedLabel = $derived(lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : '—');
+  const lastUpdatedLabel = $derived(lastUpdated ? new Date(lastUpdated).toLocaleTimeString('en-US') : '-');
 
   const isLoading = $derived(opsQuery.isLoading || qcQuery.isLoading || whQuery.isLoading);
-  const isError = $derived(opsQuery.isError && qcQuery.isError && whQuery.isError);
+  const isError = $derived(opsQuery.isError || qcQuery.isError || whQuery.isError);
+  const userName = $derived($page.data.user?.name ?? 'Operator');
+  const dateLabel = new Intl.DateTimeFormat('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date());
+
+  const warehouseUtilization = $derived(
+    whQuery.data?.totalCapacity ? whQuery.data.totalOccupied / whQuery.data.totalCapacity : null
+  );
+
+  function formatNumber(value?: number | null) {
+    return value == null ? '-' : value.toLocaleString('en-US');
+  }
+
+  function formatPercentRatio(value?: number | null) {
+    return value == null ? '-' : `${Math.round(value * 1000) / 10}%`;
+  }
 </script>
 
-<div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">{$t('nav.dashboard')}</h1>
-    <div class="text-xs text-gray-500 flex items-center gap-2">
-      {#if isLoading}
-        <span class="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" aria-hidden="true"></span>
-      {:else}
-        <span class="inline-block w-2 h-2 rounded-full bg-green-500" aria-hidden="true"></span>
-      {/if}
-      {$t('dashboard.last_updated')}: {lastUpdatedLabel}
+<div class="flex min-h-screen flex-col gap-3 xl:h-full xl:min-h-0 xl:overflow-hidden">
+  <header class="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+      <h1 class="text-[28px] font-bold tracking-normal text-slate-950">{$t('nav.dashboard')}</h1>
+      <p class="mt-1 text-sm text-slate-600">Welcome back, {userName}</p>
     </div>
-  </div>
+
+    <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+      <span class="flex items-center gap-2 font-medium">
+        <span class="size-2.5 rounded-full {isLoading ? 'animate-pulse bg-blue-500' : 'bg-green-500'}"></span>
+        {$t('dashboard.last_updated')}: {lastUpdatedLabel}
+      </span>
+      <span class="flex h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-slate-900 shadow-sm">
+        <DashboardIcon name="calendar" class="size-5 text-slate-700" />
+        {dateLabel}
+      </span>
+      <span class="flex h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-slate-900 shadow-sm">
+        <DashboardIcon name="globe" class="size-5 text-slate-700" />
+        {$t(`locale.${$locale}`)}
+      </span>
+      <span class="relative flex size-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-900 shadow-sm">
+        <DashboardIcon name="bell" class="size-5" />
+        {#if (qcQueueQuery.data?.lots?.length ?? 0) > 0}
+          <span class="absolute right-2 top-2 size-2.5 rounded-full bg-red-500"></span>
+        {/if}
+      </span>
+    </div>
+  </header>
 
   {#if isError}
-    <div class="p-4 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-      {$t('common.error')} — {opsQuery.error?.message || qcQuery.error?.message || whQuery.error?.message}
+    <div class="shrink-0 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {$t('common.error')}: {opsQuery.error?.message || qcQuery.error?.message || whQuery.error?.message}
     </div>
   {/if}
 
-  <!-- Ops KPIs -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="border rounded-lg p-4 bg-white">
-      <p class="text-sm text-gray-500">{$t('dashboard.total_lots')}</p>
-      <p class="text-3xl font-bold">{opsQuery.data?.totalLots ?? '—'}</p>
-    </div>
-    <div class="border rounded-lg p-4 bg-white">
-      <p class="text-sm text-gray-500">{$t('dashboard.awaiting_qc')}</p>
-      <p class="text-3xl font-bold text-orange-600">{opsQuery.data?.lotsAwaitingQc ?? '—'}</p>
-    </div>
-    <div class="border rounded-lg p-4 bg-white">
-      <p class="text-sm text-gray-500">{$t('dashboard.ready_for_production')}</p>
-      <p class="text-3xl font-bold text-green-600">{opsQuery.data?.lotsReadyForProduction ?? '—'}</p>
-    </div>
-    <div class="border rounded-lg p-4 bg-white">
-      <p class="text-sm text-gray-500">{$t('dashboard.qc_pass_rate')}</p>
-      <p class="text-3xl font-bold text-blue-600">
-        {qcQuery.data?.passRate != null ? `${Math.round(qcQuery.data.passRate * 100)}%` : '—'}
-      </p>
-    </div>
-  </div>
+  <section class="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+    <KpiCard title="Total Lot" value={formatNumber(opsQuery.data?.totalLots)} icon="cube" tone="purple" loading={opsQuery.isLoading} />
+    <KpiCard title="Waiting for QC" value={formatNumber(opsQuery.data?.lotsAwaitingQc)} icon="clock" tone="orange" loading={opsQuery.isLoading} />
+    <KpiCard title="Production Ready" value={formatNumber(opsQuery.data?.lotsReadyForProduction)} icon="check-circle" tone="green" loading={opsQuery.isLoading} />
+    <KpiCard title="QC Pass Rate (24h)" value={formatPercentRatio(qcQuery.data?.passRate)} icon="percent" tone="blue" loading={qcQuery.isLoading} />
+    <KpiCard title="AI Confidence Rate" value={formatPercentRatio(qcQuery.data?.averageConfidence)} icon="bot" tone="red" loading={qcQuery.isLoading} />
+    <KpiCard title="Warehouse Utilization" value={formatPercentRatio(warehouseUtilization)} icon="warehouse" tone="emerald" loading={whQuery.isLoading} />
+  </section>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- QC Metrics -->
-    <div class="border rounded-lg p-4 bg-white space-y-3">
-      <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('dashboard.qc_metrics')}</h2>
-      {#if qcQuery.isLoading}
-        <p class="text-gray-400 text-sm">{$t('common.loading')}</p>
-      {:else}
-        <div class="grid grid-cols-3 gap-3 text-center">
-          <div>
-            <p class="text-2xl font-bold text-green-600">{qcQuery.data?.passCount ?? 0}</p>
-            <p class="text-xs text-gray-500">{$t('dashboard.qc_pass')}</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-yellow-600">{qcQuery.data?.reviewCount ?? 0}</p>
-            <p class="text-xs text-gray-500">{$t('dashboard.qc_review')}</p>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-red-600">{qcQuery.data?.failCount ?? 0}</p>
-            <p class="text-xs text-gray-500">{$t('dashboard.qc_fail')}</p>
-          </div>
-        </div>
-        <div class="text-sm text-gray-500">
-          {$t('dashboard.avg_confidence')}:
-          <span class="font-medium">{qcQuery.data?.averageConfidence != null ? `${Math.round(qcQuery.data.averageConfidence * 100)}%` : '—'}</span>
-          · {$t('dashboard.pending_review')}: <span class="font-medium">{qcQuery.data?.pendingReviewCount ?? 0}</span>
-        </div>
-      {/if}
+  <div class="grid flex-1 grid-cols-1 gap-3 overflow-visible xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:overflow-hidden">
+    <div class="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1.15fr_.95fr_.95fr]">
+      <QCMetricsTrendCard
+        passCount={qcQuery.data?.passCount ?? 0}
+        reviewCount={qcQuery.data?.reviewCount ?? 0}
+        failCount={qcQuery.data?.failCount ?? 0}
+        loading={qcQuery.isLoading}
+      />
+      <StatusDistributionCard
+        statuses={opsQuery.data?.lotsByStatus ?? []}
+        total={opsQuery.data?.totalLots ?? 0}
+        loading={opsQuery.isLoading}
+      />
+      <WarehouseCapacityCard
+        zones={whQuery.data?.zones ?? []}
+        totalCapacity={whQuery.data?.totalCapacity ?? 0}
+        totalOccupied={whQuery.data?.totalOccupied ?? 0}
+        loading={whQuery.isLoading}
+      />
     </div>
 
-    <!-- Warehouse Metrics -->
-    <div class="border rounded-lg p-4 bg-white space-y-3">
-      <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('dashboard.warehouse_capacity')}</h2>
-      {#if whQuery.isLoading}
-        <p class="text-gray-400 text-sm">{$t('common.loading')}</p>
-      {:else}
-        <div class="space-y-2">
-          {#each whQuery.data?.zones ?? [] as zone}
-            {@const pct = zone.totalCapacity > 0 ? Math.round((zone.available / zone.totalCapacity) * 100) : 0}
-            <div>
-              <div class="flex items-center justify-between text-sm mb-1">
-                <span class="font-medium">{zone.zone}</span>
-                <span class="text-gray-500">{zone.available} / {zone.totalCapacity} {$t('dashboard.available')}</span>
-              </div>
-              <div class="h-2 bg-gray-100 rounded-full overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin="0" aria-valuemax="100">
-                <div class="h-full bg-blue-500 transition-all" style="width: {pct}%"></div>
-              </div>
-            </div>
-          {/each}
-        </div>
-        <div class="text-sm text-gray-500 border-t pt-2">
-          {$t('dashboard.total_label')}: <span class="font-medium">{whQuery.data?.totalAvailable ?? 0}</span> / {whQuery.data?.totalCapacity ?? 0} {$t('dashboard.slots_available')}
-        </div>
-      {/if}
+    <div class="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[.75fr_.95fr_2fr]">
+      <AIQueueCard lots={qcQueueQuery.data?.lots ?? []} loading={qcQueueQuery.isLoading} />
+      <LatestInspectionCard
+        lot={latestReviewLot}
+        result={latestQcResultQuery.data?.result ?? null}
+        imageUrl={latestImageUrlQuery.data?.viewUrl ?? ''}
+        loading={qcQueueQuery.isLoading || latestQcJobQuery.isLoading || latestQcResultQuery.isLoading}
+        unavailable={!latestReviewLot || latestQcJobQuery.isError || latestQcResultQuery.isError}
+      />
+      <CompactLotTable lots={newestLotsQuery.data?.lots ?? []} loading={newestLotsQuery.isLoading} />
     </div>
-  </div>
 
-  <!-- Lot Status Distribution -->
-  <div class="border rounded-lg p-4 bg-white space-y-3">
-    <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('dashboard.lot_distribution')}</h2>
-    {#if opsQuery.isLoading}
-      <p class="text-gray-400 text-sm">{$t('common.loading')}</p>
-    {:else}
-      <div class="flex flex-wrap gap-3">
-        {#each opsQuery.data?.lotsByStatus ?? [] as sc}
-          <div class="px-3 py-2 rounded-md bg-gray-50 border text-sm">
-            <span class="font-medium">{sc.count}</span>
-            <span class="text-gray-500 ml-1">{sc.status?.replace(/_/g, ' ').toLowerCase()}</span>
-          </div>
-        {/each}
-      </div>
-    {/if}
+    <div class="hidden shrink-0 overflow-hidden xl:block">
+      <FeatureStrip />
+    </div>
   </div>
 </div>
