@@ -1,0 +1,128 @@
+# Warehouse Intelligence System - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+env.bak/
+venv.bak/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Type checking
+.mypy_cache
+.dmypy.json
+dmypy.json
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*.postgres_dump
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Configuration
+.env
+.env.local
+.env.*.local
+
+# Models & Artifacts
+models/
+*.h5
+*.pkl
+*.pickle
+*.joblib
+*.pth
+
+# Data
+data/
+datasets/
+raw_data/
+processed_data/
+
+# Docker
+docker-compose.override.yml
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+
+# OS specific
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Misc
+.cache/
+.vscode-test/
+*.code-workspace
