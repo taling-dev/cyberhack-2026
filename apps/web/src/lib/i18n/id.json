@@ -286,7 +286,7 @@
     "create_role": "Buat peran",
     "create_role_hint": "Peran khusus langsung berlaku. Pilih tindakan yang boleh dilakukannya.",
     "temp_password": "Kata sandi sementara",
-    "temp_password_hint": "Pengguna harus menggantinya saat masuk pertama kali.",
+    "temp_password_hint": "Pengguna harus menggantinya saat masuk pertama kali. Minimal 8 karakter.",
     "initial_roles": "Peran awal",
     "role_name": "Nama peran",
     "description": "Deskripsi",

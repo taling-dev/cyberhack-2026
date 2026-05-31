@@ -101,7 +101,10 @@ func (s *AdminService) CreateUser(ctx context.Context, req *connect.Request[admi
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("temporary password required"))
 	}
 	if _, err := s.q.GetUserByUsername(ctx, username); err == nil {
-		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("user %s already exists", username))
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("username %s already exists", username))
+	}
+	if _, err := s.q.GetUserByEmail(ctx, email); err == nil {
+		return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("email %s already exists", email))
 	}
 
 	// Provision in Keycloak first (source of truth for auth). If KC is

@@ -16,6 +16,9 @@ SELECT * FROM users_profile WHERE username = ?;
 -- name: GetUserByID :one
 SELECT * FROM users_profile WHERE id = ?;
 
+-- name: GetUserByEmail :one
+SELECT * FROM users_profile WHERE email = ?;
+
 -- name: ListRoles :many
 SELECT * FROM roles ORDER BY name;
 

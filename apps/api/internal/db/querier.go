@@ -70,6 +70,7 @@ type Querier interface {
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
 	GetRoleByID(ctx context.Context, id string) (Role, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
+	GetUserByEmail(ctx context.Context, email string) (UsersProfile, error)
 	GetUserByID(ctx context.Context, id string) (UsersProfile, error)
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
 	GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error)

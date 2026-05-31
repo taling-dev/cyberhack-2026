@@ -100,7 +100,7 @@
       await client.createUser({ username: cuUsername.trim(), email: cuEmail.trim(), fullName: cuName.trim(), tempPassword: cuPassword, roleNames: cuRoles });
       showCreateUser = false;
       refetchAll();
-    } catch { cuError = $t('admin.cu_failed'); } finally { cuBusy = false; }
+    } catch (e: any) { cuError = e?.message || $t('admin.cu_failed'); } finally { cuBusy = false; }
   }
 
   // ── Create role ───────────────────────────────────────────────────
@@ -122,7 +122,7 @@
       await client.createRole({ name: crName.trim(), description: crDesc.trim(), permissions: crPerms });
       showCreateRole = false;
       refetchAll();
-    } catch { crError = $t('admin.cr_failed'); } finally { crBusy = false; }
+    } catch (e: any) { crError = e?.message || $t('admin.cr_failed'); } finally { crBusy = false; }
   }
 
   async function deleteRole(roleId: string, name: string) {

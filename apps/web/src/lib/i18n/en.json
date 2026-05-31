@@ -286,7 +286,7 @@
     "create_role": "Create role",
     "create_role_hint": "Custom roles take effect immediately. Pick which actions they may perform.",
     "temp_password": "Temporary password",
-    "temp_password_hint": "The user must change this at first sign-in.",
+    "temp_password_hint": "The user must change this at first sign-in. Min 8 characters.",
     "initial_roles": "Initial roles",
     "role_name": "Role name",
     "description": "Description",

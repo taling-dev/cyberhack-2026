@@ -138,6 +138,25 @@ func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) 
 	return i, err
 }
 
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, username, email, full_name, active, created_at, updated_at FROM users_profile WHERE email = ?
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (UsersProfile, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i UsersProfile
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.FullName,
+		&i.Active,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
 SELECT id, username, email, full_name, active, created_at, updated_at FROM users_profile WHERE id = ?
 `
