@@ -130,7 +130,7 @@
 
 <div class="max-w-3xl space-y-6">
   {#if lotQuery.isLoading}
-    <p class="text-gray-500">{$t('common.loading')}</p>
+    <p class="text-slate-500">{$t('common.loading')}</p>
   {:else if lotQuery.isError}
     <div class="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
       {lotQuery.error?.message || $t('common.error')}
@@ -139,49 +139,49 @@
     {@const lot = lotQuery.data.lot}
     <div class="flex items-center justify-between">
       <div>
-        <a href="/lots" class="text-sm text-gray-500 hover:text-blue-600">{$t('lot.back_to_lots')}</a>
-        <h1 class="text-2xl font-bold mt-1">{lot.lotNumber}</h1>
-        <p class="text-gray-500 text-sm">{lot.materialName} — {lot.supplierName}</p>
+        <a href="/lots" class="text-sm text-slate-500 transition-colors hover:text-blue-600">{$t('lot.back_to_lots')}</a>
+        <h1 class="text-2xl font-bold tracking-normal text-slate-950 mt-1">{lot.lotNumber}</h1>
+        <p class="text-slate-500 text-sm">{lot.materialName} — {lot.supplierName}</p>
       </div>
-      <span class="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
+      <span class="rounded-md px-2.5 py-1 text-xs font-semibold bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200">
         {$t(`lot_status.${lot.status}`)}
       </span>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="border rounded-lg p-4 space-y-3 bg-white">
-        <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('lot.details')}</h2>
+      <div class="border border-slate-200 shadow-sm rounded-lg p-4 space-y-3 bg-white">
+        <h2 class="font-semibold text-sm text-slate-500 uppercase tracking-normal">{$t('lot.details')}</h2>
         <dl class="space-y-2 text-sm">
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.material_type')}</dt><dd>{$t(`material_type.${lot.materialType}`)}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.quantity')}</dt><dd>{lot.quantity} {lot.unit}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.arrival_date')}</dt><dd>{lot.arrivalDate}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.created_by')}</dt><dd>{lot.createdBy}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('common.created')}</dt><dd>{lot.createdAt ? new Date(Number(lot.createdAt.seconds) * 1000).toLocaleString() : ''}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.material_type')}</dt><dd class="text-slate-950">{$t(`material_type.${lot.materialType}`)}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.quantity')}</dt><dd class="text-slate-950">{lot.quantity} {lot.unit}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.arrival_date')}</dt><dd class="text-slate-950">{lot.arrivalDate}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.created_by')}</dt><dd class="text-slate-950">{lot.createdBy}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('common.created')}</dt><dd class="text-slate-950">{lot.createdAt ? new Date(Number(lot.createdAt.seconds) * 1000).toLocaleString() : ''}</dd></div>
         </dl>
       </div>
 
-      <div class="border rounded-lg p-4 space-y-3 bg-white">
-        <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('lot.storage_requirement')}</h2>
+      <div class="border border-slate-200 shadow-sm rounded-lg p-4 space-y-3 bg-white">
+        <h2 class="font-semibold text-sm text-slate-500 uppercase tracking-normal">{$t('lot.storage_requirement')}</h2>
         <dl class="space-y-2 text-sm">
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.temperature_range')}</dt><dd>{lot.storageRequirement?.temperatureRange ? $t(`temp_range.${lot.storageRequirement.temperatureRange}`) : '—'}</dd></div>
-          <div class="flex justify-between"><dt class="text-gray-500">{$t('lot.hazard_class')}</dt><dd>{lot.storageRequirement?.hazardClass ? $t(`hazard.${lot.storageRequirement.hazardClass}`) : '—'}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.temperature_range')}</dt><dd class="text-slate-950">{lot.storageRequirement?.temperatureRange ? $t(`temp_range.${lot.storageRequirement.temperatureRange}`) : '—'}</dd></div>
+          <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.hazard_class')}</dt><dd class="text-slate-950">{lot.storageRequirement?.hazardClass ? $t(`hazard.${lot.storageRequirement.hazardClass}`) : '—'}</dd></div>
         </dl>
       </div>
     </div>
 
     <!-- QC Image Upload -->
-    <div class="border rounded-lg p-4 space-y-3 bg-white">
-      <h2 class="font-semibold text-sm text-gray-500 uppercase">{$t('qc.image_upload')}</h2>
+    <div class="border border-slate-200 shadow-sm rounded-lg p-4 space-y-3 bg-white">
+      <h2 class="font-semibold text-sm text-slate-500 uppercase tracking-normal">{$t('qc.image_upload')}</h2>
       {#if uploadedKey}
-        <div class="flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded">
+        <div class="flex items-center gap-2 text-emerald-700 bg-emerald-50 p-3 rounded-md">
           <span aria-hidden="true">✓</span>
-          <span class="text-sm">{$t('qc.image_uploaded')}: <code class="text-xs break-all">{uploadedKey}</code></span>
+          <span class="text-sm">{$t('qc.image_uploaded')}: <code class="font-mono text-xs break-all">{uploadedKey}</code></span>
         </div>
         {#if !qcStarted}
           <button
             onclick={handleStartQC}
             disabled={startingQC}
-            class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 text-sm disabled:opacity-50"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-semibold disabled:opacity-50"
           >
             {startingQC ? $t('qc.starting_qc') : $t('qc.start_qc')}
           </button>
@@ -189,7 +189,7 @@
             <p class="text-sm text-red-600">{qcError}</p>
           {/if}
         {:else}
-          <div class="flex items-center gap-2 text-blue-700 bg-blue-50 p-3 rounded">
+          <div class="flex items-center gap-2 text-blue-700 bg-blue-50 p-3 rounded-md">
             <span aria-hidden="true">🔬</span>
             <span class="text-sm">{$t('qc.qc_started')}</span>
           </div>
@@ -197,7 +197,7 @@
       {:else if uploadAllowed}
         <div class="space-y-2">
           {#if isResubmit}
-            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
               {$t('qc.upload_replaces')}
             </p>
           {/if}
@@ -207,20 +207,20 @@
             onchange={handleUpload}
             disabled={uploading}
             aria-label="Upload QC image"
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
           {#if uploading}
-            <div class="w-full bg-gray-200 rounded-full h-2" role="progressbar" aria-valuenow={uploadProgress} aria-valuemin="0" aria-valuemax="100">
+            <div class="w-full bg-slate-200 rounded-full h-2" role="progressbar" aria-valuenow={uploadProgress} aria-valuemin="0" aria-valuemax="100">
               <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: {uploadProgress}%"></div>
             </div>
-            <p class="text-xs text-gray-500">{uploadProgress}%</p>
+            <p class="text-xs text-slate-500">{uploadProgress}%</p>
           {/if}
           {#if uploadError}
             <p class="text-sm text-red-600">{uploadError}</p>
           {/if}
         </div>
       {:else}
-        <p class="text-sm text-gray-400">
+        <p class="text-sm text-slate-400">
           {#if lot.status === 3}
             {$t('qc.upload_processing')}
           {:else if [5, 7, 8].includes(lot.status)}
@@ -233,25 +233,25 @@
     </div>
 
     <!-- Timeline -->
-    <div class="border rounded-lg p-4 bg-white">
-      <h2 class="font-semibold text-sm text-gray-500 uppercase mb-3">{$t('common.timeline')}</h2>
+    <div class="border border-slate-200 shadow-sm rounded-lg p-4 bg-white">
+      <h2 class="font-semibold text-sm text-slate-500 uppercase tracking-normal mb-3">{$t('common.timeline')}</h2>
       {#if timelineQuery.isLoading}
-        <p class="text-gray-400 text-sm">{$t('lot.loading_timeline')}</p>
+        <p class="text-slate-400 text-sm">{$t('lot.loading_timeline')}</p>
       {:else if (timelineQuery.data?.entries?.length ?? 0) > 0}
         <div class="space-y-3">
           {#each timelineQuery.data?.entries ?? [] as entry}
             <div class="flex gap-3 text-sm">
               <div class="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" aria-hidden="true"></div>
               <div>
-                <span class="font-medium font-mono text-xs">{entry.action}</span>
-                <span class="text-gray-400 ml-2">by {entry.actorUserId} ({entry.actorRole})</span>
-                <p class="text-xs text-gray-400">{entry.createdAt ? new Date(Number(entry.createdAt.seconds) * 1000).toLocaleString() : ''}</p>
+                <span class="font-medium font-mono text-xs text-slate-950">{entry.action}</span>
+                <span class="text-slate-500 ml-2">by {entry.actorUserId} ({entry.actorRole})</span>
+                <p class="text-xs text-slate-400">{entry.createdAt ? new Date(Number(entry.createdAt.seconds) * 1000).toLocaleString() : ''}</p>
               </div>
             </div>
           {/each}
         </div>
       {:else}
-        <p class="text-gray-400 text-sm">{$t('lot.no_timeline')}</p>
+        <p class="text-slate-400 text-sm">{$t('lot.no_timeline')}</p>
       {/if}
     </div>
   {/if}
