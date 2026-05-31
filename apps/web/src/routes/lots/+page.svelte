@@ -12,7 +12,7 @@
   let statusFilter = $state(0);
   let materialFilter = $state(0);
   let pageToken = $state('');
-  let pageHistory = $state<string[]>(['']); // for back navigation
+  let pageHistory = $state<string[]>(['']);
 
   const lotsQuery = createQuery(() => ({
     queryKey: ['lots', statusFilter, materialFilter, pageToken],
@@ -24,13 +24,20 @@
     }),
   }));
 
-  const statusColors: Record<number, string> = {
-    1: 'bg-gray-100 text-gray-700', 2: 'bg-yellow-100 text-yellow-700',
-    3: 'bg-blue-100 text-blue-700', 4: 'bg-orange-100 text-orange-700',
-    5: 'bg-green-100 text-green-700', 6: 'bg-red-100 text-red-700',
-    7: 'bg-purple-100 text-purple-700', 8: 'bg-emerald-100 text-emerald-700',
-    9: 'bg-red-200 text-red-800'
+  const statusMeta: Record<number, { tone: string; dot: string }> = {
+    1: { tone: 'bg-slate-100 text-slate-700 ring-slate-200', dot: 'bg-slate-400' },
+    2: { tone: 'bg-yellow-100 text-yellow-800 ring-yellow-200', dot: 'bg-yellow-500' },
+    3: { tone: 'bg-blue-100 text-blue-700 ring-blue-200', dot: 'bg-blue-500' },
+    4: { tone: 'bg-orange-100 text-orange-700 ring-orange-200', dot: 'bg-orange-500' },
+    5: { tone: 'bg-emerald-100 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-500' },
+    6: { tone: 'bg-red-100 text-red-700 ring-red-200', dot: 'bg-red-500' },
+    7: { tone: 'bg-purple-100 text-purple-700 ring-purple-200', dot: 'bg-purple-500' },
+    8: { tone: 'bg-green-100 text-green-700 ring-green-200', dot: 'bg-green-500' },
+    9: { tone: 'bg-red-100 text-red-800 ring-red-200', dot: 'bg-red-600' },
   };
+
+  const statusOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const materialOptions = [1, 2, 3, 4];
 
   function nextPage() {
     const next = lotsQuery.data?.nextPageToken;
@@ -39,6 +46,7 @@
       pageToken = next;
     }
   }
+
   function prevPage() {
     if (pageHistory.length > 1) {
       pageHistory = pageHistory.slice(0, -1);
@@ -46,132 +54,255 @@
     }
   }
 
+  function resetPaging() {
+    pageToken = '';
+    pageHistory = [''];
+  }
+
+  function clearFilters() {
+    statusFilter = 0;
+    materialFilter = 0;
+    resetPaging();
+  }
+
+  function formatDate(seconds?: bigint | number | string) {
+    if (!seconds) return '-';
+    return new Date(Number(seconds) * 1000).toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+    });
+  }
+
+  function formatQuantity(value: number) {
+    return Number.isInteger(value)
+      ? value.toLocaleString('en-US')
+      : value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  }
+
+  function statusClass(status: number) {
+    return statusMeta[status]?.tone ?? statusMeta[1].tone;
+  }
+
+  function statusDot(status: number) {
+    return statusMeta[status]?.dot ?? statusMeta[1].dot;
+  }
+
   const lots = $derived(lotsQuery.data?.lots ?? []);
   const hasNext = $derived(!!lotsQuery.data?.nextPageToken);
   const hasPrev = $derived(pageHistory.length > 1);
+  const filtersActive = $derived(statusFilter !== 0 || materialFilter !== 0);
 
-  // Only OPERATOR/ADMIN can create lots (matches the CreateLot RBAC + the
-  // /lots/new route guard); hide the button for everyone else.
   const canCreate = $derived(
-    ($page.data.user?.roles ?? []).some((r: string) => r === 'OPERATOR' || r === 'ADMIN')
+    ($page.data.user?.roles ?? []).some((role: string) => role === 'OPERATOR' || role === 'ADMIN')
   );
 </script>
 
-<div class="space-y-4">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold">{$t('lot.list_title')}</h1>
-    {#if canCreate}
-    <a href="/lots/new" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
-      {$t('lot.create_button')}
-    </a>
-    {/if}
-  </div>
-
-  <!-- Filters -->
-  <div class="flex flex-wrap items-center gap-3">
+<div class="space-y-5">
+  <header class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
     <div>
-      <label for="status-filter" class="sr-only">{$t('common.status')}</label>
-      <select
-        id="status-filter"
-        bind:value={statusFilter}
-        onchange={() => { pageToken = ''; pageHistory = ['']; }}
-        class="border rounded-md px-3 py-1.5 text-sm"
-      >
-        <option value={0}>{$t('lot.filter_all_statuses')}</option>
-        {#each [1,2,3,4,5,6,7,8,9] as s}
-          <option value={s}>{$t(`lot_status.${s}`)}</option>
-        {/each}
-      </select>
+      <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Operations</p>
+      <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">{$t('lot.list_title')}</h1>
+      <p class="mt-1 text-sm text-slate-600">Manage incoming material lots and production readiness.</p>
     </div>
-    <div>
-      <label for="material-filter" class="sr-only">{$t('lot.material')}</label>
-      <select
-        id="material-filter"
-        bind:value={materialFilter}
-        onchange={() => { pageToken = ''; pageHistory = ['']; }}
-        class="border rounded-md px-3 py-1.5 text-sm"
-      >
-        <option value={0}>{$t('lot.filter_all_materials')}</option>
-        {#each [1,2,3,4] as m}
-          <option value={m}>{$t(`material_type.${m}`)}</option>
-        {/each}
-      </select>
-    </div>
-    {#if statusFilter !== 0 || materialFilter !== 0}
-      <button
-        onclick={() => { statusFilter = 0; materialFilter = 0; pageToken = ''; pageHistory = ['']; }}
-        class="text-xs text-gray-500 hover:text-gray-900 underline"
-      >
-        {$t('common.clear_filters')}
-      </button>
-    {/if}
-    <div class="ml-auto text-xs text-gray-500">
-      {lots.length} {lots.length === 1 ? $t('common.result') : $t('common.results')} {$t('common.results_on_page')}
-    </div>
-  </div>
 
-  <!-- Table -->
-  {#if lotsQuery.isLoading}
-    <div class="flex items-center justify-center py-12 text-gray-500">
-      <div class="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3" aria-hidden="true"></div>
-      {$t('common.loading')}
+    <div class="flex items-center gap-3">
+      <span class="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 shadow-sm">
+        {lots.length} {lots.length === 1 ? $t('common.result') : $t('common.results')} on this page
+      </span>
+      {#if canCreate}
+        <a href="/lots/new" class="inline-flex h-10 items-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700">
+          <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+          {$t('lot.create_button').replace('+ ', '')}
+        </a>
+      {/if}
     </div>
-  {:else if lotsQuery.isError}
-    <div class="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-      {$t('common.error')} — {lotsQuery.error?.message}
+  </header>
+
+  <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
+      <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row">
+        <div class="min-w-[190px]">
+          <label for="status-filter" class="mb-1 block text-xs font-semibold text-slate-500">Status</label>
+          <select
+            id="status-filter"
+            bind:value={statusFilter}
+            onchange={resetPaging}
+            class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none transition-colors hover:bg-slate-50 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          >
+            <option value={0}>{$t('lot.filter_all_statuses')}</option>
+            {#each statusOptions as status}
+              <option value={status}>{$t(`lot_status.${status}`)}</option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="min-w-[210px]">
+          <label for="material-filter" class="mb-1 block text-xs font-semibold text-slate-500">Material Type</label>
+          <select
+            id="material-filter"
+            bind:value={materialFilter}
+            onchange={resetPaging}
+            class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm outline-none transition-colors hover:bg-slate-50 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          >
+            <option value={0}>{$t('lot.filter_all_materials')}</option>
+            {#each materialOptions as material}
+              <option value={material}>{$t(`material_type.${material}`)}</option>
+            {/each}
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-end gap-2">
+        {#if filtersActive}
+          <button
+            type="button"
+            onclick={clearFilters}
+            class="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950"
+          >
+            {$t('common.clear_filters')}
+          </button>
+        {/if}
+        <button
+          type="button"
+          onclick={() => lotsQuery.refetch()}
+          class="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950"
+        >
+          <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 0 1-15.5 6.2" />
+            <path d="M3 12A9 9 0 0 1 18.5 5.8" />
+            <path d="M18 2v4h4" />
+            <path d="M6 22v-4H2" />
+          </svg>
+          {$t('common.refresh')}
+        </button>
+      </div>
     </div>
-  {:else}
-    <div class="overflow-x-auto border rounded-lg bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b">
-          <tr>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.lot_number')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.material')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.type')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.supplier')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('lot.quantity')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('common.status')}</th>
-            <th class="px-4 py-3 text-left font-medium">{$t('common.created')}</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y">
-          {#each lots as lot}
-            <tr class="hover:bg-gray-50 transition-colors" use:highlightOnChange={lot.id}>
-              <td class="px-4 py-3">
-                <a href="/lots/{lot.id}" class="text-blue-600 hover:underline font-mono text-xs">{lot.lotNumber}</a>
-              </td>
-              <td class="px-4 py-3">{lot.materialName}</td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-0.5 rounded text-xs bg-gray-100">{$t(`material_type.${lot.materialType}`)}</span>
-              </td>
-              <td class="px-4 py-3">{lot.supplierName}</td>
-              <td class="px-4 py-3 whitespace-nowrap">{lot.quantity} {lot.unit}</td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-0.5 rounded text-xs whitespace-nowrap {statusColors[lot.status] ?? ''}">{$t(`lot_status.${lot.status}`)}</span>
-              </td>
-              <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{lot.createdAt ? new Date(Number(lot.createdAt.seconds) * 1000).toLocaleDateString() : ''}</td>
+  </section>
+
+  <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    {#if lotsQuery.isLoading}
+      <div class="border-b border-slate-200 bg-slate-50 px-4 py-3">
+        <div class="h-4 w-40 animate-pulse rounded bg-slate-200"></div>
+      </div>
+      <div class="divide-y divide-slate-100">
+        {#each [1, 2, 3, 4, 5, 6] as _}
+          <div class="grid grid-cols-[1.2fr_1fr_.85fr_1fr_.65fr_.65fr_.9fr_.8fr_.65fr] gap-4 px-4 py-4">
+            {#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as __}
+              <div class="h-4 animate-pulse rounded bg-slate-100"></div>
+            {/each}
+          </div>
+        {/each}
+      </div>
+    {:else if lotsQuery.isError}
+      <div class="m-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {$t('common.error')}: {lotsQuery.error?.message}
+      </div>
+    {:else}
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[1080px] text-left text-sm">
+          <thead class="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+            <tr>
+              <th class="px-4 py-3">Lot No.</th>
+              <th class="px-4 py-3">Material</th>
+              <th class="px-4 py-3">Type</th>
+              <th class="px-4 py-3">Supplier</th>
+              <th class="px-4 py-3">Quantity</th>
+              <th class="px-4 py-3">AI Score</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Created Date</th>
+              <th class="px-4 py-3 text-right">Actions</th>
             </tr>
-          {:else}
-            <tr><td colspan="7" class="px-4 py-12 text-center text-gray-400">{$t('lot.no_lots')}</td></tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {#each lots as lot}
+              <tr class="transition-colors hover:bg-slate-50" use:highlightOnChange={lot.id}>
+                <td class="px-4 py-3 align-middle">
+                  <a href="/lots/{lot.id}" class="font-mono text-xs font-semibold text-blue-600 hover:underline">
+                    {lot.lotNumber}
+                  </a>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <div class="font-medium text-slate-950">{lot.materialName}</div>
+                  <div class="mt-0.5 text-xs text-slate-500">{lot.arrivalDate || '-'}</div>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <span class="inline-flex rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+                    {$t(`material_type.${lot.materialType}`)}
+                  </span>
+                </td>
+                <td class="px-4 py-3 align-middle text-slate-700">{lot.supplierName}</td>
+                <td class="whitespace-nowrap px-4 py-3 align-middle text-slate-700">
+                  {formatQuantity(lot.quantity)} {lot.unit}
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <span class="inline-flex rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-500">N/A</span>
+                </td>
+                <td class="px-4 py-3 align-middle">
+                  <span class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold ring-1 ring-inset {statusClass(lot.status)}">
+                    <span class="size-1.5 rounded-full {statusDot(lot.status)}"></span>
+                    {$t(`lot_status.${lot.status}`)}
+                  </span>
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 align-middle text-xs text-slate-500">
+                  {formatDate(lot.createdAt?.seconds)}
+                </td>
+                <td class="px-4 py-3 text-right align-middle">
+                  <a href="/lots/{lot.id}" class="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-blue-600 shadow-sm transition-colors hover:bg-blue-50">
+                    View
+                  </a>
+                </td>
+              </tr>
+            {:else}
+              <tr>
+                <td colspan="9" class="px-4 py-16">
+                  <div class="mx-auto flex max-w-sm flex-col items-center text-center">
+                    <div class="flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                      <svg viewBox="0 0 24 24" class="size-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+                        <path d="m4 7.5 8 4.5 8-4.5" />
+                        <path d="M12 12v9" />
+                      </svg>
+                    </div>
+                    <h2 class="mt-3 text-sm font-semibold text-slate-950">{$t('lot.no_lots')}</h2>
+                    <p class="mt-1 text-sm text-slate-500">Try clearing filters or create a new incoming lot.</p>
+                    {#if filtersActive}
+                      <button type="button" onclick={clearFilters} class="mt-4 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                        {$t('common.clear_filters')}
+                      </button>
+                    {/if}
+                  </div>
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
 
-    <!-- Pagination -->
-    {#if hasPrev || hasNext}
-      <div class="flex justify-center gap-2 pt-2">
-        <button
-          disabled={!hasPrev}
-          onclick={prevPage}
-          class="px-3 py-1.5 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
-        >{$t('common.prev')}</button>
-        <button
-          disabled={!hasNext}
-          onclick={nextPage}
-          class="px-3 py-1.5 border rounded text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
-        >{$t('common.next')}</button>
+      <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-xs text-slate-500">
+          Showing {lots.length} {lots.length === 1 ? $t('common.result') : $t('common.results')}
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            disabled={!hasPrev}
+            onclick={prevPage}
+            class="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {$t('common.prev')}
+          </button>
+          <button
+            disabled={!hasNext}
+            onclick={nextPage}
+            class="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {$t('common.next')}
+          </button>
+        </div>
       </div>
     {/if}
-  {/if}
+  </section>
 </div>
