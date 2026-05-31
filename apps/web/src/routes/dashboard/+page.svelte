@@ -145,12 +145,12 @@
   {/if}
 
   <section class="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-    <KpiCard title="Total Lot" value={formatNumber(opsQuery.data?.totalLots)} icon="cube" tone="purple" loading={opsQuery.isLoading} />
-    <KpiCard title="Waiting for QC" value={formatNumber(opsQuery.data?.lotsAwaitingQc)} icon="clock" tone="orange" loading={opsQuery.isLoading} />
-    <KpiCard title="Production Ready" value={formatNumber(opsQuery.data?.lotsReadyForProduction)} icon="check-circle" tone="green" loading={opsQuery.isLoading} />
-    <KpiCard title="QC Pass Rate (24h)" value={formatPercentRatio(qcQuery.data?.passRate)} icon="percent" tone="blue" loading={qcQuery.isLoading} />
-    <KpiCard title="AI Confidence Rate" value={formatPercentRatio(qcQuery.data?.averageConfidence)} icon="bot" tone="red" loading={qcQuery.isLoading} />
-    <KpiCard title="Warehouse Utilization" value={formatPercentRatio(warehouseUtilization)} icon="warehouse" tone="emerald" loading={whQuery.isLoading} />
+    <KpiCard title="Total Lot" value={formatNumber(opsQuery.data?.totalLots)} icon="cube" tone="purple" loading={opsQuery.isLoading} href="/lots" emphasis />
+    <KpiCard title="Waiting for QC" value={formatNumber(opsQuery.data?.lotsAwaitingQc)} icon="clock" tone="orange" loading={opsQuery.isLoading} href="/qc" emphasis />
+    <KpiCard title="Production Ready" value={formatNumber(opsQuery.data?.lotsReadyForProduction)} icon="check-circle" tone="green" loading={opsQuery.isLoading} href="/warehouse" emphasis />
+    <KpiCard title="QC Pass Rate (24h)" value={formatPercentRatio(qcQuery.data?.passRate)} icon="percent" tone="blue" loading={qcQuery.isLoading} href="/qc" />
+    <KpiCard title="AI Confidence Rate" value={formatPercentRatio(qcQuery.data?.averageConfidence)} icon="bot" tone="red" loading={qcQuery.isLoading} href="/qc" />
+    <KpiCard title="Warehouse Utilization" value={formatPercentRatio(warehouseUtilization)} icon="warehouse" tone="emerald" loading={whQuery.isLoading} href="/warehouse" />
   </section>
 
   <div class="grid flex-1 grid-cols-1 gap-3 overflow-visible xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:overflow-hidden">
