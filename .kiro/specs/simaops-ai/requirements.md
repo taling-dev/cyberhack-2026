@@ -1,4 +1,4 @@
-# SimaOps AI — Requirements
+# SARI (Sima Arome Resource Intelligence) — Requirements
 
 > Status: **APPROVED — pending execution kickoff**
 > Repo: `/home/dharon/cyberhack2026`
@@ -8,7 +8,7 @@
 
 Sima Arome — Indonesian natural-extracts manufacturer for F&B, cosmetics, and wellness brands — runs end-to-end raw-material intake, manual QC clearance, warehouse storage with hazard segregation and cold-chain (−4 °C to −20 °C), and PPIC-scheduled production handoff. Today, operators re-enter the same data across multiple tools, QC throughput stalls when a trained eye is unavailable, drum placement is tracked in spreadsheets, and PPIC schedules / lot histories / sample dispatches live in notebooks and chats. The result is slowdowns, rework, missed batches, and zero auditable traceability.
 
-SimaOps AI is a single enterprise platform that:
+SARI (Sima Arome Resource Intelligence) is a single enterprise platform that:
 
 1. Streamlines operator → AI-triage → human-QC-approval → warehouse → production-readiness as one event-driven flow.
 2. Captures full audit trails, idempotency, and durable async processing (no double work, no lost events).
@@ -17,7 +17,7 @@ SimaOps AI is a single enterprise platform that:
 
 ## 2. Hackathon Focus-Area Coverage (CYBERHACK 2026)
 
-| # | Focus Area                              | SimaOps Coverage                                                                                            |
+| # | Focus Area                              | SARI Coverage                                                                                               |
 | - | --------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | 1 | Integrated Operations System            | Unified data model + Connect RPC services + audit log + manager dashboard + dispatch stage (intake → QC → warehouse → production handoff → dispatch). Kills double-entry. |
 | 2 | AI for Fruit & Raw-Material QC          | AI worker `pretrained` strategy with `RAW_BOTANICAL` findings vocabulary (ripeness, color, foreign matter). |

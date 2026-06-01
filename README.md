@@ -1,8 +1,8 @@
-# SimaOps AI
+# SARI (Sima Arome Resource Intelligence)
 
 Enterprise-grade, cloud-portable operations platform for **Sima Arome** — an Indonesian natural-extracts manufacturer powering F&B, cosmetics, and wellness brands.
 
-SimaOps AI unifies lot intake, AI-assisted QC, human QC approval, cold-chain warehouse assignment, and production-readiness dashboards into a single auditable system.
+SARI (Sima Arome Resource Intelligence) unifies lot intake, AI-assisted QC, human QC approval, cold-chain warehouse assignment, and production-readiness dashboards into a single auditable system.
 
 ## Architecture
 

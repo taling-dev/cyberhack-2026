@@ -1,4 +1,4 @@
-# SimaOps AI — Constant-Load Stress Test Plan
+# SARI (Sima Arome Resource Intelligence) — Constant-Load Stress Test Plan
 
 > **Status:** Plan approved 2026-05-27. Updated 2026-05-28 with pre-execution
 > delta corrections and review issues #1, #2, #5, #6, #7. Execution still

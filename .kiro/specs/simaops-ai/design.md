@@ -1,4 +1,4 @@
-# SimaOps AI — Design
+# SARI (Sima Arome Resource Intelligence) — Design
 
 > Reads from: [`requirements.md`](./requirements.md)
 > Drives: [`tasks.md`](./tasks.md)

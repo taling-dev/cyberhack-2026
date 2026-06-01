@@ -2,7 +2,7 @@
 
 ## System Overview
 
-SimaOps AI is a cloud-portable enterprise operations platform running on Kubernetes (GKE Standard). All application services are containerized and deployed via Helm charts; no Google-native application services are used for core logic.
+SARI (Sima Arome Resource Intelligence) is a cloud-portable enterprise operations platform running on Kubernetes (GKE Standard). All application services are containerized and deployed via Helm charts; no Google-native application services are used for core logic.
 
 ```
 [Browser] → [SvelteKit BFF] → [Go API] → [TiDB]
