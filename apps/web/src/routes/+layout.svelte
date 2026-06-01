@@ -4,6 +4,7 @@
   import { t, locale } from 'svelte-i18n';
   import { get } from 'svelte/store';
   import { page } from '$app/stores';
+  import { invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
   import { onMount, onDestroy, untrack } from 'svelte';
   import { QueryClient, createQuery } from '@tanstack/svelte-query';
@@ -42,6 +43,12 @@
     { href: '/settings', icon: 'settings', key: 'nav.settings', roles: ['OPERATOR', 'QC_SUPERVISOR', 'WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'] },
     { href: '/admin', icon: 'admin', key: 'nav.admin', roles: ['ADMIN'] },
   ];
+
+  async function stopImpersonating() {
+    await fetch('/api/admin/impersonate', { method: 'DELETE' });
+    await invalidateAll();
+    location.reload();
+  }
 
   function toggleLocale() {
     locale.set($locale === 'en' ? 'id' : 'en');
@@ -346,6 +353,12 @@
     </header>
 
     <main class="flex-1 overflow-auto bg-slate-50 p-4 md:p-6">
+      {#if $page.data.impersonating}
+        <div class="mb-4 flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span class="font-medium text-amber-900">👁 {$t('impersonate.banner')} <span class="font-mono font-bold">{$page.data.impersonating}</span></span>
+          <button onclick={stopImpersonating} class="self-start rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-800 shadow-sm hover:bg-amber-100 sm:self-auto">{$t('impersonate.stop')}</button>
+        </div>
+      {/if}
       {#if !user && !$page.url.pathname.startsWith('/auth/')}
         <div class="mx-auto mt-20 max-w-md space-y-4 text-center">
           <div class="text-5xl text-slate-400" aria-hidden="true">

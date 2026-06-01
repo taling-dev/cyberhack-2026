@@ -60,6 +60,7 @@ type Querier interface {
 	// pass the FSM check against the same source state.
 	GetDispatchForUpdate(ctx context.Context, id string) (Dispatch, error)
 	GetIdempotencyKey(ctx context.Context, keyHash string) (IdempotencyKey, error)
+	GetLatestInspection(ctx context.Context) (GetLatestInspectionRow, error)
 	GetLot(ctx context.Context, id string) (Lot, error)
 	GetLotByNumber(ctx context.Context, lotNumber string) (Lot, error)
 	// Locks the row for the duration of the transaction (TiDB pessimistic mode).

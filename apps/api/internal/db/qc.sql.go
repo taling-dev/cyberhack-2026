@@ -143,6 +143,43 @@ func (q *Queries) CreateQCResult(ctx context.Context, arg CreateQCResultParams) 
 	return err
 }
 
+const getLatestInspection = `-- name: GetLatestInspection :one
+SELECT r.lot_id, l.lot_number, l.material_name, r.recommendation, r.confidence,
+       r.findings_json, j.image_object_key, r.created_at
+FROM qc_results r
+JOIN lots l ON l.id = r.lot_id
+JOIN qc_jobs j ON j.id = r.qc_job_id
+ORDER BY r.created_at DESC
+LIMIT 1
+`
+
+type GetLatestInspectionRow struct {
+	LotID          string                  `json:"lot_id"`
+	LotNumber      string                  `json:"lot_number"`
+	MaterialName   string                  `json:"material_name"`
+	Recommendation QcResultsRecommendation `json:"recommendation"`
+	Confidence     string                  `json:"confidence"`
+	FindingsJson   json.RawMessage         `json:"findings_json"`
+	ImageObjectKey string                  `json:"image_object_key"`
+	CreatedAt      time.Time               `json:"created_at"`
+}
+
+func (q *Queries) GetLatestInspection(ctx context.Context) (GetLatestInspectionRow, error) {
+	row := q.db.QueryRowContext(ctx, getLatestInspection)
+	var i GetLatestInspectionRow
+	err := row.Scan(
+		&i.LotID,
+		&i.LotNumber,
+		&i.MaterialName,
+		&i.Recommendation,
+		&i.Confidence,
+		&i.FindingsJson,
+		&i.ImageObjectKey,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getQCJob = `-- name: GetQCJob :one
 SELECT id, lot_id, image_object_key, status, requested_by, failure_reason, started_at, completed_at, created_at, updated_at FROM qc_jobs WHERE id = ?
 `

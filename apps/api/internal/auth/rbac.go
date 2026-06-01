@@ -23,6 +23,7 @@ var publicProcedures = map[string]bool{
 	"/simaops.dashboard.v1.DashboardService/GetQCMetrics":          true,
 	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics":   true,
 	"/simaops.dashboard.v1.DashboardService/GetQCTrend":            true,
+	"/simaops.dashboard.v1.DashboardService/GetLatestInspection":   true,
 }
 
 // adminOnlyProcedures require ADMIN specifically (admin console). Kept in code

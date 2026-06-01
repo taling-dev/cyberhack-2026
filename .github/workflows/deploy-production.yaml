@@ -1,8 +1,9 @@
 name: Deploy Production
 
+# Auto-deploy disabled: deploys are performed via local `helm upgrade`.
+# Manual-only so it never fires on release.
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 jobs:
   deploy:

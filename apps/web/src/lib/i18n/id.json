@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "SimaOps AI",
-    "tagline": "Platform Operasional"
+    "name": "Sari",
+    "tagline": "Sima Arome Resource Intelligence"
   },
   "nav": {
     "dashboard": "Dasbor",
@@ -295,6 +295,7 @@
     "system_role": "Sistem",
     "delete": "Hapus",
     "edit": "Ubah",
+    "impersonate": "Tiru",
     "edit_user": "Ubah pengguna",
     "edit_role": "Ubah peran",
     "save": "Simpan",
@@ -350,5 +351,9 @@
     "1": "Tidak ada",
     "2": "IBC",
     "3": "IPPC"
+  },
+  "impersonate": {
+    "banner": "Anda melihat sebagai",
+    "stop": "Berhenti meniru"
   }
 }

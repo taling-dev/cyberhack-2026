@@ -151,11 +151,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: apps/${{ matrix.app }}
           push: ${{ github.event_name == 'push' }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-${{ matrix.app }}:${{ github.sha }}
             ${{ env.IMAGE_PREFIX }}-${{ matrix.app }}:latest

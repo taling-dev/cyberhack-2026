@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "SimaOps AI",
-    "tagline": "Operations Platform"
+    "name": "Sari",
+    "tagline": "Sima Arome Resource Intelligence"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -295,12 +295,13 @@
     "system_role": "System",
     "delete": "Delete",
     "edit": "Edit",
+    "impersonate": "Impersonate",
     "edit_user": "Edit user",
     "edit_role": "Edit role",
     "save": "Save",
     "reset_password": "Set password",
     "reset_password_ph": "Leave blank to keep current",
-    "reset_password_hint": "If set, this becomes the user\u0027s password immediately (no reset prompt).",
+    "reset_password_hint": "If set, this becomes the user's password immediately (no reset prompt).",
     "eu_failed": "Could not update the user. Please try again.",
     "er_failed": "Could not update the role. Please try again.",
     "delete_role_confirm": "Delete this role?",
@@ -350,5 +351,9 @@
     "1": "None",
     "2": "IBC",
     "3": "IPPC"
+  },
+  "impersonate": {
+    "banner": "You are viewing as",
+    "stop": "Stop impersonating"
   }
 }

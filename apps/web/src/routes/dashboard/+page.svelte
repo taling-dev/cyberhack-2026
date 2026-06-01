@@ -58,28 +58,17 @@
     refetchInterval: 15_000,
   }));
 
-  const latestReviewLot = $derived(qcQueueQuery.data?.lots?.[0] ?? null);
-
-  const latestQcJobQuery = createQuery(() => ({
-    queryKey: ['qc-job-for-lot', latestReviewLot?.id],
-    queryFn: () => qcClient.getQCJob({ lotId: latestReviewLot!.id, qcJobId: '' }),
-    enabled: !!latestReviewLot?.id,
-    retry: false,
+  const latestInspectionQuery = createQuery(() => ({
+    queryKey: ['dashboard-latest-inspection'],
+    queryFn: () => dashboardClient.getLatestInspection({}),
     refetchInterval: 30_000,
   }));
-
-  const latestQcResultQuery = createQuery(() => ({
-    queryKey: ['qc-result', latestQcJobQuery.data?.job?.id],
-    queryFn: () => qcClient.getQCResult({ qcJobId: latestQcJobQuery.data!.job!.id }),
-    enabled: !!latestQcJobQuery.data?.job?.id,
-    retry: false,
-    refetchInterval: (query) => (query.state.data?.result ? false : 15_000),
-  }));
+  const latestInspection = $derived(latestInspectionQuery.data);
 
   const latestImageUrlQuery = createQuery(() => ({
-    queryKey: ['qc-image-url', latestQcJobQuery.data?.job?.imageObjectKey],
-    queryFn: () => qcClient.createQCViewUrl({ objectKey: latestQcJobQuery.data!.job!.imageObjectKey }),
-    enabled: !!latestQcJobQuery.data?.job?.imageObjectKey,
+    queryKey: ['qc-image-url', latestInspection?.imageObjectKey],
+    queryFn: () => qcClient.createQCViewUrl({ objectKey: latestInspection!.imageObjectKey }),
+    enabled: !!latestInspection?.imageObjectKey,
     staleTime: 10 * 60 * 1000,
     retry: false,
   }));
@@ -179,11 +168,10 @@
     <div class="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[.75fr_.95fr_2fr]">
       <AIQueueCard lots={qcQueueQuery.data?.lots ?? []} loading={qcQueueQuery.isLoading} />
       <LatestInspectionCard
-        lot={latestReviewLot}
-        result={latestQcResultQuery.data?.result ?? null}
+        inspection={latestInspection ?? null}
         imageUrl={latestImageUrlQuery.data?.viewUrl ?? ''}
-        loading={qcQueueQuery.isLoading || latestQcJobQuery.isLoading || latestQcResultQuery.isLoading}
-        unavailable={!latestReviewLot || latestQcJobQuery.isError || latestQcResultQuery.isError}
+        loading={latestInspectionQuery.isLoading}
+        unavailable={latestInspectionQuery.isError}
       />
       <CompactLotTable lots={newestLotsQuery.data?.lots ?? []} loading={newestLotsQuery.isLoading} />
     </div>
