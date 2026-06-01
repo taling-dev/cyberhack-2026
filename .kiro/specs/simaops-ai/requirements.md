@@ -1,4 +1,4 @@
-# SARI (Sima Arome Resource Intelligence) — Requirements
+# SARI — Requirements
 
 > Status: **APPROVED — pending execution kickoff**
 > Repo: `/home/dharon/cyberhack2026`
@@ -8,7 +8,7 @@
 
 Sima Arome — Indonesian natural-extracts manufacturer for F&B, cosmetics, and wellness brands — runs end-to-end raw-material intake, manual QC clearance, warehouse storage with hazard segregation and cold-chain (−4 °C to −20 °C), and PPIC-scheduled production handoff. Today, operators re-enter the same data across multiple tools, QC throughput stalls when a trained eye is unavailable, drum placement is tracked in spreadsheets, and PPIC schedules / lot histories / sample dispatches live in notebooks and chats. The result is slowdowns, rework, missed batches, and zero auditable traceability.
 
-SARI (Sima Arome Resource Intelligence) is a single enterprise platform that:
+SARI is a single enterprise platform that:
 
 1. Streamlines operator → AI-triage → human-QC-approval → warehouse → production-readiness as one event-driven flow.
 2. Captures full audit trails, idempotency, and durable async processing (no double work, no lost events).

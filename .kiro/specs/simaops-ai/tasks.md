@@ -1,4 +1,4 @@
-# SARI (Sima Arome Resource Intelligence) — Task Breakdown
+# SARI — Task Breakdown
 
 > Reads from: [`requirements.md`](./requirements.md) and [`design.md`](./design.md)
 > Plan revision: **v2** (Sima Arome refinements folded into Tasks 5, 7, 12, 26, 27, 28, 30)

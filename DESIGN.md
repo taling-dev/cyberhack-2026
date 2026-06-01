@@ -1,5 +1,5 @@
 ---
-name: SARI (Sima Arome Resource Intelligence)
+name: SARI
 description: Auditable QC and operations control surface for a natural-extracts plant
 colors:
   ink: "#020617"
@@ -89,7 +89,7 @@ components:
     rounded: "{rounded.md}"
 ---
 
-# Design System: SARI (Sima Arome Resource Intelligence)
+# Design System: SARI
 
 ## 1. Overview
 

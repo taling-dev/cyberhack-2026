@@ -1,4 +1,4 @@
-# SARI (Sima Arome Resource Intelligence) — Constant-Load Stress Test Plan
+# SARI — Constant-Load Stress Test Plan
 
 > **Status:** Plan approved 2026-05-27. Updated 2026-05-28 with pre-execution
 > delta corrections and review issues #1, #2, #5, #6, #7. Execution still
@@ -14,7 +14,7 @@
 
 ## Problem Statement
 
-Validate that the deployed SARI (Sima Arome Resource Intelligence) platform (running on OKE, exposed via `*.161.118.244.229.sslip.io`) can sustain realistic production traffic without errors, scales appropriately under load, and remains stable over multi-hour runs. Specifically: drive the full E2E pipeline (lot creation → QC upload → AI processing → reviewer approval → warehouse assignment) from a laptop through public HTTPS ingress, capture autoscaling behavior on api/ai-worker HPAs, and surface any leaks or backpressure issues during a 2-hour soak.
+Validate that the deployed SARI platform (running on OKE, exposed via `*.161.118.244.229.sslip.io`) can sustain realistic production traffic without errors, scales appropriately under load, and remains stable over multi-hour runs. Specifically: drive the full E2E pipeline (lot creation → QC upload → AI processing → reviewer approval → warehouse assignment) from a laptop through public HTTPS ingress, capture autoscaling behavior on api/ai-worker HPAs, and surface any leaks or backpressure issues during a 2-hour soak.
 
 ## Requirements
 

@@ -1,4 +1,4 @@
-# SARI (Sima Arome Resource Intelligence) — Design
+# SARI — Design
 
 > Reads from: [`requirements.md`](./requirements.md)
 > Drives: [`tasks.md`](./tasks.md)

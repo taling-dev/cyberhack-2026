@@ -1,4 +1,4 @@
--- SARI (Sima Arome Resource Intelligence): configurable app settings (key/value).
+-- SARI: configurable app settings (key/value).
 -- Holds the AI QC grading thresholds so admins can tune PASS/REVIEW cutoffs
 -- without a redeploy. Both the API (admin RPC) and the AI worker read these.
 

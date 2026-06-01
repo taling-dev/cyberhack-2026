@@ -1,4 +1,4 @@
--- SARI (Sima Arome Resource Intelligence): Initial Schema
+-- SARI: Initial Schema
 -- Target: TiDB v7.5 (MySQL-compatible)
 
 CREATE TABLE IF NOT EXISTS roles (

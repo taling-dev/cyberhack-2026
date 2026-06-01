@@ -1,4 +1,4 @@
--- SARI (Sima Arome Resource Intelligence): Data-driven RBAC
+-- SARI: Data-driven RBAC
 -- Roles become assignable permission sets. ADMIN keeps a hardcoded bypass in
 -- code; public (any-authenticated) procedures also stay in code. This table
 -- holds the per-role RPC grants for every other role, builtin or custom.
