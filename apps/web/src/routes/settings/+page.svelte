@@ -145,7 +145,7 @@
         <div>
           <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Language</p>
           <h2 class="mt-1 text-lg font-bold text-slate-950">Interface language</h2>
-          <p class="mt-1 text-sm text-slate-500">Choose the language used across SimaOps AI.</p>
+          <p class="mt-1 text-sm text-slate-500">Choose the language used across SARI (Sima Arome Resource Intelligence).</p>
         </div>
         <DashboardIcon name="globe" class="size-5 text-slate-400" />
       </div>

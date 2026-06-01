@@ -1,4 +1,4 @@
--- SimaOps AI: Seed Data
+-- SARI (Sima Arome Resource Intelligence): Seed Data
 -- Run after migrations: mysql -h 127.0.0.1 -P 4000 -u root simaops < db/seed/data.sql
 
 -- ─── Roles ───────────────────────────────────────────────────────

@@ -723,7 +723,7 @@ async def lifespan(app: FastAPI):
         task.cancel()
 
 
-app = FastAPI(title="SimaOps AI Worker", lifespan=lifespan)
+app = FastAPI(title="SARI (Sima Arome Resource Intelligence) Worker", lifespan=lifespan)
 
 
 @app.get("/healthz")

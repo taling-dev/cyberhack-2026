@@ -1,5 +1,5 @@
 ---
-name: SimaOps AI
+name: SARI (Sima Arome Resource Intelligence)
 description: Auditable QC and operations control surface for a natural-extracts plant
 colors:
   ink: "#020617"
