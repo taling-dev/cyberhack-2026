@@ -24,6 +24,7 @@ var publicProcedures = map[string]bool{
 	"/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics":   true,
 	"/simaops.dashboard.v1.DashboardService/GetQCTrend":            true,
 	"/simaops.dashboard.v1.DashboardService/GetLatestInspection":   true,
+	"/simaops.admin.v1.AdminService/GetQCThresholds":              true,
 }
 
 // adminOnlyProcedures require ADMIN specifically (admin console). Kept in code
@@ -38,6 +39,7 @@ var adminOnlyProcedures = map[string]bool{
 	"/simaops.admin.v1.AdminService/ListProcedures": true,
 	"/simaops.admin.v1.AdminService/CreateUser":     true,
 	"/simaops.admin.v1.AdminService/UpdateUser":     true,
+	"/simaops.admin.v1.AdminService/UpdateQCThresholds": true,
 	"/simaops.admin.v1.AdminService/UpdateRole":     true,
 }
 

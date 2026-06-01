@@ -32,7 +32,13 @@ func (s *AuditService) ListAuditLogs(ctx context.Context, req *connect.Request[a
 		fmt.Sscanf(req.Msg.PageToken, "%d", &offset)
 	}
 
-	logs, err := s.q.ListAuditLogs(ctx, db.ListAuditLogsParams{Limit: pageSize, Offset: offset})
+	logs, err := s.q.ListAuditLogs(ctx, db.ListAuditLogsParams{
+		EntityType:  req.Msg.EntityTypeFilter,
+		ActorUserID: req.Msg.ActorUserIdFilter,
+		Action:      req.Msg.ActionFilter,
+		Limit:       pageSize,
+		Offset:      offset,
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}

@@ -179,110 +179,28 @@ func (q *Queries) GetLotForUpdate(ctx context.Context, id string) (Lot, error) {
 }
 
 const listLots = `-- name: ListLots :many
-SELECT id, lot_number, supplier_name, material_name, material_type, quantity, unit, arrival_date, storage_requirement, status, created_by, created_at, updated_at FROM lots ORDER BY created_at DESC LIMIT ? OFFSET ?
+SELECT id, lot_number, supplier_name, material_name, material_type, quantity, unit, arrival_date, storage_requirement, status, created_by, created_at, updated_at FROM lots
+WHERE (? = '' OR status = ?)
+  AND (? = '' OR material_type = ?)
+ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
 
 type ListLotsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-func (q *Queries) ListLots(ctx context.Context, arg ListLotsParams) ([]Lot, error) {
-	rows, err := q.db.QueryContext(ctx, listLots, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Lot
-	for rows.Next() {
-		var i Lot
-		if err := rows.Scan(
-			&i.ID,
-			&i.LotNumber,
-			&i.SupplierName,
-			&i.MaterialName,
-			&i.MaterialType,
-			&i.Quantity,
-			&i.Unit,
-			&i.ArrivalDate,
-			&i.StorageRequirement,
-			&i.Status,
-			&i.CreatedBy,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listLotsByMaterialType = `-- name: ListLotsByMaterialType :many
-SELECT id, lot_number, supplier_name, material_name, material_type, quantity, unit, arrival_date, storage_requirement, status, created_by, created_at, updated_at FROM lots WHERE material_type = ? ORDER BY created_at DESC LIMIT ? OFFSET ?
-`
-
-type ListLotsByMaterialTypeParams struct {
+	Status       LotsStatus       `json:"status"`
 	MaterialType LotsMaterialType `json:"material_type"`
 	Limit        int32            `json:"limit"`
 	Offset       int32            `json:"offset"`
 }
 
-func (q *Queries) ListLotsByMaterialType(ctx context.Context, arg ListLotsByMaterialTypeParams) ([]Lot, error) {
-	rows, err := q.db.QueryContext(ctx, listLotsByMaterialType, arg.MaterialType, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Lot
-	for rows.Next() {
-		var i Lot
-		if err := rows.Scan(
-			&i.ID,
-			&i.LotNumber,
-			&i.SupplierName,
-			&i.MaterialName,
-			&i.MaterialType,
-			&i.Quantity,
-			&i.Unit,
-			&i.ArrivalDate,
-			&i.StorageRequirement,
-			&i.Status,
-			&i.CreatedBy,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listLotsByStatus = `-- name: ListLotsByStatus :many
-SELECT id, lot_number, supplier_name, material_name, material_type, quantity, unit, arrival_date, storage_requirement, status, created_by, created_at, updated_at FROM lots WHERE status = ? ORDER BY created_at DESC LIMIT ? OFFSET ?
-`
-
-type ListLotsByStatusParams struct {
-	Status LotsStatus `json:"status"`
-	Limit  int32      `json:"limit"`
-	Offset int32      `json:"offset"`
-}
-
-func (q *Queries) ListLotsByStatus(ctx context.Context, arg ListLotsByStatusParams) ([]Lot, error) {
-	rows, err := q.db.QueryContext(ctx, listLotsByStatus, arg.Status, arg.Limit, arg.Offset)
+func (q *Queries) ListLots(ctx context.Context, arg ListLotsParams) ([]Lot, error) {
+	rows, err := q.db.QueryContext(ctx, listLots,
+		arg.Status,
+		arg.Status,
+		arg.MaterialType,
+		arg.MaterialType,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from 'svelte-i18n';
   import DashboardIcon from './DashboardIcon.svelte';
 
   type ZoneMetricLike = {
@@ -29,7 +30,7 @@
 
 <section class="flex h-full min-h-0 flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
   <div class="flex items-center justify-between">
-    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Warehouse Capacity</h2>
+    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('widgets.warehouse_capacity')}</h2>
     <span class="text-xs font-semibold text-slate-500">{pct(totalOccupied, totalCapacity)}%</span>
   </div>
 

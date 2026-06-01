@@ -1297,6 +1297,112 @@ func (x *UpdateRoleResponse) GetRole() *RoleDefinition {
 	return nil
 }
 
+// AI QC grading thresholds (0-100 quality scale). quality >= pass_min -> PASS,
+// >= review_min -> REVIEW, else FAIL.
+type GetQCThresholdsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetQCThresholdsRequest) Reset() {
+	*x = GetQCThresholdsRequest{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetQCThresholdsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetQCThresholdsRequest) ProtoMessage() {}
+
+func (x *GetQCThresholdsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetQCThresholdsRequest.ProtoReflect.Descriptor instead.
+func (*GetQCThresholdsRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{22}
+}
+
+type QCThresholds struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PassMin          int32                  `protobuf:"varint,1,opt,name=pass_min,json=passMin,proto3" json:"pass_min,omitempty"`
+	ReviewMin        int32                  `protobuf:"varint,2,opt,name=review_min,json=reviewMin,proto3" json:"review_min,omitempty"`
+	DefaultPassMin   int32                  `protobuf:"varint,3,opt,name=default_pass_min,json=defaultPassMin,proto3" json:"default_pass_min,omitempty"` // for the UI's reset button (read-only)
+	DefaultReviewMin int32                  `protobuf:"varint,4,opt,name=default_review_min,json=defaultReviewMin,proto3" json:"default_review_min,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *QCThresholds) Reset() {
+	*x = QCThresholds{}
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QCThresholds) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QCThresholds) ProtoMessage() {}
+
+func (x *QCThresholds) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_admin_v1_admin_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QCThresholds.ProtoReflect.Descriptor instead.
+func (*QCThresholds) Descriptor() ([]byte, []int) {
+	return file_simaops_admin_v1_admin_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *QCThresholds) GetPassMin() int32 {
+	if x != nil {
+		return x.PassMin
+	}
+	return 0
+}
+
+func (x *QCThresholds) GetReviewMin() int32 {
+	if x != nil {
+		return x.ReviewMin
+	}
+	return 0
+}
+
+func (x *QCThresholds) GetDefaultPassMin() int32 {
+	if x != nil {
+		return x.DefaultPassMin
+	}
+	return 0
+}
+
+func (x *QCThresholds) GetDefaultReviewMin() int32 {
+	if x != nil {
+		return x.DefaultReviewMin
+	}
+	return 0
+}
+
 var File_simaops_admin_v1_admin_proto protoreflect.FileDescriptor
 
 const file_simaops_admin_v1_admin_proto_rawDesc = "" +
@@ -1383,7 +1489,14 @@ const file_simaops_admin_v1_admin_proto_rawDesc = "" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12 \n" +
 	"\vpermissions\x18\x03 \x03(\tR\vpermissions\"J\n" +
 	"\x12UpdateRoleResponse\x124\n" +
-	"\x04role\x18\x01 \x01(\v2 .simaops.admin.v1.RoleDefinitionR\x04role*\x83\x01\n" +
+	"\x04role\x18\x01 \x01(\v2 .simaops.admin.v1.RoleDefinitionR\x04role\"\x18\n" +
+	"\x16GetQCThresholdsRequest\"\xa0\x01\n" +
+	"\fQCThresholds\x12\x19\n" +
+	"\bpass_min\x18\x01 \x01(\x05R\apassMin\x12\x1d\n" +
+	"\n" +
+	"review_min\x18\x02 \x01(\x05R\treviewMin\x12(\n" +
+	"\x10default_pass_min\x18\x03 \x01(\x05R\x0edefaultPassMin\x12,\n" +
+	"\x12default_review_min\x18\x04 \x01(\x05R\x10defaultReviewMin*\x83\x01\n" +
 	"\x04Role\x12\x14\n" +
 	"\x10ROLE_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rROLE_OPERATOR\x10\x01\x12\x16\n" +
@@ -1391,7 +1504,7 @@ const file_simaops_admin_v1_admin_proto_rawDesc = "" +
 	"\x14ROLE_WAREHOUSE_STAFF\x10\x03\x12\x10\n" +
 	"\fROLE_MANAGER\x10\x04\x12\x0e\n" +
 	"\n" +
-	"ROLE_ADMIN\x10\x052\x8e\a\n" +
+	"ROLE_ADMIN\x10\x052\xc1\b\n" +
 	"\fAdminService\x12T\n" +
 	"\tListUsers\x12\".simaops.admin.v1.ListUsersRequest\x1a#.simaops.admin.v1.ListUsersResponse\x12W\n" +
 	"\n" +
@@ -1409,7 +1522,9 @@ const file_simaops_admin_v1_admin_proto_rawDesc = "" +
 	"\n" +
 	"UpdateUser\x12#.simaops.admin.v1.UpdateUserRequest\x1a$.simaops.admin.v1.UpdateUserResponse\x12W\n" +
 	"\n" +
-	"UpdateRole\x12#.simaops.admin.v1.UpdateRoleRequest\x1a$.simaops.admin.v1.UpdateRoleResponseB\xd9\x01\n" +
+	"UpdateRole\x12#.simaops.admin.v1.UpdateRoleRequest\x1a$.simaops.admin.v1.UpdateRoleResponse\x12[\n" +
+	"\x0fGetQCThresholds\x12(.simaops.admin.v1.GetQCThresholdsRequest\x1a\x1e.simaops.admin.v1.QCThresholds\x12T\n" +
+	"\x12UpdateQCThresholds\x12\x1e.simaops.admin.v1.QCThresholds\x1a\x1e.simaops.admin.v1.QCThresholdsB\xd9\x01\n" +
 	"\x14com.simaops.admin.v1B\n" +
 	"AdminProtoP\x01ZSgithub.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/admin/v1;adminv1\xa2\x02\x03SAX\xaa\x02\x10Simaops.Admin.V1\xca\x02\x10Simaops\\Admin\\V1\xe2\x02\x1cSimaops\\Admin\\V1\\GPBMetadata\xea\x02\x12Simaops::Admin::V1b\x06proto3"
 
@@ -1426,7 +1541,7 @@ func file_simaops_admin_v1_admin_proto_rawDescGZIP() []byte {
 }
 
 var file_simaops_admin_v1_admin_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_simaops_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_simaops_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_simaops_admin_v1_admin_proto_goTypes = []any{
 	(Role)(0),                      // 0: simaops.admin.v1.Role
 	(*User)(nil),                   // 1: simaops.admin.v1.User
@@ -1451,6 +1566,8 @@ var file_simaops_admin_v1_admin_proto_goTypes = []any{
 	(*UpdateUserResponse)(nil),     // 20: simaops.admin.v1.UpdateUserResponse
 	(*UpdateRoleRequest)(nil),      // 21: simaops.admin.v1.UpdateRoleRequest
 	(*UpdateRoleResponse)(nil),     // 22: simaops.admin.v1.UpdateRoleResponse
+	(*GetQCThresholdsRequest)(nil), // 23: simaops.admin.v1.GetQCThresholdsRequest
+	(*QCThresholds)(nil),           // 24: simaops.admin.v1.QCThresholds
 }
 var file_simaops_admin_v1_admin_proto_depIdxs = []int32{
 	0,  // 0: simaops.admin.v1.User.roles:type_name -> simaops.admin.v1.Role
@@ -1476,18 +1593,22 @@ var file_simaops_admin_v1_admin_proto_depIdxs = []int32{
 	17, // 20: simaops.admin.v1.AdminService.CreateUser:input_type -> simaops.admin.v1.CreateUserRequest
 	19, // 21: simaops.admin.v1.AdminService.UpdateUser:input_type -> simaops.admin.v1.UpdateUserRequest
 	21, // 22: simaops.admin.v1.AdminService.UpdateRole:input_type -> simaops.admin.v1.UpdateRoleRequest
-	4,  // 23: simaops.admin.v1.AdminService.ListUsers:output_type -> simaops.admin.v1.ListUsersResponse
-	6,  // 24: simaops.admin.v1.AdminService.AssignRole:output_type -> simaops.admin.v1.AssignRoleResponse
-	8,  // 25: simaops.admin.v1.AdminService.RevokeRole:output_type -> simaops.admin.v1.RevokeRoleResponse
-	10, // 26: simaops.admin.v1.AdminService.ListRoles:output_type -> simaops.admin.v1.ListRolesResponse
-	12, // 27: simaops.admin.v1.AdminService.CreateRole:output_type -> simaops.admin.v1.CreateRoleResponse
-	14, // 28: simaops.admin.v1.AdminService.DeleteRole:output_type -> simaops.admin.v1.DeleteRoleResponse
-	16, // 29: simaops.admin.v1.AdminService.ListProcedures:output_type -> simaops.admin.v1.ListProceduresResponse
-	18, // 30: simaops.admin.v1.AdminService.CreateUser:output_type -> simaops.admin.v1.CreateUserResponse
-	20, // 31: simaops.admin.v1.AdminService.UpdateUser:output_type -> simaops.admin.v1.UpdateUserResponse
-	22, // 32: simaops.admin.v1.AdminService.UpdateRole:output_type -> simaops.admin.v1.UpdateRoleResponse
-	23, // [23:33] is the sub-list for method output_type
-	13, // [13:23] is the sub-list for method input_type
+	23, // 23: simaops.admin.v1.AdminService.GetQCThresholds:input_type -> simaops.admin.v1.GetQCThresholdsRequest
+	24, // 24: simaops.admin.v1.AdminService.UpdateQCThresholds:input_type -> simaops.admin.v1.QCThresholds
+	4,  // 25: simaops.admin.v1.AdminService.ListUsers:output_type -> simaops.admin.v1.ListUsersResponse
+	6,  // 26: simaops.admin.v1.AdminService.AssignRole:output_type -> simaops.admin.v1.AssignRoleResponse
+	8,  // 27: simaops.admin.v1.AdminService.RevokeRole:output_type -> simaops.admin.v1.RevokeRoleResponse
+	10, // 28: simaops.admin.v1.AdminService.ListRoles:output_type -> simaops.admin.v1.ListRolesResponse
+	12, // 29: simaops.admin.v1.AdminService.CreateRole:output_type -> simaops.admin.v1.CreateRoleResponse
+	14, // 30: simaops.admin.v1.AdminService.DeleteRole:output_type -> simaops.admin.v1.DeleteRoleResponse
+	16, // 31: simaops.admin.v1.AdminService.ListProcedures:output_type -> simaops.admin.v1.ListProceduresResponse
+	18, // 32: simaops.admin.v1.AdminService.CreateUser:output_type -> simaops.admin.v1.CreateUserResponse
+	20, // 33: simaops.admin.v1.AdminService.UpdateUser:output_type -> simaops.admin.v1.UpdateUserResponse
+	22, // 34: simaops.admin.v1.AdminService.UpdateRole:output_type -> simaops.admin.v1.UpdateRoleResponse
+	24, // 35: simaops.admin.v1.AdminService.GetQCThresholds:output_type -> simaops.admin.v1.QCThresholds
+	24, // 36: simaops.admin.v1.AdminService.UpdateQCThresholds:output_type -> simaops.admin.v1.QCThresholds
+	25, // [25:37] is the sub-list for method output_type
+	13, // [13:25] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
 	13, // [13:13] is the sub-list for extension extendee
 	0,  // [0:13] is the sub-list for field type_name
@@ -1504,7 +1625,7 @@ func file_simaops_admin_v1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_simaops_admin_v1_admin_proto_rawDesc), len(file_simaops_admin_v1_admin_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   22,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

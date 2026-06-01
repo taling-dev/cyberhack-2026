@@ -31,6 +31,7 @@ type Querier interface {
 	// a DIFFERENT image is a deliberate re-upload that supersedes the old job.
 	CountActiveQCJobsForLotWithImage(ctx context.Context, arg CountActiveQCJobsForLotWithImageParams) (int64, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
+	CountAuditLogsFiltered(ctx context.Context, arg CountAuditLogsFilteredParams) (int64, error)
 	CountDispatches(ctx context.Context) (int64, error)
 	CountDispatchesByStatus(ctx context.Context, status DispatchesStatus) (int64, error)
 	CountLots(ctx context.Context) (int64, error)
@@ -72,6 +73,7 @@ type Querier interface {
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
 	GetRoleByID(ctx context.Context, id string) (Role, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
+	GetSetting(ctx context.Context, settingKey string) (string, error)
 	GetUserByEmail(ctx context.Context, email string) (UsersProfile, error)
 	GetUserByID(ctx context.Context, id string) (UsersProfile, error)
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
@@ -93,8 +95,6 @@ type Querier interface {
 	ListDispatchesByLot(ctx context.Context, arg ListDispatchesByLotParams) ([]Dispatch, error)
 	ListDispatchesByStatus(ctx context.Context, arg ListDispatchesByStatusParams) ([]Dispatch, error)
 	ListLots(ctx context.Context, arg ListLotsParams) ([]Lot, error)
-	ListLotsByMaterialType(ctx context.Context, arg ListLotsByMaterialTypeParams) ([]Lot, error)
-	ListLotsByStatus(ctx context.Context, arg ListLotsByStatusParams) ([]Lot, error)
 	ListPendingOutboxEvents(ctx context.Context, limit int32) ([]OutboxEvent, error)
 	ListQCJobsByLot(ctx context.Context, lotID string) ([]QcJob, error)
 	ListQCJobsByStatus(ctx context.Context, arg ListQCJobsByStatusParams) ([]QcJob, error)
@@ -137,6 +137,7 @@ type Querier interface {
 	UpdateQCResultReview(ctx context.Context, arg UpdateQCResultReviewParams) error
 	UpdateRoleDescription(ctx context.Context, arg UpdateRoleDescriptionParams) error
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
+	UpsertSetting(ctx context.Context, arg UpsertSettingParams) error
 	// `capacity` is REMAINING slots (AssignSlot decrements it), so it equals
 	// "available". Occupancy is the count of ACTIVE assignments for the zone's
 	// locations; total = remaining + occupied, which stays stable as lots are

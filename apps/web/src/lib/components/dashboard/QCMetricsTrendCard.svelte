@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from 'svelte-i18n';
   import DashboardIcon from './DashboardIcon.svelte';
 
   type Day = { date: string; passCount: number; reviewCount: number; failCount: number };
@@ -23,7 +24,7 @@
 
 <section class="flex h-full min-h-0 flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
   <div class="flex items-center justify-between">
-    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">QC Trend (7 Days)</h2>
+    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('widgets.qc_trend_7d')}</h2>
     <DashboardIcon name="chart" class="size-4 text-slate-400" />
   </div>
 
@@ -32,7 +33,7 @@
       <div class="h-full w-full animate-pulse rounded-md bg-slate-100"></div>
     {:else if grandTotal === 0}
       <div class="flex h-full flex-col items-center justify-center rounded-md border border-slate-100 bg-slate-50 px-6 text-center">
-        <p class="text-sm font-semibold text-slate-700">No QC activity in the last 7 days</p>
+        <p class="text-sm font-semibold text-slate-700">{$t('widgets.no_qc_7d')}</p>
       </div>
     {:else}
       <div class="flex h-full items-end justify-between gap-2">
@@ -52,9 +53,9 @@
   </div>
 
   <div class="mt-3 grid grid-cols-4 gap-2 border-t border-slate-100 pt-2 text-xs">
-    <div><p class="text-slate-500">Total</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : grandTotal}</p></div>
-    <div><p class="text-emerald-600">Pass</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : totals.pass}</p></div>
-    <div><p class="text-orange-600">Review</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : totals.review}</p></div>
-    <div><p class="text-red-600">Fail</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : totals.fail}</p></div>
+    <div><p class="text-slate-500">{$t('widgets.total')}</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : grandTotal}</p></div>
+    <div><p class="text-emerald-600">{$t('widgets.pass')}</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : totals.pass}</p></div>
+    <div><p class="text-orange-600">{$t('widgets.review')}</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : totals.review}</p></div>
+    <div><p class="text-red-600">{$t('widgets.fail')}</p><p class="mt-0.5 font-bold text-slate-950">{loading ? '-' : totals.fail}</p></div>
   </div>
 </section>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from 'svelte-i18n';
   import DashboardIcon from './DashboardIcon.svelte';
 
   type LotLike = {
@@ -10,6 +11,8 @@
     quantity: number;
     unit: string;
     status: number;
+    qcRecommendation?: string;
+    qcConfidence?: number;
     createdAt?: { seconds?: bigint | number | string };
   };
 
@@ -21,25 +24,11 @@
     loading?: boolean;
   }>();
 
-  function materialTypeLabel(value: number) {
-    if (value === 1) return 'Raw Botanic';
-    if (value === 2) return 'Extract';
-    if (value === 3) return 'Powder';
-    if (value === 4) return 'Other';
-    return '-';
-  }
-
-  function statusLabel(value: number) {
-    if (value === 1) return 'Draft';
-    if (value === 2) return 'Pending QC';
-    if (value === 3) return 'AI Processing';
-    if (value === 4) return 'QC Review';
-    if (value === 5) return 'QC Approved';
-    if (value === 6) return 'Rejected';
-    if (value === 7) return 'Warehouse';
-    if (value === 8) return 'Ready';
-    if (value === 9) return 'Blocked';
-    return '-';
+  function qcTone(rec?: string) {
+    if (rec === 'PASS') return 'bg-emerald-100 text-emerald-700';
+    if (rec === 'REVIEW') return 'bg-orange-100 text-orange-700';
+    if (rec === 'FAIL') return 'bg-red-100 text-red-700';
+    return 'bg-slate-100 text-slate-500';
   }
 
   function statusClass(value: number) {
@@ -64,9 +53,9 @@
 
 <section class="flex h-full min-h-0 flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
   <div class="flex items-center justify-between">
-    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Newest Lot</h2>
+    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('widgets.newest_lots')}</h2>
     <a href="/lots" class="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50">
-      See All
+      {$t('common.see_all')}
       <DashboardIcon name="arrow-right" class="size-4" />
     </a>
   </div>
@@ -80,20 +69,20 @@
       </div>
     {:else if lots.length === 0}
       <div class="flex h-full items-center justify-center rounded-md bg-slate-50 text-sm text-slate-500">
-        No lots found.
+        {$t('lot.no_lots')}
       </div>
     {:else}
       <div class="h-full overflow-hidden">
         <table class="w-full table-fixed text-left text-xs">
           <thead class="border-b border-slate-200 text-[11px] text-slate-500">
             <tr>
-              <th class="w-[17%] pb-2 font-semibold">No. Lot</th>
-              <th class="w-[16%] pb-2 font-semibold">Material</th>
-              <th class="w-[14%] pb-2 font-semibold">Type</th>
-              <th class="w-[16%] pb-2 font-semibold">Supplier</th>
-              <th class="w-[11%] pb-2 font-semibold">Qty</th>
-              <th class="w-[12%] pb-2 font-semibold">AI Score</th>
-              <th class="w-[14%] pb-2 font-semibold">Status</th>
+              <th class="w-[17%] pb-2 font-semibold">{$t('lot.lot_number')}</th>
+              <th class="w-[16%] pb-2 font-semibold">{$t('widgets.material')}</th>
+              <th class="w-[14%] pb-2 font-semibold">{$t('widgets.type')}</th>
+              <th class="w-[16%] pb-2 font-semibold">{$t('widgets.supplier')}</th>
+              <th class="w-[11%] pb-2 font-semibold">{$t('widgets.qty')}</th>
+              <th class="w-[12%] pb-2 font-semibold">{$t('widgets.ai_score')}</th>
+              <th class="w-[14%] pb-2 font-semibold">{$t('widgets.status')}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -103,14 +92,18 @@
                   <a href="/lots/{lot.id}" class="block max-h-8 overflow-hidden break-words font-mono text-[11px] font-medium leading-4 text-blue-600 hover:underline">{lot.lotNumber}</a>
                 </td>
                 <td class="truncate py-2 pr-2 text-slate-900">{lot.materialName}</td>
-                <td class="py-2 pr-2 text-slate-700">{materialTypeLabel(lot.materialType)}</td>
+                <td class="py-2 pr-2 text-slate-700">{$t(`material_type.${lot.materialType}`)}</td>
                 <td class="truncate py-2 pr-2 text-slate-700">{lot.supplierName}</td>
                 <td class="whitespace-nowrap py-2 pr-2 text-slate-700">{formatQuantity(lot.quantity)} {lot.unit}</td>
                 <td class="py-2 pr-2">
-                  <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">N/A</span>
+                  {#if lot.qcRecommendation}
+                    <span class="rounded-md px-2 py-0.5 text-[11px] font-semibold {qcTone(lot.qcRecommendation)}">{Math.round((lot.qcConfidence ?? 0) * 100)}%</span>
+                  {:else}
+                    <span class="text-[11px] text-slate-400">—</span>
+                  {/if}
                 </td>
                 <td class="py-2">
-                  <span class="inline-block max-w-full truncate rounded-md px-2 py-0.5 text-[11px] font-medium {statusClass(lot.status)}">{statusLabel(lot.status)}</span>
+                  <span class="inline-block max-w-full truncate rounded-md px-2 py-0.5 text-[11px] font-medium {statusClass(lot.status)}">{$t(`lot_status.${lot.status}`)}</span>
                 </td>
               </tr>
             {/each}

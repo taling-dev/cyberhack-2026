@@ -412,6 +412,12 @@ func (ns NullWarehouseLocationsCurrentStatus) Value() (driver.Value, error) {
 	return string(ns.WarehouseLocationsCurrentStatus), nil
 }
 
+type AppSetting struct {
+	SettingKey   string    `json:"setting_key"`
+	SettingValue string    `json:"setting_value"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
 type AuditLog struct {
 	ID          string          `json:"id"`
 	ActorUserID string          `json:"actor_user_id"`

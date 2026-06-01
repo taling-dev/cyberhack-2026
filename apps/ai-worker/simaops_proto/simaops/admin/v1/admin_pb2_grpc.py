@@ -64,6 +64,16 @@ class AdminServiceStub(object):
                 request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.SerializeToString,
                 response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.FromString,
                 _registered_method=True)
+        self.GetQCThresholds = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/GetQCThresholds',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.GetQCThresholdsRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+                _registered_method=True)
+        self.UpdateQCThresholds = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/UpdateQCThresholds',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+                _registered_method=True)
 
 
 class AdminServiceServicer(object):
@@ -129,6 +139,18 @@ class AdminServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetQCThresholds(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateQCThresholds(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AdminServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -181,6 +203,16 @@ def add_AdminServiceServicer_to_server(servicer, server):
                     servicer.UpdateRole,
                     request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.FromString,
                     response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.SerializeToString,
+            ),
+            'GetQCThresholds': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetQCThresholds,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.GetQCThresholdsRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
+            ),
+            'UpdateQCThresholds': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateQCThresholds,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -453,6 +485,60 @@ class AdminService(object):
             '/simaops.admin.v1.AdminService/UpdateRole',
             simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.SerializeToString,
             simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetQCThresholds(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/GetQCThresholds',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.GetQCThresholdsRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateQCThresholds(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/UpdateQCThresholds',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
             options,
             channel_credentials,
             insecure,

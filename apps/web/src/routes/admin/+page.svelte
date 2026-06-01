@@ -48,12 +48,12 @@
     queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
   }
 
-  async function impersonate(username: string) {
-    if (username === currentUsername) return;
+  async function impersonate(u: any) {
+    if (u.username === currentUsername) return;
     const res = await fetch('/api/admin/impersonate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify({ username: u.username, name: u.fullName, sub: u.id, email: u.email, roles: u.roleNames ?? [] })
     });
     if (res.ok) location.href = '/dashboard';
   }
@@ -258,7 +258,7 @@
                 </td>
                 <td class="px-4 py-3 text-right align-middle">
                   <div class="inline-flex gap-2">
-                    <button onclick={() => impersonate(user.username)} class="inline-flex h-8 items-center rounded-md border border-amber-200 bg-white px-3 text-xs font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50">{$t('admin.impersonate')}</button>
+                    <button onclick={() => impersonate(user)} class="inline-flex h-8 items-center rounded-md border border-amber-200 bg-white px-3 text-xs font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-50">{$t('admin.impersonate')}</button>
                     <button onclick={() => openEditUser(user)} class="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">{$t('admin.edit')}</button>
                     <button onclick={() => openManage(user)} class="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50">{$t('admin.manage_roles')}</button>
                   </div>

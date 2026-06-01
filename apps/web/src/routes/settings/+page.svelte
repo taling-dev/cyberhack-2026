@@ -22,6 +22,33 @@
   const isAdmin = $derived(roles.includes('ADMIN'));
   const primaryRole = $derived(roles[0] ?? 'USER');
 
+  // AI QC thresholds
+  const thresholdsQuery = createQuery(() => ({
+    queryKey: ['qc-thresholds'],
+    queryFn: () => adminClient.getQCThresholds({}),
+  }));
+  let passMin = $state(75);
+  let reviewMin = $state(40);
+  let thBusy = $state(false);
+  let thError = $state('');
+  let thSaved = $state(false);
+  // Sync local editable state when the query loads.
+  $effect(() => {
+    const d = thresholdsQuery.data;
+    if (d && !thBusy) { passMin = d.passMin; reviewMin = d.reviewMin; }
+  });
+  async function saveThresholds(p: number, r: number) {
+    thBusy = true; thError = ''; thSaved = false;
+    try {
+      const res = await adminClient.updateQCThresholds({ passMin: p, reviewMin: r });
+      passMin = res.passMin; reviewMin = res.reviewMin; thSaved = true;
+    } catch (e: any) { thError = e?.message || $t('settings.th_error'); } finally { thBusy = false; }
+  }
+  function resetThresholds() {
+    const d = thresholdsQuery.data;
+    if (d) saveThresholds(d.defaultPassMin, d.defaultReviewMin);
+  }
+
   const usersQuery = createQuery(() => ({
     queryKey: ['admin-users', 'settings'],
     queryFn: () => adminClient.listUsers({ pageSize: 50 }),
@@ -192,9 +219,41 @@
         <DashboardIcon name="bot" class="size-5 text-slate-400" />
       </div>
 
-      <div class="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <p class="text-sm font-semibold text-slate-950">Managed by the system</p>
-        <p class="mt-1 text-sm leading-6 text-slate-600">AI confidence and anomaly thresholds that route a lot to PASS, REVIEW, or FAIL are set centrally and applied to every inspection.</p>
+      <div class="mt-5 space-y-4">
+        <p class="text-xs text-slate-500">{$t('settings.th_hint')}</p>
+
+        <label class="block">
+          <span class="flex items-center justify-between text-sm font-medium text-slate-700">
+            {$t('settings.th_pass_min')} <span class="font-mono text-slate-950">{passMin}</span>
+          </span>
+          <input type="range" min="1" max="100" bind:value={passMin} disabled={!isAdmin || thBusy} class="mt-1 w-full accent-emerald-600 disabled:opacity-50" />
+        </label>
+
+        <label class="block">
+          <span class="flex items-center justify-between text-sm font-medium text-slate-700">
+            {$t('settings.th_review_min')} <span class="font-mono text-slate-950">{reviewMin}</span>
+          </span>
+          <input type="range" min="1" max="100" bind:value={reviewMin} disabled={!isAdmin || thBusy} class="mt-1 w-full accent-orange-500 disabled:opacity-50" />
+        </label>
+
+        <div class="rounded-md bg-slate-50 p-3 text-xs text-slate-600">
+          <span class="font-semibold text-emerald-700">PASS</span> ≥ {passMin} ·
+          <span class="font-semibold text-orange-600">REVIEW</span> ≥ {reviewMin} ·
+          <span class="font-semibold text-red-600">FAIL</span> &lt; {reviewMin}
+        </div>
+
+        {#if thError}<p class="text-sm text-red-600" role="alert">{thError}</p>{/if}
+        {#if thSaved}<p class="text-sm text-emerald-700" role="status">{$t('settings.th_saved')}</p>{/if}
+
+        {#if isAdmin}
+          <div class="flex gap-2">
+            <button onclick={() => saveThresholds(passMin, reviewMin)} disabled={thBusy || reviewMin >= passMin} class="h-9 rounded-md bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50">{thBusy ? $t('admin.saving') : $t('settings.th_save')}</button>
+            <button onclick={resetThresholds} disabled={thBusy} class="h-9 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50">{$t('settings.th_reset')}</button>
+          </div>
+          {#if reviewMin >= passMin}<p class="text-xs text-red-600">{$t('settings.th_order')}</p>{/if}
+        {:else}
+          <p class="text-xs text-slate-400">{$t('settings.th_admin_only')}</p>
+        {/if}
       </div>
     </section>
   </div>

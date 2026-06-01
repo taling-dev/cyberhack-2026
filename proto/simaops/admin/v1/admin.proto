@@ -13,6 +13,8 @@ service AdminService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
   rpc UpdateRole(UpdateRoleRequest) returns (UpdateRoleResponse);
+  rpc GetQCThresholds(GetQCThresholdsRequest) returns (QCThresholds);
+  rpc UpdateQCThresholds(QCThresholds) returns (QCThresholds);
 }
 
 // ─── Enums ───────────────────────────────────────────────────────
@@ -147,4 +149,15 @@ message UpdateRoleRequest {
 
 message UpdateRoleResponse {
   RoleDefinition role = 1;
+}
+
+// AI QC grading thresholds (0-100 quality scale). quality >= pass_min -> PASS,
+// >= review_min -> REVIEW, else FAIL.
+message GetQCThresholdsRequest {}
+
+message QCThresholds {
+  int32 pass_min = 1;
+  int32 review_min = 2;
+  int32 default_pass_min = 3;   // for the UI's reset button (read-only)
+  int32 default_review_min = 4;
 }

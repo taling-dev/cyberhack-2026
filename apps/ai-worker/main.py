@@ -210,10 +210,12 @@ class ClassifierStrategy(QCStrategy):
         findings = findings[:5]
 
         quality = _grade(self._get_fuzzy(), healthy_score, defect_score)
-        # Map the 0-100 fuzzy quality to the app's PASS/REVIEW/FAIL contract.
-        if quality >= 75:
+        # Map the 0-100 fuzzy quality to the app's PASS/REVIEW/FAIL contract,
+        # using admin-configurable thresholds (app_settings, defaults 75/40).
+        pass_min, review_min = get_qc_thresholds()
+        if quality >= pass_min:
             recommendation = "PASS"
-        elif quality >= 40:
+        elif quality >= review_min:
             recommendation = "REVIEW"
         else:
             recommendation = "FAIL"
@@ -309,6 +311,31 @@ _db_pool = PooledDB(
 
 def get_db():
     return _db_pool.connection()
+
+
+def get_qc_thresholds() -> tuple[int, int]:
+    """Read configurable (pass_min, review_min) from app_settings; fall back to
+    the defaults (75/40) if unset or on any error. Read per job so admin changes
+    take effect without a worker restart."""
+    pass_min, review_min = 75, 40
+    try:
+        db = get_db()
+        try:
+            with db.cursor() as cur:
+                cur.execute(
+                    "SELECT setting_key, setting_value FROM app_settings "
+                    "WHERE setting_key IN ('qc_pass_min','qc_review_min')"
+                )
+                for k, v in cur.fetchall():
+                    if k == 'qc_pass_min':
+                        pass_min = int(v)
+                    elif k == 'qc_review_min':
+                        review_min = int(v)
+        finally:
+            db.close()
+    except Exception:
+        pass
+    return pass_min, review_min
 
 
 def mark_job_processing(job_id: str):

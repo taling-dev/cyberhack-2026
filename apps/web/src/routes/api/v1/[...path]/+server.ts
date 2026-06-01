@@ -102,7 +102,13 @@ const handler: RequestHandler = async ({ request, params, locals, url, cookies }
   // this when the real verified token is ADMIN, so a forged cookie is inert.
   const impersonate = cookies.get('impersonate');
   if (impersonate) {
-    headers.set('X-Impersonate', impersonate);
+    try {
+      const u = JSON.parse(impersonate)?.username;
+      if (u) headers.set('X-Impersonate', u);
+    } catch {
+      // legacy plain-string cookie
+      headers.set('X-Impersonate', impersonate);
+    }
   }
 
   // SSE-specific: include refresh-token expiry hint so the API's

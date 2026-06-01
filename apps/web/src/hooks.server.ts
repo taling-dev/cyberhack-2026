@@ -82,6 +82,29 @@ export const handle: Handle = async ({ event, resolve }) => {
   // so security headers are guaranteed to be applied to every response.
   await runAuth(event);
 
+  // Impersonation (display layer): if the real signed-in user is ADMIN and an
+  // impersonation cookie is set, present the impersonated user across the UI so
+  // the sidebar name + role-gated nav match what the API enforces. The real
+  // admin identity is preserved in locals.realUser for the banner / safety.
+  const imp = event.cookies.get('impersonate');
+  if (imp && event.locals.user?.roles?.includes('ADMIN')) {
+    try {
+      const t = JSON.parse(imp);
+      if (t?.username && t.username !== event.locals.user.username) {
+        event.locals.realUser = event.locals.user;
+        event.locals.user = {
+          sub: t.sub ?? '',
+          username: t.username,
+          email: t.email ?? '',
+          name: t.name ?? t.username,
+          roles: Array.isArray(t.roles) ? t.roles : [],
+        };
+      }
+    } catch {
+      // malformed cookie: ignore, keep the real user
+    }
+  }
+
   const response = await resolve(event, {
     transformPageChunk: ({ html }) => html.replace('<html lang="en">', `<html lang="${lang}">`),
   });

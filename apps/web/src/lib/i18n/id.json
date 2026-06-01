@@ -92,7 +92,8 @@
     "approved": "Disetujui",
     "rejected": "Ditolak",
     "recheck": "Periksa ulang",
-    "assign": "Tetapkan"
+    "assign": "Tetapkan",
+    "see_all": "Lihat semua"
   },
   "locale": {
     "en": "English",
@@ -355,5 +356,55 @@
   "impersonate": {
     "banner": "Anda melihat sebagai",
     "stop": "Berhenti meniru"
+  },
+  "coldchain": {
+    "critical": "Suhu kritis",
+    "warning": "Peringatan suhu",
+    "out_of_range": "Suhu di luar rentang"
+  },
+  "widgets": {
+    "qc_trend_7d": "Tren QC (7 Hari)",
+    "no_qc_7d": "Tidak ada aktivitas QC dalam 7 hari terakhir",
+    "total": "Total",
+    "pass": "Lulus",
+    "review": "Tinjau",
+    "fail": "Gagal",
+    "status_distribution": "Distribusi Status Lot",
+    "warehouse_capacity": "Kapasitas Gudang",
+    "ai_queue": "Antrean QC AI",
+    "awaiting_review": "Lot Menunggu Tinjauan",
+    "queue_clear": "Antrean kosong",
+    "newest_lots": "Lot Terbaru",
+    "latest_inspection": "Inspeksi AI Terbaru",
+    "lot": "Lot",
+    "material": "Material",
+    "supplier": "Pemasok",
+    "type": "Tipe",
+    "qty": "Jml",
+    "ai_score": "Skor AI",
+    "status": "Status",
+    "no_inspections": "Belum ada inspeksi",
+    "inspection_unavailable": "Data inspeksi tidak tersedia",
+    "no_zone_data": "Tidak ada data zona gudang."
+  },
+  "kpi": {
+    "todays_intake": "Penerimaan Hari Ini",
+    "total_lots": "Total Lot",
+    "waiting_qc": "Menunggu QC",
+    "production_ready": "Siap Produksi",
+    "qc_pass_rate": "Tingkat Lulus QC (24j)",
+    "ai_confidence": "Tingkat Keyakinan AI",
+    "warehouse_util": "Utilisasi Gudang"
+  },
+  "settings": {
+    "th_hint": "Skor mutu AI mengarahkan tiap inspeksi ke PASS, REVIEW, atau FAIL.",
+    "th_pass_min": "Minimum PASS",
+    "th_review_min": "Minimum REVIEW",
+    "th_save": "Simpan ambang",
+    "th_reset": "Atur ulang ke bawaan",
+    "th_saved": "Ambang tersimpan.",
+    "th_error": "Tidak dapat menyimpan ambang.",
+    "th_order": "Minimum REVIEW harus di bawah minimum PASS.",
+    "th_admin_only": "Hanya administrator yang dapat mengubah ambang ini."
   }
 }

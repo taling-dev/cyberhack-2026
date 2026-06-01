@@ -11,6 +11,7 @@
   import WarehouseCapacityCard from '$lib/components/dashboard/WarehouseCapacityCard.svelte';
   import { highlightOnChange } from '$lib/actions/highlightOnChange.svelte';
   import { focusTrap } from '$lib/actions/focusTrap.svelte';
+  import { pushToast } from '$lib/components/Toaster.svelte';
 
   const dashboardClient = createClient(DashboardService, transport);
   const lotClient = createClient(LotService, transport);
@@ -132,6 +133,30 @@
   const totalAvailable = $derived(warehouseMetricsQuery.data?.totalAvailable ?? 0);
   const warehousePct = $derived(utilizationPercent(totalOccupied, totalCapacity));
   const coldChain = $derived(coldChainQuery.data?.equipment ?? []);
+
+  // Warn when a cold-chain zone crosses into WARNING/CRITICAL. Dedup per
+  // zone+status so the toast fires once per transition, not on every 10s poll;
+  // a zone returning to HEALTHY clears its key so a later excursion alerts again.
+  const alertedZones = new Map<string, string>();
+  $effect(() => {
+    for (const eq of coldChain) {
+      const status = eq.health?.status ?? 'NO_DATA';
+      const key = eq.equipment_id;
+      if (status === 'CRITICAL' || status === 'WARNING') {
+        if (alertedZones.get(key) === status) continue;
+        alertedZones.set(key, status);
+        pushToast({
+          variant: status === 'CRITICAL' ? 'error' : 'warning',
+          title: `${$t('warehouse.zone')} ${key}: ${status === 'CRITICAL' ? $t('coldchain.critical') : $t('coldchain.warning')}`,
+          body: eq.latest_alert?.message
+            ?? `${eq.latest_temperature ?? '—'}°C — ${$t('coldchain.out_of_range')}`,
+          timeoutMs: status === 'CRITICAL' ? 0 : 6000,
+        });
+      } else {
+        alertedZones.delete(key);
+      }
+    }
+  });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

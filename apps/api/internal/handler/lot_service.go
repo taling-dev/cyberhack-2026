@@ -161,21 +161,21 @@ func (s *LotService) ListLots(ctx context.Context, req *connect.Request[lotv1.Li
 		fmt.Sscanf(req.Msg.PageToken, "%d", &offset)
 	}
 
-	var lots []db.Lot
-	var err error
-
+	var statusArg db.LotsStatus
 	if req.Msg.StatusFilter != lotv1.LotStatus_LOT_STATUS_UNSPECIFIED {
-		lots, err = s.q.ListLotsByStatus(ctx, db.ListLotsByStatusParams{
-			Status: db.LotsStatus(lotStatusToDB(req.Msg.StatusFilter)),
-			Limit:  pageSize,
-			Offset: offset,
-		})
-	} else {
-		lots, err = s.q.ListLots(ctx, db.ListLotsParams{
-			Limit:  pageSize,
-			Offset: offset,
-		})
+		statusArg = db.LotsStatus(lotStatusToDB(req.Msg.StatusFilter))
 	}
+	var materialArg db.LotsMaterialType
+	if req.Msg.MaterialTypeFilter != lotv1.MaterialType_MATERIAL_TYPE_UNSPECIFIED {
+		materialArg = db.LotsMaterialType(materialTypeToDB(req.Msg.MaterialTypeFilter))
+	}
+
+	lots, err := s.q.ListLots(ctx, db.ListLotsParams{
+		Status:       statusArg,
+		MaterialType: materialArg,
+		Limit:        pageSize,
+		Offset:       offset,
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
