@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { t, locale } from 'svelte-i18n';
+  import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
   import { createClient } from '@connectrpc/connect';
   import { transport } from '$lib/connect';
@@ -90,15 +91,37 @@
   const isLoading = $derived(opsQuery.isLoading || qcQuery.isLoading || whQuery.isLoading);
   const isError = $derived(opsQuery.isError || qcQuery.isError || whQuery.isError);
   const userName = $derived($page.data.user?.name ?? 'Operator');
-  const dateLabel = new Intl.DateTimeFormat('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date());
+  const today = new Date();
+  const dateLabel = $derived(
+    new Intl.DateTimeFormat($locale === 'id' ? 'id-ID' : 'en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(today)
+  );
+  const languageOptions = [
+    { code: 'en', label: 'English', shortLabel: 'EN' },
+    { code: 'id', label: 'Bahasa Indonesia', shortLabel: 'ID' },
+  ];
+  let languageOpen = $state(false);
+  let languageButton = $state<HTMLButtonElement | null>(null);
+  let languageMenu = $state<HTMLDivElement | null>(null);
 
   const warehouseUtilization = $derived(
     whQuery.data?.totalCapacity ? whQuery.data.totalOccupied / whQuery.data.totalCapacity : null
   );
+
+  onMount(() => {
+    function closeOnOutsideClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!languageOpen) return;
+      if (languageButton?.contains(target) || languageMenu?.contains(target)) return;
+      languageOpen = false;
+    }
+
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeOnOutsideClick);
+  });
 
   function formatNumber(value?: number | null) {
     return value == null ? '-' : value.toLocaleString('en-US');
@@ -106,6 +129,49 @@
 
   function formatPercentRatio(value?: number | null) {
     return value == null ? '-' : `${Math.round(value * 1000) / 10}%`;
+  }
+
+  async function focusLanguageOption(code = $locale) {
+    await tick();
+    languageMenu?.querySelector<HTMLButtonElement>(`[data-locale="${code}"]`)?.focus();
+  }
+
+  async function openLanguageMenu(focusCode = $locale) {
+    languageOpen = true;
+    await focusLanguageOption(focusCode);
+  }
+
+  function selectLanguage(code: string) {
+    locale.set(code);
+    languageOpen = false;
+    languageButton?.focus();
+  }
+
+  function handleLanguageButtonKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openLanguageMenu();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      openLanguageMenu(languageOptions[languageOptions.length - 1].code);
+    } else if (event.key === 'Escape') {
+      languageOpen = false;
+    }
+  }
+
+  function handleLanguageMenuKeydown(event: KeyboardEvent) {
+    const currentIndex = languageOptions.findIndex((option) => option.code === document.activeElement?.getAttribute('data-locale'));
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      languageOpen = false;
+      languageButton?.focus();
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      focusLanguageOption(languageOptions[(currentIndex + 1 + languageOptions.length) % languageOptions.length].code);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      focusLanguageOption(languageOptions[(currentIndex - 1 + languageOptions.length) % languageOptions.length].code);
+    }
   }
 </script>
 
@@ -121,14 +187,62 @@
         <span class="size-2.5 rounded-full {isLoading ? 'animate-pulse bg-blue-500' : 'bg-green-500'}"></span>
         {$t('dashboard.last_updated')}: {lastUpdatedLabel}
       </span>
-      <span class="flex h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-slate-900 shadow-sm">
+      <time
+        datetime={today.toISOString().slice(0, 10)}
+        class="flex h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-slate-900 shadow-sm"
+        aria-label="Current date"
+        title="Current date"
+      >
         <DashboardIcon name="calendar" class="size-5 text-slate-700" />
         {dateLabel}
-      </span>
-      <span class="flex h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-slate-900 shadow-sm">
-        <DashboardIcon name="globe" class="size-5 text-slate-700" />
-        {$t(`locale.${$locale}`)}
-      </span>
+      </time>
+      <div class="relative">
+        <button
+          bind:this={languageButton}
+          type="button"
+          onclick={() => languageOpen ? languageOpen = false : openLanguageMenu()}
+          onkeydown={handleLanguageButtonKeydown}
+          class="flex h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 text-slate-900 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          aria-haspopup="menu"
+          aria-expanded={languageOpen}
+          aria-controls="dashboard-language-menu"
+        >
+          <DashboardIcon name="globe" class="size-5 text-slate-700" />
+          <span class="hidden sm:inline">{$t(`locale.${$locale}`)}</span>
+          <span class="font-semibold sm:hidden">{languageOptions.find((option) => option.code === $locale)?.shortLabel ?? 'EN'}</span>
+          <svg viewBox="0 0 24 24" class="size-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        {#if languageOpen}
+          <div
+            bind:this={languageMenu}
+            id="dashboard-language-menu"
+            role="menu"
+            aria-label="Select language"
+            tabindex="-1"
+            onkeydown={handleLanguageMenuKeydown}
+            class="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg"
+          >
+            {#each languageOptions as option}
+              <button
+                type="button"
+                role="menuitemradio"
+                aria-checked={$locale === option.code}
+                data-locale={option.code}
+                onclick={() => selectLanguage(option.code)}
+                class="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none {$locale === option.code ? 'font-semibold text-blue-700' : 'text-slate-700'}"
+              >
+                <span>{option.label}</span>
+                {#if $locale === option.code}
+                  <span class="size-2 rounded-full bg-blue-600" aria-hidden="true"></span>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
       <span class="relative flex size-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-900 shadow-sm">
         <DashboardIcon name="bell" class="size-5" />
         {#if (qcQueueQuery.data?.lots?.length ?? 0) > 0}
