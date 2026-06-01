@@ -127,6 +127,38 @@
     }
   }
 
+  // Plain-English summary of an audit entry: "<Role> <verb> <entity>".
+  function actionSummary(log: { action: string; actorRole?: string; entityType?: string }) {
+    const who = log.actorRole || 'System';
+    const entity = labelForEntity(log.entityType ?? '');
+    const verbs: Record<string, string> = {
+      'lot.created': `created ${entity}`,
+      'lot.status_changed': `changed ${entity} status`,
+      'qc.upload_requested': `requested a QC image upload`,
+      'qc.job_created': `started an AI inspection`,
+      'qc.reviewed': `reviewed an AI inspection`,
+      'warehouse.assigned': `assigned a warehouse slot`,
+      'dispatch.created': `created a dispatch`,
+      'dispatch.status_changed': `changed a dispatch status`,
+      'admin.role_assigned': `assigned a role`,
+      'admin.role_revoked': `revoked a role`,
+    };
+    return `${who} ${verbs[log.action] ?? log.action}`;
+  }
+
+  // Field-level before/after diff for the change summary.
+  function fieldChanges(beforeJson?: string, afterJson?: string) {
+    let before: Record<string, unknown> = {};
+    let after: Record<string, unknown> = {};
+    try { before = beforeJson ? JSON.parse(beforeJson) : {}; } catch { /* ignore */ }
+    try { after = afterJson ? JSON.parse(afterJson) : {}; } catch { /* ignore */ }
+    const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)]));
+    const fmt = (v: unknown) => v == null ? '∅' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+    return keys
+      .filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]))
+      .map((k) => ({ field: k, from: fmt(before[k]), to: fmt(after[k]) }));
+  }
+
   const logs = $derived(logsQuery.data?.logs ?? []);
   const hasNext = $derived(!!logsQuery.data?.nextPageToken);
   const hasPrev = $derived(pageHistory.length > 1);
@@ -139,8 +171,8 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Governance</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">Audit Logs</h1>
-      <p class="mt-1 text-sm text-slate-600">Track system events, user actions, and operational changes.</p>
     </div>
+
 
     <div class="flex flex-wrap items-center gap-3">
       <span class="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-500 shadow-sm">
@@ -297,6 +329,30 @@
               {#if expandedLogId === log.id}
                 <tr class="bg-slate-50/70">
                   <td colspan="6" class="px-4 py-4">
+                    <div class="mb-4 rounded-lg border border-slate-200 bg-white p-4">
+                      <p class="text-xs font-semibold uppercase tracking-normal text-slate-500">What changed</p>
+                      <p class="mt-1 text-sm font-medium text-slate-950">{actionSummary(log)}</p>
+                      {#if fieldChanges(log.beforeJson, log.afterJson).length}
+                        <div class="mt-3 overflow-x-auto">
+                          <table class="w-full min-w-[420px] text-left text-xs">
+                            <thead class="text-slate-500">
+                              <tr><th class="py-1 pr-4 font-semibold">Field</th><th class="py-1 pr-4 font-semibold">From</th><th class="py-1 font-semibold">To</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                              {#each fieldChanges(log.beforeJson, log.afterJson) as c}
+                                <tr>
+                                  <td class="py-1 pr-4 font-mono text-slate-700">{c.field}</td>
+                                  <td class="py-1 pr-4 font-mono text-red-600 line-through">{c.from}</td>
+                                  <td class="py-1 font-mono text-emerald-700">{c.to}</td>
+                                </tr>
+                              {/each}
+                            </tbody>
+                          </table>
+                        </div>
+                      {:else}
+                        <p class="mt-2 text-xs text-slate-500">No field-level changes recorded (creation or action event).</p>
+                      {/if}
+                    </div>
                     <div class="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
                       <div class="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
                         <div>

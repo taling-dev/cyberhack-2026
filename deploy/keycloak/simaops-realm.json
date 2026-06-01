@@ -4,7 +4,7 @@
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "sslRequired": "none",
+  "sslRequired": "external",
 
   "ssoSessionMaxLifespan": 259200,
   "ssoSessionIdleTimeout": 86400,
@@ -51,10 +51,10 @@
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
-      "secret": "${SIMAOPS_API_CLIENT_SECRET:changeme-dev-secret}",
+      "secret": "${SIMAOPS_API_CLIENT_SECRET}",
       "protocol": "openid-connect",
       "serviceAccountClientRoles": {
-        "realm-management": ["manage-users", "view-users", "view-realm"]
+        "realm-management": ["manage-users", "view-users", "view-realm", "manage-realm"]
       }
     }
   ],
@@ -88,7 +88,7 @@
       "lastName": "Operator",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "Operator123!", "temporary": false }],
+      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_OPERATOR_PASSWORD}", "temporary": true }],
       "realmRoles": ["OPERATOR"]
     },
     {
@@ -98,7 +98,7 @@
       "lastName": "QC Supervisor",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "QCSupervisor123!", "temporary": false }],
+      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_QC_PASSWORD}", "temporary": true }],
       "realmRoles": ["QC_SUPERVISOR"]
     },
     {
@@ -108,7 +108,7 @@
       "lastName": "Warehouse",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "Warehouse123!", "temporary": false }],
+      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_WAREHOUSE_PASSWORD}", "temporary": true }],
       "realmRoles": ["WAREHOUSE_STAFF"]
     },
     {
@@ -118,7 +118,7 @@
       "lastName": "Manager",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "Manager123!", "temporary": false }],
+      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_MANAGER_PASSWORD}", "temporary": true }],
       "realmRoles": ["MANAGER"]
     },
     {
@@ -128,7 +128,7 @@
       "lastName": "Admin",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "Admin123!", "temporary": false }],
+      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_ADMIN_PASSWORD}", "temporary": true }],
       "realmRoles": ["ADMIN"]
     }
   ]

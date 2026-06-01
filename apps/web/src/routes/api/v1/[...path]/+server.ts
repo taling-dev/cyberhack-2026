@@ -98,6 +98,19 @@ const handler: RequestHandler = async ({ request, params, locals, url, cookies }
   }
   headers.set('Authorization', `Bearer ${locals.accessToken}`);
 
+  // Impersonation: forward the chosen target username. The API only honors
+  // this when the real verified token is ADMIN, so a forged cookie is inert.
+  const impersonate = cookies.get('impersonate');
+  if (impersonate) {
+    try {
+      const u = JSON.parse(impersonate)?.username;
+      if (u) headers.set('X-Impersonate', u);
+    } catch {
+      // legacy plain-string cookie
+      headers.set('X-Impersonate', impersonate);
+    }
+  }
+
   // SSE-specific: include refresh-token expiry hint so the API's
   // connection-info frame can drive the client's session-ending warning.
   if (path === 'events') {

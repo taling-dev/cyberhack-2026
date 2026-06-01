@@ -175,7 +175,6 @@
     <div>
       <p class="text-xs font-semibold uppercase tracking-normal text-blue-600">Production</p>
       <h1 class="mt-1 text-[28px] font-bold tracking-normal text-slate-950">Production</h1>
-      <p class="mt-1 text-sm text-slate-600">Track production readiness and material handoff.</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -233,7 +232,6 @@
       <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
         <div>
           <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Production Ready Queue</h2>
-          <p class="mt-1 text-xs text-slate-500">Lots available for final dispatch handoff.</p>
         </div>
         <span class="rounded-md bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">{readyLots.length} ready</span>
       </div>
@@ -300,7 +298,6 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Production Bottlenecks</h2>
-          <p class="mt-1 text-xs text-slate-500">Upstream states affecting material availability.</p>
         </div>
         <DashboardIcon name="activity" class="size-5 text-slate-400" />
       </div>
@@ -343,7 +340,6 @@
     <div class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
       <div>
         <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Production Dispatches</h2>
-        <p class="mt-1 text-xs text-slate-500">Track material handoff from pending to delivered.</p>
       </div>
       <span class="rounded-md bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">{activeDispatchCount()} active</span>
     </div>

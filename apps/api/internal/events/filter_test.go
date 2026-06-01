@@ -82,3 +82,24 @@ func TestAllow_OperatorEmptyOwner(t *testing.T) {
 		t.Error("expected operator to be dropped when owner is empty")
 	}
 }
+
+func TestAllow_CustomRoleDerivedSubjects(t *testing.T) {
+	// A custom role granted a dispatch RPC should receive dispatch.* (and lot.*
+	// context) but NOT qc.* events.
+	SetCustomRoleSubjects(map[string][]string{
+		"DISPATCHER": {"/simaops.dispatch.v1.DispatchService/CreateDispatch"},
+	})
+	defer SetCustomRoleSubjects(map[string][]string{}) // reset
+
+	env := &Envelope{OwnerUserID: "x"}
+	roles := []string{"DISPATCHER"}
+	if !Allow("dispatch.created", env, roles, "u1") {
+		t.Error("DISPATCHER should receive dispatch.created")
+	}
+	if !Allow("lot.status_changed", env, roles, "u1") {
+		t.Error("DISPATCHER should receive lot.* context")
+	}
+	if Allow("qc.job.completed", env, roles, "u1") {
+		t.Error("DISPATCHER must NOT receive qc.* events (no qc grant)")
+	}
+}

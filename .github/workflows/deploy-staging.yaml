@@ -1,10 +1,9 @@
 name: Deploy Staging
 
+# Auto-deploy disabled: deploys are performed via local `helm upgrade` (the CI
+# OCI deploy path is unused). Manual-only so it never fires on push.
 on:
-  workflow_run:
-    workflows: ["Build & Push"]
-    types: [completed]
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:

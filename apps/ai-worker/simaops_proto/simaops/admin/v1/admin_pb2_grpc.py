@@ -34,6 +34,46 @@ class AdminServiceStub(object):
                 request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListRolesRequest.SerializeToString,
                 response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListRolesResponse.FromString,
                 _registered_method=True)
+        self.CreateRole = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/CreateRole',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateRoleRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateRoleResponse.FromString,
+                _registered_method=True)
+        self.DeleteRole = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/DeleteRole',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.DeleteRoleRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.DeleteRoleResponse.FromString,
+                _registered_method=True)
+        self.ListProcedures = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/ListProcedures',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListProceduresRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListProceduresResponse.FromString,
+                _registered_method=True)
+        self.CreateUser = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/CreateUser',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserResponse.FromString,
+                _registered_method=True)
+        self.UpdateUser = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/UpdateUser',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserResponse.FromString,
+                _registered_method=True)
+        self.UpdateRole = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/UpdateRole',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.FromString,
+                _registered_method=True)
+        self.GetQCThresholds = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/GetQCThresholds',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.GetQCThresholdsRequest.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+                _registered_method=True)
+        self.UpdateQCThresholds = channel.unary_unary(
+                '/simaops.admin.v1.AdminService/UpdateQCThresholds',
+                request_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
+                response_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+                _registered_method=True)
 
 
 class AdminServiceServicer(object):
@@ -63,6 +103,54 @@ class AdminServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateRole(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteRole(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListProcedures(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CreateUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateRole(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetQCThresholds(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateQCThresholds(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AdminServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -85,6 +173,46 @@ def add_AdminServiceServicer_to_server(servicer, server):
                     servicer.ListRoles,
                     request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListRolesRequest.FromString,
                     response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListRolesResponse.SerializeToString,
+            ),
+            'CreateRole': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateRole,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateRoleRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateRoleResponse.SerializeToString,
+            ),
+            'DeleteRole': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteRole,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.DeleteRoleRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.DeleteRoleResponse.SerializeToString,
+            ),
+            'ListProcedures': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListProcedures,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListProceduresRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.ListProceduresResponse.SerializeToString,
+            ),
+            'CreateUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateUser,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserResponse.SerializeToString,
+            ),
+            'UpdateUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateUser,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserResponse.SerializeToString,
+            ),
+            'UpdateRole': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateRole,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.SerializeToString,
+            ),
+            'GetQCThresholds': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetQCThresholds,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.GetQCThresholdsRequest.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
+            ),
+            'UpdateQCThresholds': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateQCThresholds,
+                    request_deserializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+                    response_serializer=simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -195,6 +323,222 @@ class AdminService(object):
             '/simaops.admin.v1.AdminService/ListRoles',
             simaops_dot_admin_dot_v1_dot_admin__pb2.ListRolesRequest.SerializeToString,
             simaops_dot_admin_dot_v1_dot_admin__pb2.ListRolesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateRole(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/CreateRole',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.CreateRoleRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.CreateRoleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteRole(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/DeleteRole',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.DeleteRoleRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.DeleteRoleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListProcedures(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/ListProcedures',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.ListProceduresRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.ListProceduresResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def CreateUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/CreateUser',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.CreateUserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/UpdateUser',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateUserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateRole(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/UpdateRole',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.UpdateRoleResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetQCThresholds(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/GetQCThresholds',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.GetQCThresholdsRequest.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateQCThresholds(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.admin.v1.AdminService/UpdateQCThresholds',
+            simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.SerializeToString,
+            simaops_dot_admin_dot_v1_dot_admin__pb2.QCThresholds.FromString,
             options,
             channel_credentials,
             insecure,

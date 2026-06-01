@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from 'svelte-i18n';
   import DashboardIcon from './DashboardIcon.svelte';
 
   type LotLike = {
@@ -19,12 +20,12 @@
 
 <section class="flex h-full min-h-0 flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
   <div class="flex items-center justify-between">
-    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">AI QC Queue</h2>
+    <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('widgets.ai_queue')}</h2>
     <span class="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-700">{loading ? '-' : lots.length}</span>
   </div>
 
   <div class="mt-4 min-h-0 flex-1 overflow-hidden">
-    <p class="mb-3 text-sm font-semibold text-slate-950">Lots Awaiting Review</p>
+    <p class="mb-3 text-sm font-semibold text-slate-950">{$t('widgets.awaiting_review')}</p>
 
     {#if loading}
       <div class="space-y-3">
@@ -35,7 +36,7 @@
     {:else if lots.length === 0}
       <div class="flex h-32 flex-col items-center justify-center rounded-md bg-slate-50 text-center">
         <DashboardIcon name="check-circle" class="size-6 text-emerald-600" />
-        <p class="mt-2 text-sm font-medium text-slate-700">Queue clear</p>
+        <p class="mt-2 text-sm font-medium text-slate-700">{$t('widgets.queue_clear')}</p>
         <p class="text-xs text-slate-500">No lots currently require QC review.</p>
       </div>
     {:else}
@@ -57,7 +58,7 @@
   </div>
 
   <a href="/qc" class="mt-3 flex h-9 items-center justify-center gap-2 rounded-md border border-slate-200 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50">
-    See All QC Reviews
+    {$t('common.see_all')} QC Reviews
     <DashboardIcon name="arrow-right" class="size-4" />
   </a>
 </section>

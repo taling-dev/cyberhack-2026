@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import { t, locale } from 'svelte-i18n';
   import { onMount, tick } from 'svelte';
   import { createQuery } from '@tanstack/svelte-query';
@@ -11,7 +10,6 @@
   import AIQueueCard from '$lib/components/dashboard/AIQueueCard.svelte';
   import CompactLotTable from '$lib/components/dashboard/CompactLotTable.svelte';
   import DashboardIcon from '$lib/components/dashboard/DashboardIcon.svelte';
-  import FeatureStrip from '$lib/components/dashboard/FeatureStrip.svelte';
   import KpiCard from '$lib/components/dashboard/KpiCard.svelte';
   import LatestInspectionCard from '$lib/components/dashboard/LatestInspectionCard.svelte';
   import QCMetricsTrendCard from '$lib/components/dashboard/QCMetricsTrendCard.svelte';
@@ -35,6 +33,12 @@
     refetchInterval: 30_000,
   }));
 
+  const qcTrendQuery = createQuery(() => ({
+    queryKey: ['dashboard-qc-trend'],
+    queryFn: () => dashboardClient.getQCTrend({ days: 7 }),
+    refetchInterval: 60_000,
+  }));
+
   const whQuery = createQuery(() => ({
     queryKey: ['dashboard-warehouse'],
     queryFn: () => dashboardClient.getWarehouseMetrics({}),
@@ -55,28 +59,17 @@
     refetchInterval: 15_000,
   }));
 
-  const latestReviewLot = $derived(qcQueueQuery.data?.lots?.[0] ?? null);
-
-  const latestQcJobQuery = createQuery(() => ({
-    queryKey: ['qc-job-for-lot', latestReviewLot?.id],
-    queryFn: () => qcClient.getQCJob({ lotId: latestReviewLot!.id, qcJobId: '' }),
-    enabled: !!latestReviewLot?.id,
-    retry: false,
+  const latestInspectionQuery = createQuery(() => ({
+    queryKey: ['dashboard-latest-inspection'],
+    queryFn: () => dashboardClient.getLatestInspection({}),
     refetchInterval: 30_000,
   }));
-
-  const latestQcResultQuery = createQuery(() => ({
-    queryKey: ['qc-result', latestQcJobQuery.data?.job?.id],
-    queryFn: () => qcClient.getQCResult({ qcJobId: latestQcJobQuery.data!.job!.id }),
-    enabled: !!latestQcJobQuery.data?.job?.id,
-    retry: false,
-    refetchInterval: (query) => (query.state.data?.result ? false : 15_000),
-  }));
+  const latestInspection = $derived(latestInspectionQuery.data);
 
   const latestImageUrlQuery = createQuery(() => ({
-    queryKey: ['qc-image-url', latestQcJobQuery.data?.job?.imageObjectKey],
-    queryFn: () => qcClient.createQCViewUrl({ objectKey: latestQcJobQuery.data!.job!.imageObjectKey }),
-    enabled: !!latestQcJobQuery.data?.job?.imageObjectKey,
+    queryKey: ['qc-image-url', latestInspection?.imageObjectKey],
+    queryFn: () => qcClient.createQCViewUrl({ objectKey: latestInspection!.imageObjectKey }),
+    enabled: !!latestInspection?.imageObjectKey,
     staleTime: 10 * 60 * 1000,
     retry: false,
   }));
@@ -90,7 +83,6 @@
 
   const isLoading = $derived(opsQuery.isLoading || qcQuery.isLoading || whQuery.isLoading);
   const isError = $derived(opsQuery.isError || qcQuery.isError || whQuery.isError);
-  const userName = $derived($page.data.user?.name ?? 'Operator');
   const today = new Date();
   const dateLabel = $derived(
     new Intl.DateTimeFormat($locale === 'id' ? 'id-ID' : 'en-US', {
@@ -179,7 +171,6 @@
   <header class="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
     <div>
       <h1 class="text-[28px] font-bold tracking-normal text-slate-950">{$t('nav.dashboard')}</h1>
-      <p class="mt-1 text-sm text-slate-600">Welcome back, {userName}</p>
     </div>
 
     <div class="flex flex-wrap items-center gap-3 text-sm text-slate-600">
@@ -258,22 +249,21 @@
     </div>
   {/if}
 
-  <section class="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-    <KpiCard title="Total Lot" value={formatNumber(opsQuery.data?.totalLots)} icon="cube" tone="purple" loading={opsQuery.isLoading} />
-    <KpiCard title="Waiting for QC" value={formatNumber(opsQuery.data?.lotsAwaitingQc)} icon="clock" tone="orange" loading={opsQuery.isLoading} />
-    <KpiCard title="Production Ready" value={formatNumber(opsQuery.data?.lotsReadyForProduction)} icon="check-circle" tone="green" loading={opsQuery.isLoading} />
-    <KpiCard title="QC Pass Rate (24h)" value={formatPercentRatio(qcQuery.data?.passRate)} icon="percent" tone="blue" loading={qcQuery.isLoading} />
-    <KpiCard title="AI Confidence Rate" value={formatPercentRatio(qcQuery.data?.averageConfidence)} icon="bot" tone="red" loading={qcQuery.isLoading} />
-    <KpiCard title="Warehouse Utilization" value={formatPercentRatio(warehouseUtilization)} icon="warehouse" tone="emerald" loading={whQuery.isLoading} />
+  <section class="grid shrink-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-7">
+    <KpiCard title={$t('kpi.todays_intake')} value={formatNumber(opsQuery.data?.todayIntakeCount)} icon="cube" tone="blue" loading={opsQuery.isLoading} href="/lots" emphasis />
+    <KpiCard title={$t('kpi.total_lots')} value={formatNumber(opsQuery.data?.totalLots)} icon="cube" tone="purple" loading={opsQuery.isLoading} href="/lots" emphasis />
+    <KpiCard title={$t('kpi.waiting_qc')} value={formatNumber(opsQuery.data?.lotsAwaitingQc)} icon="clock" tone="orange" loading={opsQuery.isLoading} href="/qc" emphasis />
+    <KpiCard title={$t('kpi.production_ready')} value={formatNumber(opsQuery.data?.lotsReadyForProduction)} icon="check-circle" tone="green" loading={opsQuery.isLoading} href="/warehouse" emphasis />
+    <KpiCard title={$t('kpi.qc_pass_rate')} value={formatPercentRatio(qcQuery.data?.passRate)} icon="percent" tone="blue" loading={qcQuery.isLoading} href="/qc" />
+    <KpiCard title={$t('kpi.ai_confidence')} value={formatPercentRatio(qcQuery.data?.averageConfidence)} icon="bot" tone="red" loading={qcQuery.isLoading} href="/qc" />
+    <KpiCard title={$t('kpi.warehouse_util')} value={formatPercentRatio(warehouseUtilization)} icon="warehouse" tone="emerald" loading={whQuery.isLoading} href="/warehouse" />
   </section>
 
-  <div class="grid flex-1 grid-cols-1 gap-3 overflow-visible xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:overflow-hidden">
+  <div class="grid flex-1 grid-cols-1 gap-3 overflow-visible xl:min-h-0 xl:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] xl:overflow-hidden">
     <div class="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[1.15fr_.95fr_.95fr]">
       <QCMetricsTrendCard
-        passCount={qcQuery.data?.passCount ?? 0}
-        reviewCount={qcQuery.data?.reviewCount ?? 0}
-        failCount={qcQuery.data?.failCount ?? 0}
-        loading={qcQuery.isLoading}
+        days={qcTrendQuery.data?.days ?? []}
+        loading={qcTrendQuery.isLoading}
       />
       <StatusDistributionCard
         statuses={opsQuery.data?.lotsByStatus ?? []}
@@ -291,17 +281,12 @@
     <div class="grid min-h-0 grid-cols-1 gap-3 xl:grid-cols-[.75fr_.95fr_2fr]">
       <AIQueueCard lots={qcQueueQuery.data?.lots ?? []} loading={qcQueueQuery.isLoading} />
       <LatestInspectionCard
-        lot={latestReviewLot}
-        result={latestQcResultQuery.data?.result ?? null}
+        inspection={latestInspection ?? null}
         imageUrl={latestImageUrlQuery.data?.viewUrl ?? ''}
-        loading={qcQueueQuery.isLoading || latestQcJobQuery.isLoading || latestQcResultQuery.isLoading}
-        unavailable={!latestReviewLot || latestQcJobQuery.isError || latestQcResultQuery.isError}
+        loading={latestInspectionQuery.isLoading}
+        unavailable={latestInspectionQuery.isError}
       />
       <CompactLotTable lots={newestLotsQuery.data?.lots ?? []} loading={newestLotsQuery.isLoading} />
-    </div>
-
-    <div class="hidden shrink-0 overflow-hidden xl:block">
-      <FeatureStrip />
     </div>
   </div>
 </div>

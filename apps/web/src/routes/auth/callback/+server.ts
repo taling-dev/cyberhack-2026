@@ -39,7 +39,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   // we issued, is rejected. The one exception is the silent (prompt=none)
   // flow — if its short-lived state cookie has been evicted we still surface a
   // clean failure to the parent frame rather than a hard error page.
-  const savedState = cookies.get(COOKIE_STATE);
+  const savedState = cookies.get(`${COOKIE_STATE}_${mode}`);
   if (!state || !savedState || state !== savedState) {
     if (mode === 'silent') return silentResultHtml(false);
     throw error(400, 'State mismatch');
@@ -54,7 +54,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     throw error(400, 'Missing code');
   }
 
-  const codeVerifier = cookies.get(COOKIE_PKCE);
+  const codeVerifier = cookies.get(`${COOKIE_PKCE}_${mode}`);
   if (!codeVerifier) {
     if (mode === 'silent') return silentResultHtml(false);
     throw error(400, 'Missing PKCE verifier');
@@ -93,9 +93,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   cookies.set(COOKIE_REFRESH, tokens.refresh_token, { ...COOKIE_OPTS, maxAge: REFRESH_COOKIE_MAX_AGE });
   cookies.set(COOKIE_ID, tokens.id_token, { ...COOKIE_OPTS, maxAge: tokens.expires_in });
 
-  // Clean up PKCE cookies.
-  cookies.delete(COOKIE_PKCE, { path: '/' });
-  cookies.delete(COOKIE_STATE, { path: '/' });
+  // Clean up PKCE cookies (per-mode).
+  cookies.delete(`${COOKIE_PKCE}_${mode}`, { path: '/' });
+  cookies.delete(`${COOKIE_STATE}_${mode}`, { path: '/' });
 
   if (mode === 'silent') return silentResultHtml(true);
   if (mode === 'popup') return popupResultHtml();

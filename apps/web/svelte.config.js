@@ -8,6 +8,10 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const MINIO_ORIGIN =
   process.env.PUBLIC_MINIO_ORIGIN || 'https://minio.161.118.244.229.sslip.io';
 
+// Dev-only allowance so impeccable live mode can load. Guarded by NODE_ENV.
+const __impeccableLiveDev =
+  process.env.NODE_ENV === 'development' ? ['http://localhost:8400'] : [];
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
@@ -23,11 +27,11 @@ const config = {
       mode: 'auto',
       directives: {
         'default-src': ['self'],
-        'script-src': ['self'],
+        'script-src': ['self', ...__impeccableLiveDev],
         'style-src': ['self', 'unsafe-inline'],
         'img-src': ['self', 'blob:', 'data:', 'https:'],
         'font-src': ['self', 'data:'],
-        'connect-src': ['self', MINIO_ORIGIN],
+        'connect-src': ['self', MINIO_ORIGIN, ...__impeccableLiveDev],
         'frame-src': ['self'],
         'frame-ancestors': ['none'],
         'base-uri': ['self'],

@@ -29,6 +29,16 @@ class DashboardServiceStub(object):
                 request_serializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetWarehouseMetricsRequest.SerializeToString,
                 response_deserializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetWarehouseMetricsResponse.FromString,
                 _registered_method=True)
+        self.GetQCTrend = channel.unary_unary(
+                '/simaops.dashboard.v1.DashboardService/GetQCTrend',
+                request_serializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetQCTrendRequest.SerializeToString,
+                response_deserializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetQCTrendResponse.FromString,
+                _registered_method=True)
+        self.GetLatestInspection = channel.unary_unary(
+                '/simaops.dashboard.v1.DashboardService/GetLatestInspection',
+                request_serializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetLatestInspectionRequest.SerializeToString,
+                response_deserializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetLatestInspectionResponse.FromString,
+                _registered_method=True)
 
 
 class DashboardServiceServicer(object):
@@ -52,6 +62,18 @@ class DashboardServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetQCTrend(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetLatestInspection(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DashboardServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -69,6 +91,16 @@ def add_DashboardServiceServicer_to_server(servicer, server):
                     servicer.GetWarehouseMetrics,
                     request_deserializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetWarehouseMetricsRequest.FromString,
                     response_serializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetWarehouseMetricsResponse.SerializeToString,
+            ),
+            'GetQCTrend': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetQCTrend,
+                    request_deserializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetQCTrendRequest.FromString,
+                    response_serializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetQCTrendResponse.SerializeToString,
+            ),
+            'GetLatestInspection': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetLatestInspection,
+                    request_deserializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetLatestInspectionRequest.FromString,
+                    response_serializer=simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetLatestInspectionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -152,6 +184,60 @@ class DashboardService(object):
             '/simaops.dashboard.v1.DashboardService/GetWarehouseMetrics',
             simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetWarehouseMetricsRequest.SerializeToString,
             simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetWarehouseMetricsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetQCTrend(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.dashboard.v1.DashboardService/GetQCTrend',
+            simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetQCTrendRequest.SerializeToString,
+            simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetQCTrendResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetLatestInspection(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.dashboard.v1.DashboardService/GetLatestInspection',
+            simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetLatestInspectionRequest.SerializeToString,
+            simaops_dot_dashboard_dot_v1_dot_dashboard__pb2.GetLatestInspectionResponse.FromString,
             options,
             channel_credentials,
             insecure,

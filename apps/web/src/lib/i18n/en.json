@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "SimaOps AI",
-    "tagline": "Operations Platform"
+    "name": "Sari",
+    "tagline": "Sima Arome Resource Intelligence"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -67,6 +67,8 @@
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
+    "unknown": "Unknown",
+    "close": "Close",
     "save": "Save",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -90,7 +92,8 @@
     "approved": "Approved",
     "rejected": "Rejected",
     "recheck": "Recheck",
-    "assign": "Assign"
+    "assign": "Assign",
+    "see_all": "See all"
   },
   "locale": {
     "en": "English",
@@ -162,6 +165,8 @@
     "model": "Model",
     "findings": "Findings",
     "anomaly": "anomaly",
+    "normal": "Normal",
+    "pending": "Pending",
     "supervisor_decision": "Supervisor Decision",
     "approve": "✓ Approve",
     "reject": "✗ Reject",
@@ -176,6 +181,20 @@
     "reason_placeholder": "Explain your decision...",
     "submitting": "Submitting...",
     "review_failed": "Review failed",
+    "request_error": "Something went wrong processing your request. Please try again.",
+    "rec_help_label": "What do these mean?",
+    "rec_help_pass": "PASS: AI is confident the material meets quality. Approving is low-risk.",
+    "rec_help_review": "REVIEW: AI is uncertain. Inspect the image and decide; a reason is required to approve.",
+    "rec_help_fail": "FAIL: AI detected a likely defect. Approving overrides the AI and requires a reason.",
+    "job_status": {
+      "1": "Queued",
+      "2": "Processing",
+      "3": "AI Completed",
+      "4": "Needs Review",
+      "5": "Approved",
+      "6": "Rejected",
+      "7": "Failed"
+    },
     "review_for": "QC Review",
     "review_decision_approved": "Approved",
     "review_decision_rejected": "Rejected",
@@ -247,7 +266,50 @@
     "name": "Name",
     "email": "Email",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "eyebrow": "Administration",
+    "subtitle": "Manage users and their role assignments.",
+    "users_hint": "All users who have signed in, with their current roles.",
+    "roles_hint": "Roles are fixed; assign them to users above. Changes sync to the identity provider.",
+    "filter_by_role": "Filter by role",
+    "all_roles": "All roles",
+    "no_roles": "No roles",
+    "no_users": "No users found.",
+    "manage_roles": "Manage roles",
+    "assign": "Assign",
+    "revoke": "Revoke",
+    "saving": "Saving...",
+    "role_update_failed": "Could not update the role. Please try again.",
+    "guard_self_admin": "You cannot remove your own ADMIN role.",
+    "guard_last_role": "A user must keep at least one role.",
+    "kc_sync_note": "Role changes are synced to Keycloak immediately.",
+    "create_user": "Create user",
+    "create_role": "Create role",
+    "create_role_hint": "Custom roles take effect immediately. Pick which actions they may perform.",
+    "temp_password": "Temporary password",
+    "temp_password_hint": "The user must change this at first sign-in. Min 8 characters.",
+    "initial_roles": "Initial roles",
+    "role_name": "Role name",
+    "description": "Description",
+    "permissions": "permissions",
+    "perm_note": "A role with no permissions can sign in but perform no actions.",
+    "system_role": "System",
+    "delete": "Delete",
+    "edit": "Edit",
+    "impersonate": "Impersonate",
+    "edit_user": "Edit user",
+    "edit_role": "Edit role",
+    "save": "Save",
+    "reset_password": "Set password",
+    "reset_password_ph": "Leave blank to keep current",
+    "reset_password_hint": "If set, this becomes the user's password immediately (no reset prompt).",
+    "eu_failed": "Could not update the user. Please try again.",
+    "er_failed": "Could not update the role. Please try again.",
+    "delete_role_confirm": "Delete this role?",
+    "cu_required": "Username, email and password are required.",
+    "cu_failed": "Could not create the user. The username or email may already exist.",
+    "cr_required": "Role name is required.",
+    "cr_failed": "Could not create the role. The name may be reserved or already exist."
   },
   "audit": {
     "time": "Time",
@@ -290,5 +352,59 @@
     "1": "None",
     "2": "IBC",
     "3": "IPPC"
+  },
+  "impersonate": {
+    "banner": "You are viewing as",
+    "stop": "Stop impersonating"
+  },
+  "coldchain": {
+    "critical": "Critical temperature",
+    "warning": "Temperature warning",
+    "out_of_range": "Temperature out of range"
+  },
+  "widgets": {
+    "qc_trend_7d": "QC Trend (7 Days)",
+    "no_qc_7d": "No QC activity in the last 7 days",
+    "total": "Total",
+    "pass": "Pass",
+    "review": "Review",
+    "fail": "Fail",
+    "status_distribution": "Lot Status Distribution",
+    "warehouse_capacity": "Warehouse Capacity",
+    "ai_queue": "AI QC Queue",
+    "awaiting_review": "Lots Awaiting Review",
+    "queue_clear": "Queue clear",
+    "newest_lots": "Newest Lots",
+    "latest_inspection": "Latest AI Inspection",
+    "lot": "Lot",
+    "material": "Material",
+    "supplier": "Supplier",
+    "type": "Type",
+    "qty": "Qty",
+    "ai_score": "AI Score",
+    "status": "Status",
+    "no_inspections": "No inspections yet",
+    "inspection_unavailable": "Inspection data unavailable",
+    "no_zone_data": "No warehouse zone data available."
+  },
+  "kpi": {
+    "todays_intake": "Today's Intake",
+    "total_lots": "Total Lots",
+    "waiting_qc": "Waiting for QC",
+    "production_ready": "Production Ready",
+    "qc_pass_rate": "QC Pass Rate (24h)",
+    "ai_confidence": "AI Confidence Rate",
+    "warehouse_util": "Warehouse Utilization"
+  },
+  "settings": {
+    "th_hint": "AI quality score routes each inspection to PASS, REVIEW, or FAIL.",
+    "th_pass_min": "PASS minimum",
+    "th_review_min": "REVIEW minimum",
+    "th_save": "Save thresholds",
+    "th_reset": "Reset to defaults",
+    "th_saved": "Thresholds saved.",
+    "th_error": "Could not save thresholds.",
+    "th_order": "REVIEW minimum must be below PASS minimum.",
+    "th_admin_only": "Only an administrator can change these thresholds."
   }
 }

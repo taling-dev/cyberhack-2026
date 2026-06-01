@@ -493,6 +493,366 @@ func (x *GetWarehouseMetricsResponse) GetTotalAvailable() int32 {
 	return 0
 }
 
+type GetQCTrendRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Days          int32                  `protobuf:"varint,1,opt,name=days,proto3" json:"days,omitempty"` // lookback window in days, default 7
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetQCTrendRequest) Reset() {
+	*x = GetQCTrendRequest{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetQCTrendRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetQCTrendRequest) ProtoMessage() {}
+
+func (x *GetQCTrendRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetQCTrendRequest.ProtoReflect.Descriptor instead.
+func (*GetQCTrendRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetQCTrendRequest) GetDays() int32 {
+	if x != nil {
+		return x.Days
+	}
+	return 0
+}
+
+type QCTrendDay struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"` // YYYY-MM-DD
+	PassCount     int32                  `protobuf:"varint,2,opt,name=pass_count,json=passCount,proto3" json:"pass_count,omitempty"`
+	ReviewCount   int32                  `protobuf:"varint,3,opt,name=review_count,json=reviewCount,proto3" json:"review_count,omitempty"`
+	FailCount     int32                  `protobuf:"varint,4,opt,name=fail_count,json=failCount,proto3" json:"fail_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QCTrendDay) Reset() {
+	*x = QCTrendDay{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QCTrendDay) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QCTrendDay) ProtoMessage() {}
+
+func (x *QCTrendDay) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QCTrendDay.ProtoReflect.Descriptor instead.
+func (*QCTrendDay) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *QCTrendDay) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *QCTrendDay) GetPassCount() int32 {
+	if x != nil {
+		return x.PassCount
+	}
+	return 0
+}
+
+func (x *QCTrendDay) GetReviewCount() int32 {
+	if x != nil {
+		return x.ReviewCount
+	}
+	return 0
+}
+
+func (x *QCTrendDay) GetFailCount() int32 {
+	if x != nil {
+		return x.FailCount
+	}
+	return 0
+}
+
+type GetQCTrendResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Days          []*QCTrendDay          `protobuf:"bytes,1,rep,name=days,proto3" json:"days,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetQCTrendResponse) Reset() {
+	*x = GetQCTrendResponse{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetQCTrendResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetQCTrendResponse) ProtoMessage() {}
+
+func (x *GetQCTrendResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetQCTrendResponse.ProtoReflect.Descriptor instead.
+func (*GetQCTrendResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetQCTrendResponse) GetDays() []*QCTrendDay {
+	if x != nil {
+		return x.Days
+	}
+	return nil
+}
+
+type GetLatestInspectionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLatestInspectionRequest) Reset() {
+	*x = GetLatestInspectionRequest{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLatestInspectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLatestInspectionRequest) ProtoMessage() {}
+
+func (x *GetLatestInspectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLatestInspectionRequest.ProtoReflect.Descriptor instead.
+func (*GetLatestInspectionRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{11}
+}
+
+type InspectionFinding struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MappedFinding string                 `protobuf:"bytes,1,opt,name=mapped_finding,json=mappedFinding,proto3" json:"mapped_finding,omitempty"`
+	Confidence    float64                `protobuf:"fixed64,2,opt,name=confidence,proto3" json:"confidence,omitempty"`
+	IsAnomaly     bool                   `protobuf:"varint,3,opt,name=is_anomaly,json=isAnomaly,proto3" json:"is_anomaly,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InspectionFinding) Reset() {
+	*x = InspectionFinding{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InspectionFinding) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InspectionFinding) ProtoMessage() {}
+
+func (x *InspectionFinding) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InspectionFinding.ProtoReflect.Descriptor instead.
+func (*InspectionFinding) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *InspectionFinding) GetMappedFinding() string {
+	if x != nil {
+		return x.MappedFinding
+	}
+	return ""
+}
+
+func (x *InspectionFinding) GetConfidence() float64 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *InspectionFinding) GetIsAnomaly() bool {
+	if x != nil {
+		return x.IsAnomaly
+	}
+	return false
+}
+
+type GetLatestInspectionResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Present        bool                   `protobuf:"varint,1,opt,name=present,proto3" json:"present,omitempty"` // false when no QC result exists yet
+	LotId          string                 `protobuf:"bytes,2,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"`
+	LotNumber      string                 `protobuf:"bytes,3,opt,name=lot_number,json=lotNumber,proto3" json:"lot_number,omitempty"`
+	MaterialName   string                 `protobuf:"bytes,4,opt,name=material_name,json=materialName,proto3" json:"material_name,omitempty"`
+	Recommendation int32                  `protobuf:"varint,5,opt,name=recommendation,proto3" json:"recommendation,omitempty"` // 1=PASS,2=REVIEW,3=FAIL
+	Confidence     float64                `protobuf:"fixed64,6,opt,name=confidence,proto3" json:"confidence,omitempty"`
+	ImageObjectKey string                 `protobuf:"bytes,7,opt,name=image_object_key,json=imageObjectKey,proto3" json:"image_object_key,omitempty"` // for a presigned view URL
+	CreatedAtUnix  int64                  `protobuf:"varint,8,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
+	Findings       []*InspectionFinding   `protobuf:"bytes,9,rep,name=findings,proto3" json:"findings,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *GetLatestInspectionResponse) Reset() {
+	*x = GetLatestInspectionResponse{}
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLatestInspectionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLatestInspectionResponse) ProtoMessage() {}
+
+func (x *GetLatestInspectionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_dashboard_v1_dashboard_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLatestInspectionResponse.ProtoReflect.Descriptor instead.
+func (*GetLatestInspectionResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetLatestInspectionResponse) GetPresent() bool {
+	if x != nil {
+		return x.Present
+	}
+	return false
+}
+
+func (x *GetLatestInspectionResponse) GetLotId() string {
+	if x != nil {
+		return x.LotId
+	}
+	return ""
+}
+
+func (x *GetLatestInspectionResponse) GetLotNumber() string {
+	if x != nil {
+		return x.LotNumber
+	}
+	return ""
+}
+
+func (x *GetLatestInspectionResponse) GetMaterialName() string {
+	if x != nil {
+		return x.MaterialName
+	}
+	return ""
+}
+
+func (x *GetLatestInspectionResponse) GetRecommendation() int32 {
+	if x != nil {
+		return x.Recommendation
+	}
+	return 0
+}
+
+func (x *GetLatestInspectionResponse) GetConfidence() float64 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *GetLatestInspectionResponse) GetImageObjectKey() string {
+	if x != nil {
+		return x.ImageObjectKey
+	}
+	return ""
+}
+
+func (x *GetLatestInspectionResponse) GetCreatedAtUnix() int64 {
+	if x != nil {
+		return x.CreatedAtUnix
+	}
+	return 0
+}
+
+func (x *GetLatestInspectionResponse) GetFindings() []*InspectionFinding {
+	if x != nil {
+		return x.Findings
+	}
+	return nil
+}
+
 var File_simaops_dashboard_v1_dashboard_proto protoreflect.FileDescriptor
 
 const file_simaops_dashboard_v1_dashboard_proto_rawDesc = "" +
@@ -532,11 +892,47 @@ const file_simaops_dashboard_v1_dashboard_proto_rawDesc = "" +
 	"\x05zones\x18\x01 \x03(\v2!.simaops.dashboard.v1.ZoneMetricsR\x05zones\x12%\n" +
 	"\x0etotal_capacity\x18\x02 \x01(\x05R\rtotalCapacity\x12%\n" +
 	"\x0etotal_occupied\x18\x03 \x01(\x05R\rtotalOccupied\x12'\n" +
-	"\x0ftotal_available\x18\x04 \x01(\x05R\x0etotalAvailable2\xe5\x02\n" +
+	"\x0ftotal_available\x18\x04 \x01(\x05R\x0etotalAvailable\"'\n" +
+	"\x11GetQCTrendRequest\x12\x12\n" +
+	"\x04days\x18\x01 \x01(\x05R\x04days\"\x81\x01\n" +
+	"\n" +
+	"QCTrendDay\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x12\x1d\n" +
+	"\n" +
+	"pass_count\x18\x02 \x01(\x05R\tpassCount\x12!\n" +
+	"\freview_count\x18\x03 \x01(\x05R\vreviewCount\x12\x1d\n" +
+	"\n" +
+	"fail_count\x18\x04 \x01(\x05R\tfailCount\"J\n" +
+	"\x12GetQCTrendResponse\x124\n" +
+	"\x04days\x18\x01 \x03(\v2 .simaops.dashboard.v1.QCTrendDayR\x04days\"\x1c\n" +
+	"\x1aGetLatestInspectionRequest\"y\n" +
+	"\x11InspectionFinding\x12%\n" +
+	"\x0emapped_finding\x18\x01 \x01(\tR\rmappedFinding\x12\x1e\n" +
+	"\n" +
+	"confidence\x18\x02 \x01(\x01R\n" +
+	"confidence\x12\x1d\n" +
+	"\n" +
+	"is_anomaly\x18\x03 \x01(\bR\tisAnomaly\"\xf1\x02\n" +
+	"\x1bGetLatestInspectionResponse\x12\x18\n" +
+	"\apresent\x18\x01 \x01(\bR\apresent\x12\x15\n" +
+	"\x06lot_id\x18\x02 \x01(\tR\x05lotId\x12\x1d\n" +
+	"\n" +
+	"lot_number\x18\x03 \x01(\tR\tlotNumber\x12#\n" +
+	"\rmaterial_name\x18\x04 \x01(\tR\fmaterialName\x12&\n" +
+	"\x0erecommendation\x18\x05 \x01(\x05R\x0erecommendation\x12\x1e\n" +
+	"\n" +
+	"confidence\x18\x06 \x01(\x01R\n" +
+	"confidence\x12(\n" +
+	"\x10image_object_key\x18\a \x01(\tR\x0eimageObjectKey\x12&\n" +
+	"\x0fcreated_at_unix\x18\b \x01(\x03R\rcreatedAtUnix\x12C\n" +
+	"\bfindings\x18\t \x03(\v2'.simaops.dashboard.v1.InspectionFindingR\bfindings2\xc2\x04\n" +
 	"\x10DashboardService\x12n\n" +
 	"\x0fGetOpsDashboard\x12,.simaops.dashboard.v1.GetOpsDashboardRequest\x1a-.simaops.dashboard.v1.GetOpsDashboardResponse\x12e\n" +
 	"\fGetQCMetrics\x12).simaops.dashboard.v1.GetQCMetricsRequest\x1a*.simaops.dashboard.v1.GetQCMetricsResponse\x12z\n" +
-	"\x13GetWarehouseMetrics\x120.simaops.dashboard.v1.GetWarehouseMetricsRequest\x1a1.simaops.dashboard.v1.GetWarehouseMetricsResponseB\xf9\x01\n" +
+	"\x13GetWarehouseMetrics\x120.simaops.dashboard.v1.GetWarehouseMetricsRequest\x1a1.simaops.dashboard.v1.GetWarehouseMetricsResponse\x12_\n" +
+	"\n" +
+	"GetQCTrend\x12'.simaops.dashboard.v1.GetQCTrendRequest\x1a(.simaops.dashboard.v1.GetQCTrendResponse\x12z\n" +
+	"\x13GetLatestInspection\x120.simaops.dashboard.v1.GetLatestInspectionRequest\x1a1.simaops.dashboard.v1.GetLatestInspectionResponseB\xf9\x01\n" +
 	"\x18com.simaops.dashboard.v1B\x0eDashboardProtoP\x01Z[github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/dashboard/v1;dashboardv1\xa2\x02\x03SDX\xaa\x02\x14Simaops.Dashboard.V1\xca\x02\x14Simaops\\Dashboard\\V1\xe2\x02 Simaops\\Dashboard\\V1\\GPBMetadata\xea\x02\x16Simaops::Dashboard::V1b\x06proto3"
 
 var (
@@ -551,7 +947,7 @@ func file_simaops_dashboard_v1_dashboard_proto_rawDescGZIP() []byte {
 	return file_simaops_dashboard_v1_dashboard_proto_rawDescData
 }
 
-var file_simaops_dashboard_v1_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_simaops_dashboard_v1_dashboard_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_simaops_dashboard_v1_dashboard_proto_goTypes = []any{
 	(*StatusCount)(nil),                 // 0: simaops.dashboard.v1.StatusCount
 	(*GetOpsDashboardRequest)(nil),      // 1: simaops.dashboard.v1.GetOpsDashboardRequest
@@ -561,21 +957,33 @@ var file_simaops_dashboard_v1_dashboard_proto_goTypes = []any{
 	(*GetWarehouseMetricsRequest)(nil),  // 5: simaops.dashboard.v1.GetWarehouseMetricsRequest
 	(*ZoneMetrics)(nil),                 // 6: simaops.dashboard.v1.ZoneMetrics
 	(*GetWarehouseMetricsResponse)(nil), // 7: simaops.dashboard.v1.GetWarehouseMetricsResponse
+	(*GetQCTrendRequest)(nil),           // 8: simaops.dashboard.v1.GetQCTrendRequest
+	(*QCTrendDay)(nil),                  // 9: simaops.dashboard.v1.QCTrendDay
+	(*GetQCTrendResponse)(nil),          // 10: simaops.dashboard.v1.GetQCTrendResponse
+	(*GetLatestInspectionRequest)(nil),  // 11: simaops.dashboard.v1.GetLatestInspectionRequest
+	(*InspectionFinding)(nil),           // 12: simaops.dashboard.v1.InspectionFinding
+	(*GetLatestInspectionResponse)(nil), // 13: simaops.dashboard.v1.GetLatestInspectionResponse
 }
 var file_simaops_dashboard_v1_dashboard_proto_depIdxs = []int32{
-	0, // 0: simaops.dashboard.v1.GetOpsDashboardResponse.lots_by_status:type_name -> simaops.dashboard.v1.StatusCount
-	6, // 1: simaops.dashboard.v1.GetWarehouseMetricsResponse.zones:type_name -> simaops.dashboard.v1.ZoneMetrics
-	1, // 2: simaops.dashboard.v1.DashboardService.GetOpsDashboard:input_type -> simaops.dashboard.v1.GetOpsDashboardRequest
-	3, // 3: simaops.dashboard.v1.DashboardService.GetQCMetrics:input_type -> simaops.dashboard.v1.GetQCMetricsRequest
-	5, // 4: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:input_type -> simaops.dashboard.v1.GetWarehouseMetricsRequest
-	2, // 5: simaops.dashboard.v1.DashboardService.GetOpsDashboard:output_type -> simaops.dashboard.v1.GetOpsDashboardResponse
-	4, // 6: simaops.dashboard.v1.DashboardService.GetQCMetrics:output_type -> simaops.dashboard.v1.GetQCMetricsResponse
-	7, // 7: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:output_type -> simaops.dashboard.v1.GetWarehouseMetricsResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0,  // 0: simaops.dashboard.v1.GetOpsDashboardResponse.lots_by_status:type_name -> simaops.dashboard.v1.StatusCount
+	6,  // 1: simaops.dashboard.v1.GetWarehouseMetricsResponse.zones:type_name -> simaops.dashboard.v1.ZoneMetrics
+	9,  // 2: simaops.dashboard.v1.GetQCTrendResponse.days:type_name -> simaops.dashboard.v1.QCTrendDay
+	12, // 3: simaops.dashboard.v1.GetLatestInspectionResponse.findings:type_name -> simaops.dashboard.v1.InspectionFinding
+	1,  // 4: simaops.dashboard.v1.DashboardService.GetOpsDashboard:input_type -> simaops.dashboard.v1.GetOpsDashboardRequest
+	3,  // 5: simaops.dashboard.v1.DashboardService.GetQCMetrics:input_type -> simaops.dashboard.v1.GetQCMetricsRequest
+	5,  // 6: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:input_type -> simaops.dashboard.v1.GetWarehouseMetricsRequest
+	8,  // 7: simaops.dashboard.v1.DashboardService.GetQCTrend:input_type -> simaops.dashboard.v1.GetQCTrendRequest
+	11, // 8: simaops.dashboard.v1.DashboardService.GetLatestInspection:input_type -> simaops.dashboard.v1.GetLatestInspectionRequest
+	2,  // 9: simaops.dashboard.v1.DashboardService.GetOpsDashboard:output_type -> simaops.dashboard.v1.GetOpsDashboardResponse
+	4,  // 10: simaops.dashboard.v1.DashboardService.GetQCMetrics:output_type -> simaops.dashboard.v1.GetQCMetricsResponse
+	7,  // 11: simaops.dashboard.v1.DashboardService.GetWarehouseMetrics:output_type -> simaops.dashboard.v1.GetWarehouseMetricsResponse
+	10, // 12: simaops.dashboard.v1.DashboardService.GetQCTrend:output_type -> simaops.dashboard.v1.GetQCTrendResponse
+	13, // 13: simaops.dashboard.v1.DashboardService.GetLatestInspection:output_type -> simaops.dashboard.v1.GetLatestInspectionResponse
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_simaops_dashboard_v1_dashboard_proto_init() }
@@ -589,7 +997,7 @@ func file_simaops_dashboard_v1_dashboard_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_simaops_dashboard_v1_dashboard_proto_rawDesc), len(file_simaops_dashboard_v1_dashboard_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -6,6 +6,8 @@ service DashboardService {
   rpc GetOpsDashboard(GetOpsDashboardRequest) returns (GetOpsDashboardResponse);
   rpc GetQCMetrics(GetQCMetricsRequest) returns (GetQCMetricsResponse);
   rpc GetWarehouseMetrics(GetWarehouseMetricsRequest) returns (GetWarehouseMetricsResponse);
+  rpc GetQCTrend(GetQCTrendRequest) returns (GetQCTrendResponse);
+  rpc GetLatestInspection(GetLatestInspectionRequest) returns (GetLatestInspectionResponse);
 }
 
 // ─── Messages ────────────────────────────────────────────────────
@@ -59,4 +61,43 @@ message GetWarehouseMetricsResponse {
   int32 total_capacity = 2;
   int32 total_occupied = 3;
   int32 total_available = 4;
+}
+
+// ─── QC Trend (daily buckets) ────────────────────────────────────
+
+message GetQCTrendRequest {
+  int32 days = 1; // lookback window in days, default 7
+}
+
+message QCTrendDay {
+  string date = 1; // YYYY-MM-DD
+  int32 pass_count = 2;
+  int32 review_count = 3;
+  int32 fail_count = 4;
+}
+
+message GetQCTrendResponse {
+  repeated QCTrendDay days = 1;
+}
+
+// ─── Latest Inspection (most recent QC result, globally) ─────────
+
+message GetLatestInspectionRequest {}
+
+message InspectionFinding {
+  string mapped_finding = 1;
+  double confidence = 2;
+  bool is_anomaly = 3;
+}
+
+message GetLatestInspectionResponse {
+  bool present = 1;            // false when no QC result exists yet
+  string lot_id = 2;
+  string lot_number = 3;
+  string material_name = 4;
+  int32 recommendation = 5;    // 1=PASS,2=REVIEW,3=FAIL
+  double confidence = 6;
+  string image_object_key = 7; // for a presigned view URL
+  int64 created_at_unix = 8;
+  repeated InspectionFinding findings = 9;
 }

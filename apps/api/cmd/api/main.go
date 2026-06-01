@@ -126,9 +126,11 @@ func main() {
 				middleware.CORS(
 					middleware.Metrics(
 						jwtMw.Wrap(
-							auth.RBACMiddleware(
-								middleware.Idempotency(dbConn,
-									middleware.Audit(dbConn, mux),
+							auth.ImpersonationMiddleware(db.New(dbConn))(
+								auth.RBACMiddleware(
+									middleware.Idempotency(dbConn,
+										middleware.Audit(dbConn, mux),
+									),
 								),
 							),
 						),

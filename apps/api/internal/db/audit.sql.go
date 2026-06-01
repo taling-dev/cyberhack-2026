@@ -22,6 +22,33 @@ func (q *Queries) CountAuditLogs(ctx context.Context) (int64, error) {
 	return count, err
 }
 
+const countAuditLogsFiltered = `-- name: CountAuditLogsFiltered :one
+SELECT COUNT(*) FROM audit_logs
+WHERE (? = '' OR entity_type = ?)
+  AND (? = '' OR actor_user_id = ?)
+  AND (? = '' OR action = ?)
+`
+
+type CountAuditLogsFilteredParams struct {
+	EntityType  string `json:"entity_type"`
+	ActorUserID string `json:"actor_user_id"`
+	Action      string `json:"action"`
+}
+
+func (q *Queries) CountAuditLogsFiltered(ctx context.Context, arg CountAuditLogsFilteredParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAuditLogsFiltered,
+		arg.EntityType,
+		arg.EntityType,
+		arg.ActorUserID,
+		arg.ActorUserID,
+		arg.Action,
+		arg.Action,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAuditLog = `-- name: CreateAuditLog :exec
 INSERT INTO audit_logs (id, actor_user_id, actor_role, action, entity_type, entity_id, before_json, after_json, request_id, trace_id)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -61,16 +88,32 @@ SELECT id, actor_user_id, actor_role, action, entity_type, entity_id,
        COALESCE(before_json, JSON_OBJECT()) AS before_json,
        COALESCE(after_json, JSON_OBJECT())  AS after_json,
        request_id, trace_id, created_at
-FROM audit_logs ORDER BY created_at DESC LIMIT ? OFFSET ?
+FROM audit_logs
+WHERE (? = '' OR entity_type = ?)
+  AND (? = '' OR actor_user_id = ?)
+  AND (? = '' OR action = ?)
+ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
 
 type ListAuditLogsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	EntityType  string `json:"entity_type"`
+	ActorUserID string `json:"actor_user_id"`
+	Action      string `json:"action"`
+	Limit       int32  `json:"limit"`
+	Offset      int32  `json:"offset"`
 }
 
 func (q *Queries) ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]AuditLog, error) {
-	rows, err := q.db.QueryContext(ctx, listAuditLogs, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listAuditLogs,
+		arg.EntityType,
+		arg.EntityType,
+		arg.ActorUserID,
+		arg.ActorUserID,
+		arg.Action,
+		arg.Action,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

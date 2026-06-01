@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file simaops/admin/v1/admin.proto.
  */
 export const file_simaops_admin_v1_admin: GenFile = /*@__PURE__*/
-  fileDesc("ChxzaW1hb3BzL2FkbWluL3YxL2FkbWluLnByb3RvEhBzaW1hb3BzLmFkbWluLnYxIn0KBFVzZXISCgoCaWQYASABKAkSEAoIdXNlcm5hbWUYAiABKAkSDQoFZW1haWwYAyABKAkSEQoJZnVsbF9uYW1lGAQgASgJEiUKBXJvbGVzGAUgAygOMhYuc2ltYW9wcy5hZG1pbi52MS5Sb2xlEg4KBmFjdGl2ZRgGIAEoCCJZCg5Sb2xlRGVmaW5pdGlvbhIkCgRyb2xlGAEgASgOMhYuc2ltYW9wcy5hZG1pbi52MS5Sb2xlEgwKBG5hbWUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkiZgoQTGlzdFVzZXJzUmVxdWVzdBIRCglwYWdlX3NpemUYASABKAUSEgoKcGFnZV90b2tlbhgCIAEoCRIrCgtyb2xlX2ZpbHRlchgDIAEoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZSJoChFMaXN0VXNlcnNSZXNwb25zZRIlCgV1c2VycxgBIAMoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlchIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkSEwoLdG90YWxfY291bnQYAyABKAUiYwoRQXNzaWduUm9sZVJlcXVlc3QSDwoHdXNlcl9pZBgBIAEoCRIkCgRyb2xlGAIgASgOMhYuc2ltYW9wcy5hZG1pbi52MS5Sb2xlEhcKD2lkZW1wb3RlbmN5X2tleRgDIAEoCSI6ChJBc3NpZ25Sb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciJjChFSZXZva2VSb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIjoKElJldm9rZVJvbGVSZXNwb25zZRIkCgR1c2VyGAEgASgLMhYuc2ltYW9wcy5hZG1pbi52MS5Vc2VyIhIKEExpc3RSb2xlc1JlcXVlc3QiRAoRTGlzdFJvbGVzUmVzcG9uc2USLwoFcm9sZXMYASADKAsyIC5zaW1hb3BzLmFkbWluLnYxLlJvbGVEZWZpbml0aW9uKoMBCgRSb2xlEhQKEFJPTEVfVU5TUEVDSUZJRUQQABIRCg1ST0xFX09QRVJBVE9SEAESFgoSUk9MRV9RQ19TVVBFUlZJU09SEAISGAoUUk9MRV9XQVJFSE9VU0VfU1RBRkYQAxIQCgxST0xFX01BTkFHRVIQBBIOCgpST0xFX0FETUlOEAUy7AIKDEFkbWluU2VydmljZRJUCglMaXN0VXNlcnMSIi5zaW1hb3BzLmFkbWluLnYxLkxpc3RVc2Vyc1JlcXVlc3QaIy5zaW1hb3BzLmFkbWluLnYxLkxpc3RVc2Vyc1Jlc3BvbnNlElcKCkFzc2lnblJvbGUSIy5zaW1hb3BzLmFkbWluLnYxLkFzc2lnblJvbGVSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5Bc3NpZ25Sb2xlUmVzcG9uc2USVwoKUmV2b2tlUm9sZRIjLnNpbWFvcHMuYWRtaW4udjEuUmV2b2tlUm9sZVJlcXVlc3QaJC5zaW1hb3BzLmFkbWluLnYxLlJldm9rZVJvbGVSZXNwb25zZRJUCglMaXN0Um9sZXMSIi5zaW1hb3BzLmFkbWluLnYxLkxpc3RSb2xlc1JlcXVlc3QaIy5zaW1hb3BzLmFkbWluLnYxLkxpc3RSb2xlc1Jlc3BvbnNlQtkBChRjb20uc2ltYW9wcy5hZG1pbi52MUIKQWRtaW5Qcm90b1ABWlNnaXRodWIuY29tL3RhbGluZy1kZXYvQ1lCRVJIQUNLLTIwMjYvYXBwcy9hcGkvaW50ZXJuYWwvZ2VuL3NpbWFvcHMvYWRtaW4vdjE7YWRtaW52MaICA1NBWKoCEFNpbWFvcHMuQWRtaW4uVjHKAhBTaW1hb3BzXEFkbWluXFYx4gIcU2ltYW9wc1xBZG1pblxWMVxHUEJNZXRhZGF0YeoCElNpbWFvcHM6OkFkbWluOjpWMWIGcHJvdG8z");
+  fileDesc("ChxzaW1hb3BzL2FkbWluL3YxL2FkbWluLnByb3RvEhBzaW1hb3BzLmFkbWluLnYxIpEBCgRVc2VyEgoKAmlkGAEgASgJEhAKCHVzZXJuYW1lGAIgASgJEg0KBWVtYWlsGAMgASgJEhEKCWZ1bGxfbmFtZRgEIAEoCRIlCgVyb2xlcxgFIAMoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZRIOCgZhY3RpdmUYBiABKAgSEgoKcm9sZV9uYW1lcxgHIAMoCSKNAQoOUm9sZURlZmluaXRpb24SJAoEcm9sZRgBIAEoDjIWLnNpbWFvcHMuYWRtaW4udjEuUm9sZRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhEKCWlzX3N5c3RlbRgEIAEoCBITCgtwZXJtaXNzaW9ucxgFIAMoCRIKCgJpZBgGIAEoCSJmChBMaXN0VXNlcnNSZXF1ZXN0EhEKCXBhZ2Vfc2l6ZRgBIAEoBRISCgpwYWdlX3Rva2VuGAIgASgJEisKC3JvbGVfZmlsdGVyGAMgASgOMhYuc2ltYW9wcy5hZG1pbi52MS5Sb2xlImgKEUxpc3RVc2Vyc1Jlc3BvbnNlEiUKBXVzZXJzGAEgAygLMhYuc2ltYW9wcy5hZG1pbi52MS5Vc2VyEhcKD25leHRfcGFnZV90b2tlbhgCIAEoCRITCgt0b3RhbF9jb3VudBgDIAEoBSJ2ChFBc3NpZ25Sb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEhEKCXJvbGVfbmFtZRgEIAEoCSI6ChJBc3NpZ25Sb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciJ2ChFSZXZva2VSb2xlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEiQKBHJvbGUYAiABKA4yFi5zaW1hb3BzLmFkbWluLnYxLlJvbGUSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEhEKCXJvbGVfbmFtZRgEIAEoCSI6ChJSZXZva2VSb2xlUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciISChBMaXN0Um9sZXNSZXF1ZXN0IkQKEUxpc3RSb2xlc1Jlc3BvbnNlEi8KBXJvbGVzGAEgAygLMiAuc2ltYW9wcy5hZG1pbi52MS5Sb2xlRGVmaW5pdGlvbiJLChFDcmVhdGVSb2xlUmVxdWVzdBIMCgRuYW1lGAEgASgJEhMKC2Rlc2NyaXB0aW9uGAIgASgJEhMKC3Blcm1pc3Npb25zGAMgAygJIkQKEkNyZWF0ZVJvbGVSZXNwb25zZRIuCgRyb2xlGAEgASgLMiAuc2ltYW9wcy5hZG1pbi52MS5Sb2xlRGVmaW5pdGlvbiIkChFEZWxldGVSb2xlUmVxdWVzdBIPCgdyb2xlX2lkGAEgASgJIiUKEkRlbGV0ZVJvbGVSZXNwb25zZRIPCgdkZWxldGVkGAEgASgIIhcKFUxpc3RQcm9jZWR1cmVzUmVxdWVzdCIsChZMaXN0UHJvY2VkdXJlc1Jlc3BvbnNlEhIKCnByb2NlZHVyZXMYASADKAkicgoRQ3JlYXRlVXNlclJlcXVlc3QSEAoIdXNlcm5hbWUYASABKAkSDQoFZW1haWwYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhUKDXRlbXBfcGFzc3dvcmQYBCABKAkSEgoKcm9sZV9uYW1lcxgFIAMoCSI6ChJDcmVhdGVVc2VyUmVzcG9uc2USJAoEdXNlchgBIAEoCzIWLnNpbWFvcHMuYWRtaW4udjEuVXNlciJxChFVcGRhdGVVc2VyUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEhEKCWZ1bGxfbmFtZRgCIAEoCRINCgVlbWFpbBgDIAEoCRIOCgZhY3RpdmUYBCABKAgSGQoRbmV3X3RlbXBfcGFzc3dvcmQYBSABKAkiOgoSVXBkYXRlVXNlclJlc3BvbnNlEiQKBHVzZXIYASABKAsyFi5zaW1hb3BzLmFkbWluLnYxLlVzZXIiTgoRVXBkYXRlUm9sZVJlcXVlc3QSDwoHcm9sZV9pZBgBIAEoCRITCgtkZXNjcmlwdGlvbhgCIAEoCRITCgtwZXJtaXNzaW9ucxgDIAMoCSJEChJVcGRhdGVSb2xlUmVzcG9uc2USLgoEcm9sZRgBIAEoCzIgLnNpbWFvcHMuYWRtaW4udjEuUm9sZURlZmluaXRpb24iGAoWR2V0UUNUaHJlc2hvbGRzUmVxdWVzdCJqCgxRQ1RocmVzaG9sZHMSEAoIcGFzc19taW4YASABKAUSEgoKcmV2aWV3X21pbhgCIAEoBRIYChBkZWZhdWx0X3Bhc3NfbWluGAMgASgFEhoKEmRlZmF1bHRfcmV2aWV3X21pbhgEIAEoBSqDAQoEUm9sZRIUChBST0xFX1VOU1BFQ0lGSUVEEAASEQoNUk9MRV9PUEVSQVRPUhABEhYKElJPTEVfUUNfU1VQRVJWSVNPUhACEhgKFFJPTEVfV0FSRUhPVVNFX1NUQUZGEAMSEAoMUk9MRV9NQU5BR0VSEAQSDgoKUk9MRV9BRE1JThAFMsEICgxBZG1pblNlcnZpY2USVAoJTGlzdFVzZXJzEiIuc2ltYW9wcy5hZG1pbi52MS5MaXN0VXNlcnNSZXF1ZXN0GiMuc2ltYW9wcy5hZG1pbi52MS5MaXN0VXNlcnNSZXNwb25zZRJXCgpBc3NpZ25Sb2xlEiMuc2ltYW9wcy5hZG1pbi52MS5Bc3NpZ25Sb2xlUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuQXNzaWduUm9sZVJlc3BvbnNlElcKClJldm9rZVJvbGUSIy5zaW1hb3BzLmFkbWluLnYxLlJldm9rZVJvbGVSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5SZXZva2VSb2xlUmVzcG9uc2USVAoJTGlzdFJvbGVzEiIuc2ltYW9wcy5hZG1pbi52MS5MaXN0Um9sZXNSZXF1ZXN0GiMuc2ltYW9wcy5hZG1pbi52MS5MaXN0Um9sZXNSZXNwb25zZRJXCgpDcmVhdGVSb2xlEiMuc2ltYW9wcy5hZG1pbi52MS5DcmVhdGVSb2xlUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuQ3JlYXRlUm9sZVJlc3BvbnNlElcKCkRlbGV0ZVJvbGUSIy5zaW1hb3BzLmFkbWluLnYxLkRlbGV0ZVJvbGVSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5EZWxldGVSb2xlUmVzcG9uc2USYwoOTGlzdFByb2NlZHVyZXMSJy5zaW1hb3BzLmFkbWluLnYxLkxpc3RQcm9jZWR1cmVzUmVxdWVzdBooLnNpbWFvcHMuYWRtaW4udjEuTGlzdFByb2NlZHVyZXNSZXNwb25zZRJXCgpDcmVhdGVVc2VyEiMuc2ltYW9wcy5hZG1pbi52MS5DcmVhdGVVc2VyUmVxdWVzdBokLnNpbWFvcHMuYWRtaW4udjEuQ3JlYXRlVXNlclJlc3BvbnNlElcKClVwZGF0ZVVzZXISIy5zaW1hb3BzLmFkbWluLnYxLlVwZGF0ZVVzZXJSZXF1ZXN0GiQuc2ltYW9wcy5hZG1pbi52MS5VcGRhdGVVc2VyUmVzcG9uc2USVwoKVXBkYXRlUm9sZRIjLnNpbWFvcHMuYWRtaW4udjEuVXBkYXRlUm9sZVJlcXVlc3QaJC5zaW1hb3BzLmFkbWluLnYxLlVwZGF0ZVJvbGVSZXNwb25zZRJbCg9HZXRRQ1RocmVzaG9sZHMSKC5zaW1hb3BzLmFkbWluLnYxLkdldFFDVGhyZXNob2xkc1JlcXVlc3QaHi5zaW1hb3BzLmFkbWluLnYxLlFDVGhyZXNob2xkcxJUChJVcGRhdGVRQ1RocmVzaG9sZHMSHi5zaW1hb3BzLmFkbWluLnYxLlFDVGhyZXNob2xkcxoeLnNpbWFvcHMuYWRtaW4udjEuUUNUaHJlc2hvbGRzQtkBChRjb20uc2ltYW9wcy5hZG1pbi52MUIKQWRtaW5Qcm90b1ABWlNnaXRodWIuY29tL3RhbGluZy1kZXYvQ1lCRVJIQUNLLTIwMjYvYXBwcy9hcGkvaW50ZXJuYWwvZ2VuL3NpbWFvcHMvYWRtaW4vdjE7YWRtaW52MaICA1NBWKoCEFNpbWFvcHMuQWRtaW4uVjHKAhBTaW1hb3BzXEFkbWluXFYx4gIcU2ltYW9wc1xBZG1pblxWMVxHUEJNZXRhZGF0YeoCElNpbWFvcHM6OkFkbWluOjpWMWIGcHJvdG8z");
 
 /**
  * @generated from message simaops.admin.v1.User
@@ -45,6 +45,14 @@ export type User = Message<"simaops.admin.v1.User"> & {
    * @generated from field: bool active = 6;
    */
   active: boolean;
+
+  /**
+   * Custom roles aren't in the Role enum; role_names is the authoritative,
+   * enum-independent role list (includes builtin + custom).
+   *
+   * @generated from field: repeated string role_names = 7;
+   */
+  roleNames: string[];
 };
 
 /**
@@ -72,6 +80,27 @@ export type RoleDefinition = Message<"simaops.admin.v1.RoleDefinition"> & {
    * @generated from field: string description = 3;
    */
   description: string;
+
+  /**
+   * builtin roles cannot be deleted
+   *
+   * @generated from field: bool is_system = 4;
+   */
+  isSystem: boolean;
+
+  /**
+   * granted RPC paths (custom roles)
+   *
+   * @generated from field: repeated string permissions = 5;
+   */
+  permissions: string[];
+
+  /**
+   * DB role id (for DeleteRole)
+   *
+   * @generated from field: string id = 6;
+   */
+  id: string;
 };
 
 /**
@@ -153,6 +182,13 @@ export type AssignRoleRequest = Message<"simaops.admin.v1.AssignRoleRequest"> & 
    * @generated from field: string idempotency_key = 3;
    */
   idempotencyKey: string;
+
+  /**
+   * preferred; supports custom roles. Falls back to enum.
+   *
+   * @generated from field: string role_name = 4;
+   */
+  roleName: string;
 };
 
 /**
@@ -197,6 +233,13 @@ export type RevokeRoleRequest = Message<"simaops.admin.v1.RevokeRoleRequest"> & 
    * @generated from field: string idempotency_key = 3;
    */
   idempotencyKey: string;
+
+  /**
+   * preferred; supports custom roles. Falls back to enum.
+   *
+   * @generated from field: string role_name = 4;
+   */
+  roleName: string;
 };
 
 /**
@@ -252,6 +295,326 @@ export type ListRolesResponse = Message<"simaops.admin.v1.ListRolesResponse"> & 
  */
 export const ListRolesResponseSchema: GenMessage<ListRolesResponse> = /*@__PURE__*/
   messageDesc(file_simaops_admin_v1_admin, 9);
+
+/**
+ * @generated from message simaops.admin.v1.CreateRoleRequest
+ */
+export type CreateRoleRequest = Message<"simaops.admin.v1.CreateRoleRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 2;
+   */
+  description: string;
+
+  /**
+   * RPC paths this role may call
+   *
+   * @generated from field: repeated string permissions = 3;
+   */
+  permissions: string[];
+};
+
+/**
+ * Describes the message simaops.admin.v1.CreateRoleRequest.
+ * Use `create(CreateRoleRequestSchema)` to create a new message.
+ */
+export const CreateRoleRequestSchema: GenMessage<CreateRoleRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 10);
+
+/**
+ * @generated from message simaops.admin.v1.CreateRoleResponse
+ */
+export type CreateRoleResponse = Message<"simaops.admin.v1.CreateRoleResponse"> & {
+  /**
+   * @generated from field: simaops.admin.v1.RoleDefinition role = 1;
+   */
+  role?: RoleDefinition | undefined;
+};
+
+/**
+ * Describes the message simaops.admin.v1.CreateRoleResponse.
+ * Use `create(CreateRoleResponseSchema)` to create a new message.
+ */
+export const CreateRoleResponseSchema: GenMessage<CreateRoleResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 11);
+
+/**
+ * @generated from message simaops.admin.v1.DeleteRoleRequest
+ */
+export type DeleteRoleRequest = Message<"simaops.admin.v1.DeleteRoleRequest"> & {
+  /**
+   * @generated from field: string role_id = 1;
+   */
+  roleId: string;
+};
+
+/**
+ * Describes the message simaops.admin.v1.DeleteRoleRequest.
+ * Use `create(DeleteRoleRequestSchema)` to create a new message.
+ */
+export const DeleteRoleRequestSchema: GenMessage<DeleteRoleRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 12);
+
+/**
+ * @generated from message simaops.admin.v1.DeleteRoleResponse
+ */
+export type DeleteRoleResponse = Message<"simaops.admin.v1.DeleteRoleResponse"> & {
+  /**
+   * @generated from field: bool deleted = 1;
+   */
+  deleted: boolean;
+};
+
+/**
+ * Describes the message simaops.admin.v1.DeleteRoleResponse.
+ * Use `create(DeleteRoleResponseSchema)` to create a new message.
+ */
+export const DeleteRoleResponseSchema: GenMessage<DeleteRoleResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 13);
+
+/**
+ * @generated from message simaops.admin.v1.ListProceduresRequest
+ */
+export type ListProceduresRequest = Message<"simaops.admin.v1.ListProceduresRequest"> & {
+};
+
+/**
+ * Describes the message simaops.admin.v1.ListProceduresRequest.
+ * Use `create(ListProceduresRequestSchema)` to create a new message.
+ */
+export const ListProceduresRequestSchema: GenMessage<ListProceduresRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 14);
+
+/**
+ * @generated from message simaops.admin.v1.ListProceduresResponse
+ */
+export type ListProceduresResponse = Message<"simaops.admin.v1.ListProceduresResponse"> & {
+  /**
+   * grantable RPC paths
+   *
+   * @generated from field: repeated string procedures = 1;
+   */
+  procedures: string[];
+};
+
+/**
+ * Describes the message simaops.admin.v1.ListProceduresResponse.
+ * Use `create(ListProceduresResponseSchema)` to create a new message.
+ */
+export const ListProceduresResponseSchema: GenMessage<ListProceduresResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 15);
+
+/**
+ * @generated from message simaops.admin.v1.CreateUserRequest
+ */
+export type CreateUserRequest = Message<"simaops.admin.v1.CreateUserRequest"> & {
+  /**
+   * @generated from field: string username = 1;
+   */
+  username: string;
+
+  /**
+   * @generated from field: string email = 2;
+   */
+  email: string;
+
+  /**
+   * @generated from field: string full_name = 3;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: string temp_password = 4;
+   */
+  tempPassword: string;
+
+  /**
+   * initial roles to assign
+   *
+   * @generated from field: repeated string role_names = 5;
+   */
+  roleNames: string[];
+};
+
+/**
+ * Describes the message simaops.admin.v1.CreateUserRequest.
+ * Use `create(CreateUserRequestSchema)` to create a new message.
+ */
+export const CreateUserRequestSchema: GenMessage<CreateUserRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 16);
+
+/**
+ * @generated from message simaops.admin.v1.CreateUserResponse
+ */
+export type CreateUserResponse = Message<"simaops.admin.v1.CreateUserResponse"> & {
+  /**
+   * @generated from field: simaops.admin.v1.User user = 1;
+   */
+  user?: User | undefined;
+};
+
+/**
+ * Describes the message simaops.admin.v1.CreateUserResponse.
+ * Use `create(CreateUserResponseSchema)` to create a new message.
+ */
+export const CreateUserResponseSchema: GenMessage<CreateUserResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 17);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateUserRequest
+ */
+export type UpdateUserRequest = Message<"simaops.admin.v1.UpdateUserRequest"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string full_name = 2;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: string email = 3;
+   */
+  email: string;
+
+  /**
+   * @generated from field: bool active = 4;
+   */
+  active: boolean;
+
+  /**
+   * optional; resets password (temporary) when set
+   *
+   * @generated from field: string new_temp_password = 5;
+   */
+  newTempPassword: string;
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateUserRequest.
+ * Use `create(UpdateUserRequestSchema)` to create a new message.
+ */
+export const UpdateUserRequestSchema: GenMessage<UpdateUserRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 18);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateUserResponse
+ */
+export type UpdateUserResponse = Message<"simaops.admin.v1.UpdateUserResponse"> & {
+  /**
+   * @generated from field: simaops.admin.v1.User user = 1;
+   */
+  user?: User | undefined;
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateUserResponse.
+ * Use `create(UpdateUserResponseSchema)` to create a new message.
+ */
+export const UpdateUserResponseSchema: GenMessage<UpdateUserResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 19);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateRoleRequest
+ */
+export type UpdateRoleRequest = Message<"simaops.admin.v1.UpdateRoleRequest"> & {
+  /**
+   * @generated from field: string role_id = 1;
+   */
+  roleId: string;
+
+  /**
+   * @generated from field: string description = 2;
+   */
+  description: string;
+
+  /**
+   * replaces the role's granted RPC paths
+   *
+   * @generated from field: repeated string permissions = 3;
+   */
+  permissions: string[];
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateRoleRequest.
+ * Use `create(UpdateRoleRequestSchema)` to create a new message.
+ */
+export const UpdateRoleRequestSchema: GenMessage<UpdateRoleRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 20);
+
+/**
+ * @generated from message simaops.admin.v1.UpdateRoleResponse
+ */
+export type UpdateRoleResponse = Message<"simaops.admin.v1.UpdateRoleResponse"> & {
+  /**
+   * @generated from field: simaops.admin.v1.RoleDefinition role = 1;
+   */
+  role?: RoleDefinition | undefined;
+};
+
+/**
+ * Describes the message simaops.admin.v1.UpdateRoleResponse.
+ * Use `create(UpdateRoleResponseSchema)` to create a new message.
+ */
+export const UpdateRoleResponseSchema: GenMessage<UpdateRoleResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 21);
+
+/**
+ * AI QC grading thresholds (0-100 quality scale). quality >= pass_min -> PASS,
+ * >= review_min -> REVIEW, else FAIL.
+ *
+ * @generated from message simaops.admin.v1.GetQCThresholdsRequest
+ */
+export type GetQCThresholdsRequest = Message<"simaops.admin.v1.GetQCThresholdsRequest"> & {
+};
+
+/**
+ * Describes the message simaops.admin.v1.GetQCThresholdsRequest.
+ * Use `create(GetQCThresholdsRequestSchema)` to create a new message.
+ */
+export const GetQCThresholdsRequestSchema: GenMessage<GetQCThresholdsRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 22);
+
+/**
+ * @generated from message simaops.admin.v1.QCThresholds
+ */
+export type QCThresholds = Message<"simaops.admin.v1.QCThresholds"> & {
+  /**
+   * @generated from field: int32 pass_min = 1;
+   */
+  passMin: number;
+
+  /**
+   * @generated from field: int32 review_min = 2;
+   */
+  reviewMin: number;
+
+  /**
+   * for the UI's reset button (read-only)
+   *
+   * @generated from field: int32 default_pass_min = 3;
+   */
+  defaultPassMin: number;
+
+  /**
+   * @generated from field: int32 default_review_min = 4;
+   */
+  defaultReviewMin: number;
+};
+
+/**
+ * Describes the message simaops.admin.v1.QCThresholds.
+ * Use `create(QCThresholdsSchema)` to create a new message.
+ */
+export const QCThresholdsSchema: GenMessage<QCThresholds> = /*@__PURE__*/
+  messageDesc(file_simaops_admin_v1_admin, 23);
 
 /**
  * @generated from enum simaops.admin.v1.Role
@@ -329,6 +692,70 @@ export const AdminService: GenService<{
     methodKind: "unary";
     input: typeof ListRolesRequestSchema;
     output: typeof ListRolesResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.CreateRole
+   */
+  createRole: {
+    methodKind: "unary";
+    input: typeof CreateRoleRequestSchema;
+    output: typeof CreateRoleResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.DeleteRole
+   */
+  deleteRole: {
+    methodKind: "unary";
+    input: typeof DeleteRoleRequestSchema;
+    output: typeof DeleteRoleResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.ListProcedures
+   */
+  listProcedures: {
+    methodKind: "unary";
+    input: typeof ListProceduresRequestSchema;
+    output: typeof ListProceduresResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.CreateUser
+   */
+  createUser: {
+    methodKind: "unary";
+    input: typeof CreateUserRequestSchema;
+    output: typeof CreateUserResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.UpdateUser
+   */
+  updateUser: {
+    methodKind: "unary";
+    input: typeof UpdateUserRequestSchema;
+    output: typeof UpdateUserResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.UpdateRole
+   */
+  updateRole: {
+    methodKind: "unary";
+    input: typeof UpdateRoleRequestSchema;
+    output: typeof UpdateRoleResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.GetQCThresholds
+   */
+  getQCThresholds: {
+    methodKind: "unary";
+    input: typeof GetQCThresholdsRequestSchema;
+    output: typeof QCThresholdsSchema;
+  },
+  /**
+   * @generated from rpc simaops.admin.v1.AdminService.UpdateQCThresholds
+   */
+  updateQCThresholds: {
+    methodKind: "unary";
+    input: typeof QCThresholdsSchema;
+    output: typeof QCThresholdsSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_simaops_admin_v1_admin, 0);

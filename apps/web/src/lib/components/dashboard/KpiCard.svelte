@@ -19,12 +19,16 @@
     icon,
     tone = 'slate',
     loading = false,
+    href = undefined,
+    emphasis = false,
   } = $props<{
     title: string;
     value: string;
     icon: DashboardIconName;
     tone?: Tone;
     loading?: boolean;
+    href?: string;
+    emphasis?: boolean;
   }>();
 
   function classesFor(value: Tone | undefined) {
@@ -34,16 +38,20 @@
   const toneClass = $derived(classesFor(tone));
 </script>
 
-<section class="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+<svelte:element
+  this={href ? 'a' : 'section'}
+  {href}
+  class="block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-colors {href ? 'hover:border-slate-300 hover:bg-slate-50' : ''}"
+>
   <p class="truncate text-center text-[12px] font-medium text-slate-700">{title}</p>
   <div class="mt-3 flex items-center justify-center gap-3">
-    <span class="flex size-10 shrink-0 items-center justify-center rounded-md {toneClass.badge}">
-      <DashboardIcon name={icon} class="size-6" />
+    <span class="flex shrink-0 items-center justify-center rounded-md {emphasis ? 'size-11' : 'size-10'} {toneClass.badge}">
+      <DashboardIcon name={icon} class={emphasis ? 'size-7' : 'size-6'} />
     </span>
     {#if loading}
       <span class="h-8 w-20 animate-pulse rounded bg-slate-100"></span>
     {:else}
-      <span class="truncate text-2xl font-bold tracking-normal {toneClass.value}">{value}</span>
+      <span class="truncate font-bold tracking-normal {emphasis ? 'text-3xl' : 'text-2xl'} {toneClass.value}">{value}</span>
     {/if}
   </div>
-</section>
+</svelte:element>

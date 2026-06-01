@@ -318,8 +318,11 @@ type Lot struct {
 	CreatedBy          string                 `protobuf:"bytes,11,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
 	CreatedAt          *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt          *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// Latest QC result for this lot, when one exists (for list display).
+	QcConfidence     float64 `protobuf:"fixed64,14,opt,name=qc_confidence,json=qcConfidence,proto3" json:"qc_confidence,omitempty"`           // 0..1; 0 when no QC result yet
+	QcRecommendation string  `protobuf:"bytes,15,opt,name=qc_recommendation,json=qcRecommendation,proto3" json:"qc_recommendation,omitempty"` // "PASS"|"REVIEW"|"FAIL"; empty when none
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Lot) Reset() {
@@ -441,6 +444,20 @@ func (x *Lot) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Lot) GetQcConfidence() float64 {
+	if x != nil {
+		return x.QcConfidence
+	}
+	return 0
+}
+
+func (x *Lot) GetQcRecommendation() string {
+	if x != nil {
+		return x.QcRecommendation
+	}
+	return ""
 }
 
 type CreateLotRequest struct {
@@ -1094,7 +1111,7 @@ const file_simaops_lot_v1_lot_proto_rawDesc = "" +
 	"\x18simaops/lot/v1/lot.proto\x12\x0esimaops.lot.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa3\x01\n" +
 	"\x12StorageRequirement\x12M\n" +
 	"\x11temperature_range\x18\x01 \x01(\x0e2 .simaops.lot.v1.TemperatureRangeR\x10temperatureRange\x12>\n" +
-	"\fhazard_class\x18\x02 \x01(\x0e2\x1b.simaops.lot.v1.HazardClassR\vhazardClass\"\xb1\x04\n" +
+	"\fhazard_class\x18\x02 \x01(\x0e2\x1b.simaops.lot.v1.HazardClassR\vhazardClass\"\x83\x05\n" +
 	"\x03Lot\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -1113,7 +1130,9 @@ const file_simaops_lot_v1_lot_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xf0\x02\n" +
+	"updated_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12#\n" +
+	"\rqc_confidence\x18\x0e \x01(\x01R\fqcConfidence\x12+\n" +
+	"\x11qc_recommendation\x18\x0f \x01(\tR\x10qcRecommendation\"\xf0\x02\n" +
 	"\x10CreateLotRequest\x12#\n" +
 	"\rsupplier_name\x18\x01 \x01(\tR\fsupplierName\x12#\n" +
 	"\rmaterial_name\x18\x02 \x01(\tR\fmaterialName\x12A\n" +

@@ -16,13 +16,10 @@ SELECT * FROM lots WHERE id = ? FOR UPDATE;
 SELECT * FROM lots WHERE lot_number = ?;
 
 -- name: ListLots :many
-SELECT * FROM lots ORDER BY created_at DESC LIMIT ? OFFSET ?;
-
--- name: ListLotsByStatus :many
-SELECT * FROM lots WHERE status = ? ORDER BY created_at DESC LIMIT ? OFFSET ?;
-
--- name: ListLotsByMaterialType :many
-SELECT * FROM lots WHERE material_type = ? ORDER BY created_at DESC LIMIT ? OFFSET ?;
+SELECT * FROM lots
+WHERE (sqlc.arg('status') = '' OR status = sqlc.arg('status'))
+  AND (sqlc.arg('material_type') = '' OR material_type = sqlc.arg('material_type'))
+ORDER BY created_at DESC LIMIT ? OFFSET ?;
 
 -- name: CountLots :one
 SELECT COUNT(*) FROM lots;

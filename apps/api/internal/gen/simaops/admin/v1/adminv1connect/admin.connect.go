@@ -41,6 +41,25 @@ const (
 	AdminServiceRevokeRoleProcedure = "/simaops.admin.v1.AdminService/RevokeRole"
 	// AdminServiceListRolesProcedure is the fully-qualified name of the AdminService's ListRoles RPC.
 	AdminServiceListRolesProcedure = "/simaops.admin.v1.AdminService/ListRoles"
+	// AdminServiceCreateRoleProcedure is the fully-qualified name of the AdminService's CreateRole RPC.
+	AdminServiceCreateRoleProcedure = "/simaops.admin.v1.AdminService/CreateRole"
+	// AdminServiceDeleteRoleProcedure is the fully-qualified name of the AdminService's DeleteRole RPC.
+	AdminServiceDeleteRoleProcedure = "/simaops.admin.v1.AdminService/DeleteRole"
+	// AdminServiceListProceduresProcedure is the fully-qualified name of the AdminService's
+	// ListProcedures RPC.
+	AdminServiceListProceduresProcedure = "/simaops.admin.v1.AdminService/ListProcedures"
+	// AdminServiceCreateUserProcedure is the fully-qualified name of the AdminService's CreateUser RPC.
+	AdminServiceCreateUserProcedure = "/simaops.admin.v1.AdminService/CreateUser"
+	// AdminServiceUpdateUserProcedure is the fully-qualified name of the AdminService's UpdateUser RPC.
+	AdminServiceUpdateUserProcedure = "/simaops.admin.v1.AdminService/UpdateUser"
+	// AdminServiceUpdateRoleProcedure is the fully-qualified name of the AdminService's UpdateRole RPC.
+	AdminServiceUpdateRoleProcedure = "/simaops.admin.v1.AdminService/UpdateRole"
+	// AdminServiceGetQCThresholdsProcedure is the fully-qualified name of the AdminService's
+	// GetQCThresholds RPC.
+	AdminServiceGetQCThresholdsProcedure = "/simaops.admin.v1.AdminService/GetQCThresholds"
+	// AdminServiceUpdateQCThresholdsProcedure is the fully-qualified name of the AdminService's
+	// UpdateQCThresholds RPC.
+	AdminServiceUpdateQCThresholdsProcedure = "/simaops.admin.v1.AdminService/UpdateQCThresholds"
 )
 
 // AdminServiceClient is a client for the simaops.admin.v1.AdminService service.
@@ -49,6 +68,14 @@ type AdminServiceClient interface {
 	AssignRole(context.Context, *connect.Request[v1.AssignRoleRequest]) (*connect.Response[v1.AssignRoleResponse], error)
 	RevokeRole(context.Context, *connect.Request[v1.RevokeRoleRequest]) (*connect.Response[v1.RevokeRoleResponse], error)
 	ListRoles(context.Context, *connect.Request[v1.ListRolesRequest]) (*connect.Response[v1.ListRolesResponse], error)
+	CreateRole(context.Context, *connect.Request[v1.CreateRoleRequest]) (*connect.Response[v1.CreateRoleResponse], error)
+	DeleteRole(context.Context, *connect.Request[v1.DeleteRoleRequest]) (*connect.Response[v1.DeleteRoleResponse], error)
+	ListProcedures(context.Context, *connect.Request[v1.ListProceduresRequest]) (*connect.Response[v1.ListProceduresResponse], error)
+	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
+	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
+	UpdateRole(context.Context, *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error)
+	GetQCThresholds(context.Context, *connect.Request[v1.GetQCThresholdsRequest]) (*connect.Response[v1.QCThresholds], error)
+	UpdateQCThresholds(context.Context, *connect.Request[v1.QCThresholds]) (*connect.Response[v1.QCThresholds], error)
 }
 
 // NewAdminServiceClient constructs a client for the simaops.admin.v1.AdminService service. By
@@ -86,15 +113,71 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("ListRoles")),
 			connect.WithClientOptions(opts...),
 		),
+		createRole: connect.NewClient[v1.CreateRoleRequest, v1.CreateRoleResponse](
+			httpClient,
+			baseURL+AdminServiceCreateRoleProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("CreateRole")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteRole: connect.NewClient[v1.DeleteRoleRequest, v1.DeleteRoleResponse](
+			httpClient,
+			baseURL+AdminServiceDeleteRoleProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("DeleteRole")),
+			connect.WithClientOptions(opts...),
+		),
+		listProcedures: connect.NewClient[v1.ListProceduresRequest, v1.ListProceduresResponse](
+			httpClient,
+			baseURL+AdminServiceListProceduresProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ListProcedures")),
+			connect.WithClientOptions(opts...),
+		),
+		createUser: connect.NewClient[v1.CreateUserRequest, v1.CreateUserResponse](
+			httpClient,
+			baseURL+AdminServiceCreateUserProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("CreateUser")),
+			connect.WithClientOptions(opts...),
+		),
+		updateUser: connect.NewClient[v1.UpdateUserRequest, v1.UpdateUserResponse](
+			httpClient,
+			baseURL+AdminServiceUpdateUserProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateUser")),
+			connect.WithClientOptions(opts...),
+		),
+		updateRole: connect.NewClient[v1.UpdateRoleRequest, v1.UpdateRoleResponse](
+			httpClient,
+			baseURL+AdminServiceUpdateRoleProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateRole")),
+			connect.WithClientOptions(opts...),
+		),
+		getQCThresholds: connect.NewClient[v1.GetQCThresholdsRequest, v1.QCThresholds](
+			httpClient,
+			baseURL+AdminServiceGetQCThresholdsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("GetQCThresholds")),
+			connect.WithClientOptions(opts...),
+		),
+		updateQCThresholds: connect.NewClient[v1.QCThresholds, v1.QCThresholds](
+			httpClient,
+			baseURL+AdminServiceUpdateQCThresholdsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateQCThresholds")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // adminServiceClient implements AdminServiceClient.
 type adminServiceClient struct {
-	listUsers  *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
-	assignRole *connect.Client[v1.AssignRoleRequest, v1.AssignRoleResponse]
-	revokeRole *connect.Client[v1.RevokeRoleRequest, v1.RevokeRoleResponse]
-	listRoles  *connect.Client[v1.ListRolesRequest, v1.ListRolesResponse]
+	listUsers          *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
+	assignRole         *connect.Client[v1.AssignRoleRequest, v1.AssignRoleResponse]
+	revokeRole         *connect.Client[v1.RevokeRoleRequest, v1.RevokeRoleResponse]
+	listRoles          *connect.Client[v1.ListRolesRequest, v1.ListRolesResponse]
+	createRole         *connect.Client[v1.CreateRoleRequest, v1.CreateRoleResponse]
+	deleteRole         *connect.Client[v1.DeleteRoleRequest, v1.DeleteRoleResponse]
+	listProcedures     *connect.Client[v1.ListProceduresRequest, v1.ListProceduresResponse]
+	createUser         *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
+	updateUser         *connect.Client[v1.UpdateUserRequest, v1.UpdateUserResponse]
+	updateRole         *connect.Client[v1.UpdateRoleRequest, v1.UpdateRoleResponse]
+	getQCThresholds    *connect.Client[v1.GetQCThresholdsRequest, v1.QCThresholds]
+	updateQCThresholds *connect.Client[v1.QCThresholds, v1.QCThresholds]
 }
 
 // ListUsers calls simaops.admin.v1.AdminService.ListUsers.
@@ -117,12 +200,60 @@ func (c *adminServiceClient) ListRoles(ctx context.Context, req *connect.Request
 	return c.listRoles.CallUnary(ctx, req)
 }
 
+// CreateRole calls simaops.admin.v1.AdminService.CreateRole.
+func (c *adminServiceClient) CreateRole(ctx context.Context, req *connect.Request[v1.CreateRoleRequest]) (*connect.Response[v1.CreateRoleResponse], error) {
+	return c.createRole.CallUnary(ctx, req)
+}
+
+// DeleteRole calls simaops.admin.v1.AdminService.DeleteRole.
+func (c *adminServiceClient) DeleteRole(ctx context.Context, req *connect.Request[v1.DeleteRoleRequest]) (*connect.Response[v1.DeleteRoleResponse], error) {
+	return c.deleteRole.CallUnary(ctx, req)
+}
+
+// ListProcedures calls simaops.admin.v1.AdminService.ListProcedures.
+func (c *adminServiceClient) ListProcedures(ctx context.Context, req *connect.Request[v1.ListProceduresRequest]) (*connect.Response[v1.ListProceduresResponse], error) {
+	return c.listProcedures.CallUnary(ctx, req)
+}
+
+// CreateUser calls simaops.admin.v1.AdminService.CreateUser.
+func (c *adminServiceClient) CreateUser(ctx context.Context, req *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error) {
+	return c.createUser.CallUnary(ctx, req)
+}
+
+// UpdateUser calls simaops.admin.v1.AdminService.UpdateUser.
+func (c *adminServiceClient) UpdateUser(ctx context.Context, req *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
+	return c.updateUser.CallUnary(ctx, req)
+}
+
+// UpdateRole calls simaops.admin.v1.AdminService.UpdateRole.
+func (c *adminServiceClient) UpdateRole(ctx context.Context, req *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error) {
+	return c.updateRole.CallUnary(ctx, req)
+}
+
+// GetQCThresholds calls simaops.admin.v1.AdminService.GetQCThresholds.
+func (c *adminServiceClient) GetQCThresholds(ctx context.Context, req *connect.Request[v1.GetQCThresholdsRequest]) (*connect.Response[v1.QCThresholds], error) {
+	return c.getQCThresholds.CallUnary(ctx, req)
+}
+
+// UpdateQCThresholds calls simaops.admin.v1.AdminService.UpdateQCThresholds.
+func (c *adminServiceClient) UpdateQCThresholds(ctx context.Context, req *connect.Request[v1.QCThresholds]) (*connect.Response[v1.QCThresholds], error) {
+	return c.updateQCThresholds.CallUnary(ctx, req)
+}
+
 // AdminServiceHandler is an implementation of the simaops.admin.v1.AdminService service.
 type AdminServiceHandler interface {
 	ListUsers(context.Context, *connect.Request[v1.ListUsersRequest]) (*connect.Response[v1.ListUsersResponse], error)
 	AssignRole(context.Context, *connect.Request[v1.AssignRoleRequest]) (*connect.Response[v1.AssignRoleResponse], error)
 	RevokeRole(context.Context, *connect.Request[v1.RevokeRoleRequest]) (*connect.Response[v1.RevokeRoleResponse], error)
 	ListRoles(context.Context, *connect.Request[v1.ListRolesRequest]) (*connect.Response[v1.ListRolesResponse], error)
+	CreateRole(context.Context, *connect.Request[v1.CreateRoleRequest]) (*connect.Response[v1.CreateRoleResponse], error)
+	DeleteRole(context.Context, *connect.Request[v1.DeleteRoleRequest]) (*connect.Response[v1.DeleteRoleResponse], error)
+	ListProcedures(context.Context, *connect.Request[v1.ListProceduresRequest]) (*connect.Response[v1.ListProceduresResponse], error)
+	CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error)
+	UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error)
+	UpdateRole(context.Context, *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error)
+	GetQCThresholds(context.Context, *connect.Request[v1.GetQCThresholdsRequest]) (*connect.Response[v1.QCThresholds], error)
+	UpdateQCThresholds(context.Context, *connect.Request[v1.QCThresholds]) (*connect.Response[v1.QCThresholds], error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -156,6 +287,54 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("ListRoles")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceCreateRoleHandler := connect.NewUnaryHandler(
+		AdminServiceCreateRoleProcedure,
+		svc.CreateRole,
+		connect.WithSchema(adminServiceMethods.ByName("CreateRole")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceDeleteRoleHandler := connect.NewUnaryHandler(
+		AdminServiceDeleteRoleProcedure,
+		svc.DeleteRole,
+		connect.WithSchema(adminServiceMethods.ByName("DeleteRole")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceListProceduresHandler := connect.NewUnaryHandler(
+		AdminServiceListProceduresProcedure,
+		svc.ListProcedures,
+		connect.WithSchema(adminServiceMethods.ByName("ListProcedures")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceCreateUserHandler := connect.NewUnaryHandler(
+		AdminServiceCreateUserProcedure,
+		svc.CreateUser,
+		connect.WithSchema(adminServiceMethods.ByName("CreateUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdateUserHandler := connect.NewUnaryHandler(
+		AdminServiceUpdateUserProcedure,
+		svc.UpdateUser,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdateRoleHandler := connect.NewUnaryHandler(
+		AdminServiceUpdateRoleProcedure,
+		svc.UpdateRole,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateRole")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceGetQCThresholdsHandler := connect.NewUnaryHandler(
+		AdminServiceGetQCThresholdsProcedure,
+		svc.GetQCThresholds,
+		connect.WithSchema(adminServiceMethods.ByName("GetQCThresholds")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdateQCThresholdsHandler := connect.NewUnaryHandler(
+		AdminServiceUpdateQCThresholdsProcedure,
+		svc.UpdateQCThresholds,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateQCThresholds")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/simaops.admin.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceListUsersProcedure:
@@ -166,6 +345,22 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceRevokeRoleHandler.ServeHTTP(w, r)
 		case AdminServiceListRolesProcedure:
 			adminServiceListRolesHandler.ServeHTTP(w, r)
+		case AdminServiceCreateRoleProcedure:
+			adminServiceCreateRoleHandler.ServeHTTP(w, r)
+		case AdminServiceDeleteRoleProcedure:
+			adminServiceDeleteRoleHandler.ServeHTTP(w, r)
+		case AdminServiceListProceduresProcedure:
+			adminServiceListProceduresHandler.ServeHTTP(w, r)
+		case AdminServiceCreateUserProcedure:
+			adminServiceCreateUserHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateUserProcedure:
+			adminServiceUpdateUserHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateRoleProcedure:
+			adminServiceUpdateRoleHandler.ServeHTTP(w, r)
+		case AdminServiceGetQCThresholdsProcedure:
+			adminServiceGetQCThresholdsHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateQCThresholdsProcedure:
+			adminServiceUpdateQCThresholdsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -189,4 +384,36 @@ func (UnimplementedAdminServiceHandler) RevokeRole(context.Context, *connect.Req
 
 func (UnimplementedAdminServiceHandler) ListRoles(context.Context, *connect.Request[v1.ListRolesRequest]) (*connect.Response[v1.ListRolesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.ListRoles is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) CreateRole(context.Context, *connect.Request[v1.CreateRoleRequest]) (*connect.Response[v1.CreateRoleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.CreateRole is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) DeleteRole(context.Context, *connect.Request[v1.DeleteRoleRequest]) (*connect.Response[v1.DeleteRoleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.DeleteRole is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ListProcedures(context.Context, *connect.Request[v1.ListProceduresRequest]) (*connect.Response[v1.ListProceduresResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.ListProcedures is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) CreateUser(context.Context, *connect.Request[v1.CreateUserRequest]) (*connect.Response[v1.CreateUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.CreateUser is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateUser(context.Context, *connect.Request[v1.UpdateUserRequest]) (*connect.Response[v1.UpdateUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.UpdateUser is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateRole(context.Context, *connect.Request[v1.UpdateRoleRequest]) (*connect.Response[v1.UpdateRoleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.UpdateRole is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) GetQCThresholds(context.Context, *connect.Request[v1.GetQCThresholdsRequest]) (*connect.Response[v1.QCThresholds], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.GetQCThresholds is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateQCThresholds(context.Context, *connect.Request[v1.QCThresholds]) (*connect.Response[v1.QCThresholds], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.admin.v1.AdminService.UpdateQCThresholds is not implemented"))
 }

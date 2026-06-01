@@ -42,19 +42,23 @@ func (s *AdminService) ListUsers(ctx context.Context, req *connect.Request[admin
 	protoUsers := make([]*adminv1.User, 0, len(users))
 	for _, u := range users {
 		var roles []adminv1.Role
+		var roleNames []string
 		// role_names is GROUP_CONCAT of comma-separated names
 		if u.RoleNames.Valid && u.RoleNames.String != "" {
 			for _, name := range strings.Split(u.RoleNames.String, ",") {
-				roles = append(roles, roleNameToProto(strings.TrimSpace(name)))
+				n := strings.TrimSpace(name)
+				roleNames = append(roleNames, n)
+				roles = append(roles, roleNameToProto(n))
 			}
 		}
 		protoUsers = append(protoUsers, &adminv1.User{
-			Id:       u.ID,
-			Username: u.Username,
-			Email:    u.Email,
-			FullName: u.FullName,
-			Roles:    roles,
-			Active:   u.Active,
+			Id:        u.ID,
+			Username:  u.Username,
+			Email:     u.Email,
+			FullName:  u.FullName,
+			Roles:     roles,
+			RoleNames: roleNames,
+			Active:    u.Active,
 		})
 	}
 
@@ -65,12 +69,12 @@ func (s *AdminService) ListUsers(ctx context.Context, req *connect.Request[admin
 }
 
 func (s *AdminService) AssignRole(ctx context.Context, req *connect.Request[adminv1.AssignRoleRequest]) (*connect.Response[adminv1.AssignRoleResponse], error) {
-	if req.Msg.UserId == "" || req.Msg.Role == adminv1.Role_ROLE_UNSPECIFIED {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and role required"))
-	}
-	roleName := protoToRoleName(req.Msg.Role)
+	roleName := req.Msg.RoleName
 	if roleName == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unknown role"))
+		roleName = protoToRoleName(req.Msg.Role)
+	}
+	if req.Msg.UserId == "" || roleName == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and role required"))
 	}
 	role, err := s.q.GetRoleByName(ctx, roleName)
 	if err != nil {
@@ -102,17 +106,17 @@ func (s *AdminService) AssignRole(ctx context.Context, req *connect.Request[admi
 		roles = append(roles, roleNameToProto(rn))
 	}
 	return connect.NewResponse(&adminv1.AssignRoleResponse{
-		User: &adminv1.User{Id: req.Msg.UserId, Roles: roles},
+		User: &adminv1.User{Id: req.Msg.UserId, Roles: roles, RoleNames: roleNames},
 	}), nil
 }
 
 func (s *AdminService) RevokeRole(ctx context.Context, req *connect.Request[adminv1.RevokeRoleRequest]) (*connect.Response[adminv1.RevokeRoleResponse], error) {
-	if req.Msg.UserId == "" || req.Msg.Role == adminv1.Role_ROLE_UNSPECIFIED {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and role required"))
-	}
-	roleName := protoToRoleName(req.Msg.Role)
+	roleName := req.Msg.RoleName
 	if roleName == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unknown role"))
+		roleName = protoToRoleName(req.Msg.Role)
+	}
+	if req.Msg.UserId == "" || roleName == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and role required"))
 	}
 	role, err := s.q.GetRoleByName(ctx, roleName)
 	if err != nil {
@@ -138,7 +142,7 @@ func (s *AdminService) RevokeRole(ctx context.Context, req *connect.Request[admi
 		roles = append(roles, roleNameToProto(rn))
 	}
 	return connect.NewResponse(&adminv1.RevokeRoleResponse{
-		User: &adminv1.User{Id: req.Msg.UserId, Roles: roles},
+		User: &adminv1.User{Id: req.Msg.UserId, Roles: roles, RoleNames: roleNames},
 	}), nil
 }
 
@@ -156,12 +160,26 @@ func (s *AdminService) ListRoles(ctx context.Context, req *connect.Request[admin
 		"ADMIN":            "Full system access",
 	}
 
+	// Per-role granted RPC paths, from the data-driven grant table.
+	permRows, _ := s.q.ListAllRolePermissions(ctx)
+	permsByRole := map[string][]string{}
+	for _, pr := range permRows {
+		permsByRole[pr.RoleName] = append(permsByRole[pr.RoleName], pr.RpcPath)
+	}
+
 	protoRoles := make([]*adminv1.RoleDefinition, 0, len(roles))
 	for _, r := range roles {
+		desc := r.Description
+		if desc == "" {
+			desc = descriptions[r.Name]
+		}
 		protoRoles = append(protoRoles, &adminv1.RoleDefinition{
 			Role:        roleNameToProto(r.Name),
 			Name:        r.Name,
-			Description: descriptions[r.Name],
+			Description: desc,
+			IsSystem:    r.IsSystem,
+			Permissions: permsByRole[r.Name],
+			Id:          r.ID,
 		})
 	}
 

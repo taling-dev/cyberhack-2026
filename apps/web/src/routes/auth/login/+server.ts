@@ -35,9 +35,11 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
   const nonce = crypto.randomUUID();
   const state = encodeAuthState({ nonce, mode, returnTo });
 
-  // Store PKCE verifier and state in cookies for callback validation.
-  cookies.set(COOKIE_PKCE, codeVerifier, { ...COOKIE_OPTS, maxAge: 600 });
-  cookies.set(COOKIE_STATE, state, { ...COOKIE_OPTS, maxAge: 600 });
+  // Scope PKCE+state cookies per mode so a background silent-renew iframe
+  // (mode=silent) can't overwrite an in-flight interactive login's cookies,
+  // which would cause a spurious "state mismatch" on the interactive callback.
+  cookies.set(`${COOKIE_PKCE}_${mode}`, codeVerifier, { ...COOKIE_OPTS, maxAge: 600 });
+  cookies.set(`${COOKIE_STATE}_${mode}`, state, { ...COOKIE_OPTS, maxAge: 600 });
 
   const authUrl = buildAuthorizationUrl({
     state,

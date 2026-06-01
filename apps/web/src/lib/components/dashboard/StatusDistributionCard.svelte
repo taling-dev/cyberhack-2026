@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from 'svelte-i18n';
   type StatusCountLike = {
     status: string;
     count: number;
@@ -62,14 +63,14 @@
 </script>
 
 <section class="flex h-full min-h-0 flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-  <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">Lot Status Distribution</h2>
+  <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('widgets.status_distribution')}</h2>
 
-  <div class="mt-3 grid min-h-0 flex-1 grid-cols-[150px_1fr] items-center gap-4">
-    <div class="relative mx-auto size-32">
+  <div class="mt-3 grid min-h-0 flex-1 grid-cols-1 items-center gap-4 sm:grid-cols-[minmax(110px,140px)_1fr]">
+    <div class="relative mx-auto aspect-square w-28 max-w-[140px] sm:w-full">
       {#if loading}
-        <div class="size-32 animate-pulse rounded-full bg-slate-100"></div>
+        <div class="size-full animate-pulse rounded-full bg-slate-100"></div>
       {:else}
-        <svg class="size-32" viewBox="0 0 128 128" aria-label="Lot status distribution">
+        <svg class="size-full" viewBox="0 0 128 128" aria-label="Lot status distribution">
           <circle cx="64" cy="64" r="42" fill="none" stroke="#e5e7eb" stroke-width="18" />
           {#each segments() as segment}
             <circle
@@ -88,7 +89,7 @@
         </svg>
         <div class="absolute inset-0 flex flex-col items-center justify-center">
           <span class="text-xl font-bold text-slate-950">{totalFromStatuses().toLocaleString('en-US')}</span>
-          <span class="text-[11px] text-slate-500">Total</span>
+          <span class="text-[11px] text-slate-500">{$t('widgets.total')}</span>
         </div>
       {/if}
     </div>

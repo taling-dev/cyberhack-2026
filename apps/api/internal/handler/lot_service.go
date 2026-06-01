@@ -161,21 +161,21 @@ func (s *LotService) ListLots(ctx context.Context, req *connect.Request[lotv1.Li
 		fmt.Sscanf(req.Msg.PageToken, "%d", &offset)
 	}
 
-	var lots []db.Lot
-	var err error
-
+	var statusArg db.LotsStatus
 	if req.Msg.StatusFilter != lotv1.LotStatus_LOT_STATUS_UNSPECIFIED {
-		lots, err = s.q.ListLotsByStatus(ctx, db.ListLotsByStatusParams{
-			Status: db.LotsStatus(lotStatusToDB(req.Msg.StatusFilter)),
-			Limit:  pageSize,
-			Offset: offset,
-		})
-	} else {
-		lots, err = s.q.ListLots(ctx, db.ListLotsParams{
-			Limit:  pageSize,
-			Offset: offset,
-		})
+		statusArg = db.LotsStatus(lotStatusToDB(req.Msg.StatusFilter))
 	}
+	var materialArg db.LotsMaterialType
+	if req.Msg.MaterialTypeFilter != lotv1.MaterialType_MATERIAL_TYPE_UNSPECIFIED {
+		materialArg = db.LotsMaterialType(materialTypeToDB(req.Msg.MaterialTypeFilter))
+	}
+
+	lots, err := s.q.ListLots(ctx, db.ListLotsParams{
+		Status:       statusArg,
+		MaterialType: materialArg,
+		Limit:        pageSize,
+		Offset:       offset,
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -183,6 +183,28 @@ func (s *LotService) ListLots(ctx context.Context, req *connect.Request[lotv1.Li
 	protoLots := make([]*lotv1.Lot, len(lots))
 	for i, l := range lots {
 		protoLots[i] = dbLotToProto(l)
+	}
+
+	// Enrich with each lot's latest QC result (confidence + recommendation) so
+	// the lots list can show an AI Score column. Best-effort: on error the
+	// lots still return without QC fields.
+	if len(protoLots) > 0 {
+		ids := make([]string, len(protoLots))
+		for i, p := range protoLots {
+			ids[i] = p.Id
+		}
+		if qcRows, qErr := s.q.LatestQCResultsForLots(ctx, ids); qErr == nil {
+			byLot := make(map[string]db.LatestQCResultsForLotsRow, len(qcRows))
+			for _, r := range qcRows {
+				byLot[r.LotID] = r
+			}
+			for _, p := range protoLots {
+				if r, ok := byLot[p.Id]; ok {
+					p.QcConfidence = parseFloat(r.Confidence)
+					p.QcRecommendation = string(r.Recommendation)
+				}
+			}
+		}
 	}
 
 	nextToken := ""

@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file simaops/dashboard/v1/dashboard.proto.
  */
 export const file_simaops_dashboard_v1_dashboard: GenFile = /*@__PURE__*/
-  fileDesc("CiRzaW1hb3BzL2Rhc2hib2FyZC92MS9kYXNoYm9hcmQucHJvdG8SFHNpbWFvcHMuZGFzaGJvYXJkLnYxIiwKC1N0YXR1c0NvdW50Eg4KBnN0YXR1cxgBIAEoCRINCgVjb3VudBgCIAEoBSIYChZHZXRPcHNEYXNoYm9hcmRSZXF1ZXN0IsEBChdHZXRPcHNEYXNoYm9hcmRSZXNwb25zZRI5Cg5sb3RzX2J5X3N0YXR1cxgBIAMoCzIhLnNpbWFvcHMuZGFzaGJvYXJkLnYxLlN0YXR1c0NvdW50EhoKEnRvZGF5X2ludGFrZV9jb3VudBgCIAEoBRIYChBsb3RzX2F3YWl0aW5nX3FjGAMgASgFEiEKGWxvdHNfcmVhZHlfZm9yX3Byb2R1Y3Rpb24YBCABKAUSEgoKdG90YWxfbG90cxgFIAEoBSIkChNHZXRRQ01ldHJpY3NSZXF1ZXN0Eg0KBWhvdXJzGAEgASgFIrUBChRHZXRRQ01ldHJpY3NSZXNwb25zZRISCgp0b3RhbF9qb2JzGAEgASgFEhIKCnBhc3NfY291bnQYAiABKAUSFAoMcmV2aWV3X2NvdW50GAMgASgFEhIKCmZhaWxfY291bnQYBCABKAUSGgoSYXZlcmFnZV9jb25maWRlbmNlGAUgASgBEhEKCXBhc3NfcmF0ZRgGIAEoARIcChRwZW5kaW5nX3Jldmlld19jb3VudBgHIAEoBSIcChpHZXRXYXJlaG91c2VNZXRyaWNzUmVxdWVzdCJYCgtab25lTWV0cmljcxIMCgR6b25lGAEgASgJEhYKDnRvdGFsX2NhcGFjaXR5GAIgASgFEhAKCG9jY3VwaWVkGAMgASgFEhEKCWF2YWlsYWJsZRgEIAEoBSKYAQobR2V0V2FyZWhvdXNlTWV0cmljc1Jlc3BvbnNlEjAKBXpvbmVzGAEgAygLMiEuc2ltYW9wcy5kYXNoYm9hcmQudjEuWm9uZU1ldHJpY3MSFgoOdG90YWxfY2FwYWNpdHkYAiABKAUSFgoOdG90YWxfb2NjdXBpZWQYAyABKAUSFwoPdG90YWxfYXZhaWxhYmxlGAQgASgFMuUCChBEYXNoYm9hcmRTZXJ2aWNlEm4KD0dldE9wc0Rhc2hib2FyZBIsLnNpbWFvcHMuZGFzaGJvYXJkLnYxLkdldE9wc0Rhc2hib2FyZFJlcXVlc3QaLS5zaW1hb3BzLmRhc2hib2FyZC52MS5HZXRPcHNEYXNoYm9hcmRSZXNwb25zZRJlCgxHZXRRQ01ldHJpY3MSKS5zaW1hb3BzLmRhc2hib2FyZC52MS5HZXRRQ01ldHJpY3NSZXF1ZXN0Giouc2ltYW9wcy5kYXNoYm9hcmQudjEuR2V0UUNNZXRyaWNzUmVzcG9uc2USegoTR2V0V2FyZWhvdXNlTWV0cmljcxIwLnNpbWFvcHMuZGFzaGJvYXJkLnYxLkdldFdhcmVob3VzZU1ldHJpY3NSZXF1ZXN0GjEuc2ltYW9wcy5kYXNoYm9hcmQudjEuR2V0V2FyZWhvdXNlTWV0cmljc1Jlc3BvbnNlQvkBChhjb20uc2ltYW9wcy5kYXNoYm9hcmQudjFCDkRhc2hib2FyZFByb3RvUAFaW2dpdGh1Yi5jb20vdGFsaW5nLWRldi9DWUJFUkhBQ0stMjAyNi9hcHBzL2FwaS9pbnRlcm5hbC9nZW4vc2ltYW9wcy9kYXNoYm9hcmQvdjE7ZGFzaGJvYXJkdjGiAgNTRFiqAhRTaW1hb3BzLkRhc2hib2FyZC5WMcoCFFNpbWFvcHNcRGFzaGJvYXJkXFYx4gIgU2ltYW9wc1xEYXNoYm9hcmRcVjFcR1BCTWV0YWRhdGHqAhZTaW1hb3BzOjpEYXNoYm9hcmQ6OlYxYgZwcm90bzM");
+  fileDesc("CiRzaW1hb3BzL2Rhc2hib2FyZC92MS9kYXNoYm9hcmQucHJvdG8SFHNpbWFvcHMuZGFzaGJvYXJkLnYxIiwKC1N0YXR1c0NvdW50Eg4KBnN0YXR1cxgBIAEoCRINCgVjb3VudBgCIAEoBSIYChZHZXRPcHNEYXNoYm9hcmRSZXF1ZXN0IsEBChdHZXRPcHNEYXNoYm9hcmRSZXNwb25zZRI5Cg5sb3RzX2J5X3N0YXR1cxgBIAMoCzIhLnNpbWFvcHMuZGFzaGJvYXJkLnYxLlN0YXR1c0NvdW50EhoKEnRvZGF5X2ludGFrZV9jb3VudBgCIAEoBRIYChBsb3RzX2F3YWl0aW5nX3FjGAMgASgFEiEKGWxvdHNfcmVhZHlfZm9yX3Byb2R1Y3Rpb24YBCABKAUSEgoKdG90YWxfbG90cxgFIAEoBSIkChNHZXRRQ01ldHJpY3NSZXF1ZXN0Eg0KBWhvdXJzGAEgASgFIrUBChRHZXRRQ01ldHJpY3NSZXNwb25zZRISCgp0b3RhbF9qb2JzGAEgASgFEhIKCnBhc3NfY291bnQYAiABKAUSFAoMcmV2aWV3X2NvdW50GAMgASgFEhIKCmZhaWxfY291bnQYBCABKAUSGgoSYXZlcmFnZV9jb25maWRlbmNlGAUgASgBEhEKCXBhc3NfcmF0ZRgGIAEoARIcChRwZW5kaW5nX3Jldmlld19jb3VudBgHIAEoBSIcChpHZXRXYXJlaG91c2VNZXRyaWNzUmVxdWVzdCJYCgtab25lTWV0cmljcxIMCgR6b25lGAEgASgJEhYKDnRvdGFsX2NhcGFjaXR5GAIgASgFEhAKCG9jY3VwaWVkGAMgASgFEhEKCWF2YWlsYWJsZRgEIAEoBSKYAQobR2V0V2FyZWhvdXNlTWV0cmljc1Jlc3BvbnNlEjAKBXpvbmVzGAEgAygLMiEuc2ltYW9wcy5kYXNoYm9hcmQudjEuWm9uZU1ldHJpY3MSFgoOdG90YWxfY2FwYWNpdHkYAiABKAUSFgoOdG90YWxfb2NjdXBpZWQYAyABKAUSFwoPdG90YWxfYXZhaWxhYmxlGAQgASgFIiEKEUdldFFDVHJlbmRSZXF1ZXN0EgwKBGRheXMYASABKAUiWAoKUUNUcmVuZERheRIMCgRkYXRlGAEgASgJEhIKCnBhc3NfY291bnQYAiABKAUSFAoMcmV2aWV3X2NvdW50GAMgASgFEhIKCmZhaWxfY291bnQYBCABKAUiRAoSR2V0UUNUcmVuZFJlc3BvbnNlEi4KBGRheXMYASADKAsyIC5zaW1hb3BzLmRhc2hib2FyZC52MS5RQ1RyZW5kRGF5IhwKGkdldExhdGVzdEluc3BlY3Rpb25SZXF1ZXN0IlMKEUluc3BlY3Rpb25GaW5kaW5nEhYKDm1hcHBlZF9maW5kaW5nGAEgASgJEhIKCmNvbmZpZGVuY2UYAiABKAESEgoKaXNfYW5vbWFseRgDIAEoCCKDAgobR2V0TGF0ZXN0SW5zcGVjdGlvblJlc3BvbnNlEg8KB3ByZXNlbnQYASABKAgSDgoGbG90X2lkGAIgASgJEhIKCmxvdF9udW1iZXIYAyABKAkSFQoNbWF0ZXJpYWxfbmFtZRgEIAEoCRIWCg5yZWNvbW1lbmRhdGlvbhgFIAEoBRISCgpjb25maWRlbmNlGAYgASgBEhgKEGltYWdlX29iamVjdF9rZXkYByABKAkSFwoPY3JlYXRlZF9hdF91bml4GAggASgDEjkKCGZpbmRpbmdzGAkgAygLMicuc2ltYW9wcy5kYXNoYm9hcmQudjEuSW5zcGVjdGlvbkZpbmRpbmcywgQKEERhc2hib2FyZFNlcnZpY2USbgoPR2V0T3BzRGFzaGJvYXJkEiwuc2ltYW9wcy5kYXNoYm9hcmQudjEuR2V0T3BzRGFzaGJvYXJkUmVxdWVzdBotLnNpbWFvcHMuZGFzaGJvYXJkLnYxLkdldE9wc0Rhc2hib2FyZFJlc3BvbnNlEmUKDEdldFFDTWV0cmljcxIpLnNpbWFvcHMuZGFzaGJvYXJkLnYxLkdldFFDTWV0cmljc1JlcXVlc3QaKi5zaW1hb3BzLmRhc2hib2FyZC52MS5HZXRRQ01ldHJpY3NSZXNwb25zZRJ6ChNHZXRXYXJlaG91c2VNZXRyaWNzEjAuc2ltYW9wcy5kYXNoYm9hcmQudjEuR2V0V2FyZWhvdXNlTWV0cmljc1JlcXVlc3QaMS5zaW1hb3BzLmRhc2hib2FyZC52MS5HZXRXYXJlaG91c2VNZXRyaWNzUmVzcG9uc2USXwoKR2V0UUNUcmVuZBInLnNpbWFvcHMuZGFzaGJvYXJkLnYxLkdldFFDVHJlbmRSZXF1ZXN0Giguc2ltYW9wcy5kYXNoYm9hcmQudjEuR2V0UUNUcmVuZFJlc3BvbnNlEnoKE0dldExhdGVzdEluc3BlY3Rpb24SMC5zaW1hb3BzLmRhc2hib2FyZC52MS5HZXRMYXRlc3RJbnNwZWN0aW9uUmVxdWVzdBoxLnNpbWFvcHMuZGFzaGJvYXJkLnYxLkdldExhdGVzdEluc3BlY3Rpb25SZXNwb25zZUL5AQoYY29tLnNpbWFvcHMuZGFzaGJvYXJkLnYxQg5EYXNoYm9hcmRQcm90b1ABWltnaXRodWIuY29tL3RhbGluZy1kZXYvQ1lCRVJIQUNLLTIwMjYvYXBwcy9hcGkvaW50ZXJuYWwvZ2VuL3NpbWFvcHMvZGFzaGJvYXJkL3YxO2Rhc2hib2FyZHYxogIDU0RYqgIUU2ltYW9wcy5EYXNoYm9hcmQuVjHKAhRTaW1hb3BzXERhc2hib2FyZFxWMeICIFNpbWFvcHNcRGFzaGJvYXJkXFYxXEdQQk1ldGFkYXRh6gIWU2ltYW9wczo6RGFzaGJvYXJkOjpWMWIGcHJvdG8z");
 
 /**
  * @generated from message simaops.dashboard.v1.StatusCount
@@ -228,6 +228,179 @@ export const GetWarehouseMetricsResponseSchema: GenMessage<GetWarehouseMetricsRe
   messageDesc(file_simaops_dashboard_v1_dashboard, 7);
 
 /**
+ * @generated from message simaops.dashboard.v1.GetQCTrendRequest
+ */
+export type GetQCTrendRequest = Message<"simaops.dashboard.v1.GetQCTrendRequest"> & {
+  /**
+   * lookback window in days, default 7
+   *
+   * @generated from field: int32 days = 1;
+   */
+  days: number;
+};
+
+/**
+ * Describes the message simaops.dashboard.v1.GetQCTrendRequest.
+ * Use `create(GetQCTrendRequestSchema)` to create a new message.
+ */
+export const GetQCTrendRequestSchema: GenMessage<GetQCTrendRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_dashboard_v1_dashboard, 8);
+
+/**
+ * @generated from message simaops.dashboard.v1.QCTrendDay
+ */
+export type QCTrendDay = Message<"simaops.dashboard.v1.QCTrendDay"> & {
+  /**
+   * YYYY-MM-DD
+   *
+   * @generated from field: string date = 1;
+   */
+  date: string;
+
+  /**
+   * @generated from field: int32 pass_count = 2;
+   */
+  passCount: number;
+
+  /**
+   * @generated from field: int32 review_count = 3;
+   */
+  reviewCount: number;
+
+  /**
+   * @generated from field: int32 fail_count = 4;
+   */
+  failCount: number;
+};
+
+/**
+ * Describes the message simaops.dashboard.v1.QCTrendDay.
+ * Use `create(QCTrendDaySchema)` to create a new message.
+ */
+export const QCTrendDaySchema: GenMessage<QCTrendDay> = /*@__PURE__*/
+  messageDesc(file_simaops_dashboard_v1_dashboard, 9);
+
+/**
+ * @generated from message simaops.dashboard.v1.GetQCTrendResponse
+ */
+export type GetQCTrendResponse = Message<"simaops.dashboard.v1.GetQCTrendResponse"> & {
+  /**
+   * @generated from field: repeated simaops.dashboard.v1.QCTrendDay days = 1;
+   */
+  days: QCTrendDay[];
+};
+
+/**
+ * Describes the message simaops.dashboard.v1.GetQCTrendResponse.
+ * Use `create(GetQCTrendResponseSchema)` to create a new message.
+ */
+export const GetQCTrendResponseSchema: GenMessage<GetQCTrendResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_dashboard_v1_dashboard, 10);
+
+/**
+ * @generated from message simaops.dashboard.v1.GetLatestInspectionRequest
+ */
+export type GetLatestInspectionRequest = Message<"simaops.dashboard.v1.GetLatestInspectionRequest"> & {
+};
+
+/**
+ * Describes the message simaops.dashboard.v1.GetLatestInspectionRequest.
+ * Use `create(GetLatestInspectionRequestSchema)` to create a new message.
+ */
+export const GetLatestInspectionRequestSchema: GenMessage<GetLatestInspectionRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_dashboard_v1_dashboard, 11);
+
+/**
+ * @generated from message simaops.dashboard.v1.InspectionFinding
+ */
+export type InspectionFinding = Message<"simaops.dashboard.v1.InspectionFinding"> & {
+  /**
+   * @generated from field: string mapped_finding = 1;
+   */
+  mappedFinding: string;
+
+  /**
+   * @generated from field: double confidence = 2;
+   */
+  confidence: number;
+
+  /**
+   * @generated from field: bool is_anomaly = 3;
+   */
+  isAnomaly: boolean;
+};
+
+/**
+ * Describes the message simaops.dashboard.v1.InspectionFinding.
+ * Use `create(InspectionFindingSchema)` to create a new message.
+ */
+export const InspectionFindingSchema: GenMessage<InspectionFinding> = /*@__PURE__*/
+  messageDesc(file_simaops_dashboard_v1_dashboard, 12);
+
+/**
+ * @generated from message simaops.dashboard.v1.GetLatestInspectionResponse
+ */
+export type GetLatestInspectionResponse = Message<"simaops.dashboard.v1.GetLatestInspectionResponse"> & {
+  /**
+   * false when no QC result exists yet
+   *
+   * @generated from field: bool present = 1;
+   */
+  present: boolean;
+
+  /**
+   * @generated from field: string lot_id = 2;
+   */
+  lotId: string;
+
+  /**
+   * @generated from field: string lot_number = 3;
+   */
+  lotNumber: string;
+
+  /**
+   * @generated from field: string material_name = 4;
+   */
+  materialName: string;
+
+  /**
+   * 1=PASS,2=REVIEW,3=FAIL
+   *
+   * @generated from field: int32 recommendation = 5;
+   */
+  recommendation: number;
+
+  /**
+   * @generated from field: double confidence = 6;
+   */
+  confidence: number;
+
+  /**
+   * for a presigned view URL
+   *
+   * @generated from field: string image_object_key = 7;
+   */
+  imageObjectKey: string;
+
+  /**
+   * @generated from field: int64 created_at_unix = 8;
+   */
+  createdAtUnix: bigint;
+
+  /**
+   * @generated from field: repeated simaops.dashboard.v1.InspectionFinding findings = 9;
+   */
+  findings: InspectionFinding[];
+};
+
+/**
+ * Describes the message simaops.dashboard.v1.GetLatestInspectionResponse.
+ * Use `create(GetLatestInspectionResponseSchema)` to create a new message.
+ */
+export const GetLatestInspectionResponseSchema: GenMessage<GetLatestInspectionResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_dashboard_v1_dashboard, 13);
+
+/**
  * @generated from service simaops.dashboard.v1.DashboardService
  */
 export const DashboardService: GenService<{
@@ -254,6 +427,22 @@ export const DashboardService: GenService<{
     methodKind: "unary";
     input: typeof GetWarehouseMetricsRequestSchema;
     output: typeof GetWarehouseMetricsResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.dashboard.v1.DashboardService.GetQCTrend
+   */
+  getQCTrend: {
+    methodKind: "unary";
+    input: typeof GetQCTrendRequestSchema;
+    output: typeof GetQCTrendResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.dashboard.v1.DashboardService.GetLatestInspection
+   */
+  getLatestInspection: {
+    methodKind: "unary";
+    input: typeof GetLatestInspectionRequestSchema;
+    output: typeof GetLatestInspectionResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_simaops_dashboard_v1_dashboard, 0);

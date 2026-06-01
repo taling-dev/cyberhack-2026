@@ -105,7 +105,7 @@
       queryClient.invalidateQueries({ queryKey: ['lot-timeline', lotId] });
       queryClient.invalidateQueries({ queryKey: ['qc-job-for-lot', lotId] });
     } catch (e: any) {
-      reviewError = e.message || $t('qc.review_failed');
+      reviewError = $t('qc.request_error');
     } finally {
       submitting = false;
     }
@@ -115,7 +115,7 @@
     if (value === 1) return 'PASS';
     if (value === 2) return 'REVIEW';
     if (value === 3) return 'FAIL';
-    return 'Pending';
+    return $t('qc.pending');
   }
 
   function recommendationClass(value?: number) {
@@ -126,14 +126,7 @@
   }
 
   function jobStatusLabel(value?: number) {
-    if (value === 1) return 'Queued';
-    if (value === 2) return 'Processing';
-    if (value === 3) return 'AI Completed';
-    if (value === 4) return 'Needs Review';
-    if (value === 5) return 'Approved';
-    if (value === 6) return 'Rejected';
-    if (value === 7) return 'Failed';
-    return 'Unknown';
+    return value && value >= 1 && value <= 7 ? $t(`qc.job_status.${value}`) : $t('common.unknown');
   }
 
   function decisionLabel(value: number) {
@@ -217,7 +210,6 @@
         <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">{$t('qc.qc_image')}</h2>
-            <p class="mt-1 text-xs text-slate-500">Material evidence used by the AI inspection.</p>
           </div>
           <DashboardIcon name="bot" class="size-5 text-slate-400" />
         </div>
@@ -252,7 +244,6 @@
         <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
             <h2 class="text-[13px] font-bold uppercase tracking-normal text-slate-950">AI Decision Panel</h2>
-            <p class="mt-1 text-xs text-slate-500">Review model output before making a human decision.</p>
           </div>
           <span class="rounded-md bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700">
             {jobStatusLabel(qcJobQuery.data?.job?.status)}
@@ -286,6 +277,14 @@
                 <span class="mt-3 inline-flex rounded-md px-2.5 py-1 text-xs font-bold ring-1 ring-inset {recommendationClass(aiResult.recommendation)}">
                   {recommendationLabel(aiResult.recommendation)}
                 </span>
+                <details class="mt-3 text-xs text-slate-500">
+                  <summary class="cursor-pointer font-medium text-slate-600 hover:text-slate-950">{$t('qc.rec_help_label')}</summary>
+                  <ul class="mt-2 space-y-1">
+                    <li class={aiResult.recommendation === 1 ? 'font-semibold text-slate-950' : ''}>{$t('qc.rec_help_pass')}</li>
+                    <li class={aiResult.recommendation === 2 ? 'font-semibold text-slate-950' : ''}>{$t('qc.rec_help_review')}</li>
+                    <li class={aiResult.recommendation === 3 ? 'font-semibold text-slate-950' : ''}>{$t('qc.rec_help_fail')}</li>
+                  </ul>
+                </details>
               </div>
 
               <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-4">
@@ -293,7 +292,7 @@
                 <div class="mt-3 flex items-center gap-3">
                   <span class="text-2xl font-bold text-slate-950">{confidencePct}%</span>
                   <div class="h-2 flex-1 overflow-hidden rounded-full bg-white">
-                    <div class="h-full rounded-full bg-purple-600 transition-all" style="width: {confidencePct}%"></div>
+                    <div class="h-full rounded-full bg-blue-600 transition-all" style="width: {confidencePct}%"></div>
                   </div>
                 </div>
               </div>
@@ -317,7 +316,7 @@
                         </div>
                         <span class="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold {finding.isAnomaly ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">
                           <span class="size-1.5 rounded-full {finding.isAnomaly ? 'bg-red-500' : 'bg-emerald-500'}"></span>
-                          {finding.isAnomaly ? $t('qc.anomaly') : 'Normal'}
+                          {finding.isAnomaly ? $t('qc.anomaly') : $t('qc.normal')}
                         </span>
                       </div>
                     {/each}
@@ -334,7 +333,6 @@
           {#if !reviewSuccess && qcJobId && lot.status === 4}
             <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <h3 class="text-sm font-bold text-slate-950">{$t('qc.supervisor_decision')}</h3>
-              <p class="mt-1 text-xs text-slate-500">Record a human decision for this AI inspection result.</p>
               <div class="mt-4 flex flex-wrap gap-2">
                 <button onclick={() => openReview(1)} class="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100">
                   <DashboardIcon name="check-circle" class="size-4" />

@@ -10,6 +10,7 @@ import (
 )
 
 type Querier interface {
+	AddRolePermission(ctx context.Context, arg AddRolePermissionParams) error
 	AssignUserRole(ctx context.Context, arg AssignUserRoleParams) error
 	AvgQCConfidence(ctx context.Context, createdAt time.Time) (interface{}, error)
 	// Atomically transitions a batch of PENDING events to PUBLISHING. Combined
@@ -18,6 +19,7 @@ type Querier interface {
 	// election handoff) or this same leader (after a recovered crash) from
 	// re-publishing a row that was already taken.
 	ClaimOutboxBatch(ctx context.Context, limit int32) (int64, error)
+	ClearRolePermissions(ctx context.Context, roleID string) error
 	// A lot may only have one non-cancelled dispatch at a time. Used to reject a
 	// duplicate CreateDispatch for a lot already being shipped.
 	CountActiveDispatchesForLot(ctx context.Context, lotID string) (int64, error)
@@ -29,12 +31,14 @@ type Querier interface {
 	// a DIFFERENT image is a deliberate re-upload that supersedes the old job.
 	CountActiveQCJobsForLotWithImage(ctx context.Context, arg CountActiveQCJobsForLotWithImageParams) (int64, error)
 	CountAuditLogs(ctx context.Context) (int64, error)
+	CountAuditLogsFiltered(ctx context.Context, arg CountAuditLogsFilteredParams) (int64, error)
 	CountDispatches(ctx context.Context) (int64, error)
 	CountDispatchesByStatus(ctx context.Context, status DispatchesStatus) (int64, error)
 	CountLots(ctx context.Context) (int64, error)
 	CountLotsByStatus(ctx context.Context, status LotsStatus) (int64, error)
 	CountLotsByStatusGroup(ctx context.Context) ([]CountLotsByStatusGroupRow, error)
 	CountQCByRecommendation(ctx context.Context, createdAt time.Time) ([]CountQCByRecommendationRow, error)
+	CountRoleMembers(ctx context.Context, roleID string) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateAuditLog(ctx context.Context, arg CreateAuditLogParams) error
 	CreateDispatch(ctx context.Context, arg CreateDispatchParams) error
@@ -43,10 +47,13 @@ type Querier interface {
 	CreateOutboxEvent(ctx context.Context, arg CreateOutboxEventParams) error
 	CreateQCJob(ctx context.Context, arg CreateQCJobParams) error
 	CreateQCResult(ctx context.Context, arg CreateQCResultParams) error
+	CreateRole(ctx context.Context, arg CreateRoleParams) error
+	CreateUserProfile(ctx context.Context, arg CreateUserProfileParams) error
 	CreateWarehouseAssignment(ctx context.Context, arg CreateWarehouseAssignmentParams) error
 	DecrementLocationCapacity(ctx context.Context, id string) error
 	DecrementLocationCapacityAtomic(ctx context.Context, id string) (int64, error)
 	DeleteExpiredIdempotencyKeys(ctx context.Context) error
+	DeleteRole(ctx context.Context, id string) error
 	GetDispatch(ctx context.Context, id string) (Dispatch, error)
 	// Locks the row for the duration of the transaction (TiDB pessimistic mode).
 	// Used by UpdateDispatchStatus to close the same TOCTOU race the lot FSM
@@ -54,6 +61,7 @@ type Querier interface {
 	// pass the FSM check against the same source state.
 	GetDispatchForUpdate(ctx context.Context, id string) (Dispatch, error)
 	GetIdempotencyKey(ctx context.Context, keyHash string) (IdempotencyKey, error)
+	GetLatestInspection(ctx context.Context) (GetLatestInspectionRow, error)
 	GetLot(ctx context.Context, id string) (Lot, error)
 	GetLotByNumber(ctx context.Context, lotNumber string) (Lot, error)
 	// Locks the row for the duration of the transaction (TiDB pessimistic mode).
@@ -63,13 +71,18 @@ type Querier interface {
 	GetLotForUpdate(ctx context.Context, id string) (Lot, error)
 	GetQCJob(ctx context.Context, id string) (QcJob, error)
 	GetQCResult(ctx context.Context, qcJobID string) (QcResult, error)
+	GetRoleByID(ctx context.Context, id string) (Role, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
+	GetSetting(ctx context.Context, settingKey string) (string, error)
+	GetUserByEmail(ctx context.Context, email string) (UsersProfile, error)
 	GetUserByID(ctx context.Context, id string) (UsersProfile, error)
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
 	GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error)
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)
 	IncrementLocationCapacity(ctx context.Context, id string) (int64, error)
 	IncrementOutboxRetry(ctx context.Context, id string) error
+	LatestQCResultsForLots(ctx context.Context, lotIds []string) ([]LatestQCResultsForLotsRow, error)
+	ListAllRolePermissions(ctx context.Context) ([]ListAllRolePermissionsRow, error)
 	ListAuditLogs(ctx context.Context, arg ListAuditLogsParams) ([]AuditLog, error)
 	ListAuditLogsByActor(ctx context.Context, arg ListAuditLogsByActorParams) ([]AuditLog, error)
 	ListAuditLogsByEntity(ctx context.Context, arg ListAuditLogsByEntityParams) ([]AuditLog, error)
@@ -82,8 +95,6 @@ type Querier interface {
 	ListDispatchesByLot(ctx context.Context, arg ListDispatchesByLotParams) ([]Dispatch, error)
 	ListDispatchesByStatus(ctx context.Context, arg ListDispatchesByStatusParams) ([]Dispatch, error)
 	ListLots(ctx context.Context, arg ListLotsParams) ([]Lot, error)
-	ListLotsByMaterialType(ctx context.Context, arg ListLotsByMaterialTypeParams) ([]Lot, error)
-	ListLotsByStatus(ctx context.Context, arg ListLotsByStatusParams) ([]Lot, error)
 	ListPendingOutboxEvents(ctx context.Context, limit int32) ([]OutboxEvent, error)
 	ListQCJobsByLot(ctx context.Context, lotID string) ([]QcJob, error)
 	ListQCJobsByStatus(ctx context.Context, arg ListQCJobsByStatusParams) ([]QcJob, error)
@@ -98,6 +109,7 @@ type Querier interface {
 	// manually resets it (e.g., after a NATS / config fix).
 	MarkOutboxFailed(ctx context.Context, id string) error
 	MarkOutboxPublished(ctx context.Context, id string) error
+	QCTrendByDay(ctx context.Context, createdAt time.Time) ([]QCTrendByDayRow, error)
 	// Returns a single claimed event back to PENDING with retry_count incremented.
 	// Used when the publish call to NATS fails but the event hasn't yet exhausted
 	// its retry budget — the next poll cycle will pick it up again.
@@ -123,6 +135,9 @@ type Querier interface {
 	UpdateQCJobStarted(ctx context.Context, id string) error
 	UpdateQCJobStatus(ctx context.Context, arg UpdateQCJobStatusParams) error
 	UpdateQCResultReview(ctx context.Context, arg UpdateQCResultReviewParams) error
+	UpdateRoleDescription(ctx context.Context, arg UpdateRoleDescriptionParams) error
+	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
+	UpsertSetting(ctx context.Context, arg UpsertSettingParams) error
 	// `capacity` is REMAINING slots (AssignSlot decrements it), so it equals
 	// "available". Occupancy is the count of ACTIVE assignments for the zone's
 	// locations; total = remaining + occupied, which stays stable as lots are

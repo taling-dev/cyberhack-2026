@@ -64,3 +64,32 @@ SELECT recommendation, COUNT(*) as count FROM qc_results WHERE created_at >= ? G
 
 -- name: AvgQCConfidence :one
 SELECT COALESCE(AVG(confidence), 0) FROM qc_results WHERE created_at >= ?;
+
+-- name: GetLatestInspection :one
+SELECT r.lot_id, l.lot_number, l.material_name, r.recommendation, r.confidence,
+       r.findings_json, j.image_object_key, r.created_at
+FROM qc_results r
+JOIN lots l ON l.id = r.lot_id
+JOIN qc_jobs j ON j.id = r.qc_job_id
+ORDER BY r.created_at DESC
+LIMIT 1;
+
+-- name: QCTrendByDay :many
+SELECT DATE(created_at) AS day,
+       SUM(recommendation = 'PASS')   AS pass_count,
+       SUM(recommendation = 'REVIEW') AS review_count,
+       SUM(recommendation = 'FAIL')   AS fail_count
+FROM qc_results
+WHERE created_at >= ?
+GROUP BY DATE(created_at)
+ORDER BY day;
+
+-- name: LatestQCResultsForLots :many
+SELECT r.lot_id, r.recommendation, r.confidence
+FROM qc_results r
+JOIN (
+  SELECT q.lot_id AS lid, MAX(q.created_at) AS max_created
+  FROM qc_results q
+  WHERE q.lot_id IN (sqlc.slice('lot_ids'))
+  GROUP BY q.lot_id
+) latest ON latest.lid = r.lot_id AND latest.max_created = r.created_at;
