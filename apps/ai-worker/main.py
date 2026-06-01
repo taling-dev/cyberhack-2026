@@ -6,9 +6,9 @@ NATS so the SSE bridge can fan them out to subscribed web clients.
 
 Events published by this worker (all envelope-formatted, subject == event_type):
   qc.job.completed             — AI inference finished cleanly
-  qc.job.needs_human_review    — recommendation is REVIEW or FAIL
+  qc.job.needs_human_review    — recommendation is REVIEW (PASS/FAIL auto-decided)
   qc.job.failed                — exception during processing (after final retry)
-  lot.status_changed           — lot transitioned PENDING_QC → QC_REVIEW
+  lot.status_changed           — lot transitioned to QC_APPROVED / QC_REJECTED (auto) or QC_REVIEW
 """
 
 import asyncio
@@ -364,21 +364,33 @@ def write_qc_result(job_id: str, lot_id: str, result: dict):
     idempotent).
     """
     db = get_db()
+    # Auto-decision: PASS -> auto-approve, FAIL -> auto-reject, REVIEW -> human review.
+    rec = result["recommendation"]
+    if rec == "PASS":
+        _job_status, _lot_status, _auto_decision = "APPROVED", "QC_APPROVED", "APPROVED"
+    elif rec == "FAIL":
+        _job_status, _lot_status, _auto_decision = "REJECTED", "QC_REJECTED", "REJECTED"
+    else:
+        _job_status, _lot_status, _auto_decision = "AI_COMPLETED", "QC_REVIEW", None
     try:
         with db.cursor() as cur:
             cur.execute(
-                """INSERT INTO qc_results (id, qc_job_id, lot_id, recommendation, confidence, findings_json, model_version)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """INSERT INTO qc_results (id, qc_job_id, lot_id, recommendation, confidence, findings_json, model_version, supervisor_decision, reviewed_by, reviewed_at)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
                    ON DUPLICATE KEY UPDATE
                        recommendation=VALUES(recommendation),
                        confidence=VALUES(confidence),
                        findings_json=VALUES(findings_json),
-                       model_version=VALUES(model_version)""",
-                (str(uuid.uuid4()), job_id, lot_id, result["recommendation"],
-                 f"{result['confidence']:.4f}", json.dumps(result["findings"]), MODEL_VERSION),
+                       model_version=VALUES(model_version),
+                       supervisor_decision=VALUES(supervisor_decision),
+                       reviewed_by=VALUES(reviewed_by),
+                       reviewed_at=VALUES(reviewed_at)""",
+                (str(uuid.uuid4()), job_id, lot_id, rec,
+                 f"{result['confidence']:.4f}", json.dumps(result["findings"]), MODEL_VERSION,
+                 _auto_decision, "ai-auto" if _auto_decision else None),
             )
-            cur.execute("UPDATE qc_jobs SET status='AI_COMPLETED', completed_at=NOW() WHERE id=%s", (job_id,))
-            cur.execute("UPDATE lots SET status='QC_REVIEW' WHERE id=%s", (lot_id,))
+            cur.execute("UPDATE qc_jobs SET status=%s, completed_at=NOW() WHERE id=%s", (_job_status, job_id))
+            cur.execute("UPDATE lots SET status=%s WHERE id=%s", (_lot_status, lot_id))
         db.commit()
     except Exception:
         db.rollback()
@@ -535,6 +547,7 @@ async def message_handler(msg):
                 "qc.job.completed",
                 build_envelope("qc.job.completed", actor_id, owner_user_id, job_id, base_payload),
             )
+            _lot_to = "QC_APPROVED" if recommendation == "PASS" else "QC_REJECTED" if recommendation == "FAIL" else "QC_REVIEW"
             await publish_envelope(
                 "lot.status_changed",
                 build_envelope(
@@ -543,14 +556,14 @@ async def message_handler(msg):
                         "lot_id":     lot_id,
                         "lot_number": lot_number,
                         "from":       "AI_PROCESSING",
-                        "to":         "QC_REVIEW",
-                        "reason":     "ai-completed",
+                        "to":         _lot_to,
+                        "reason":     "ai-auto-decision" if recommendation in ("PASS", "FAIL") else "ai-completed",
                         "created_by": owner_user_id,
                         "actor_id":   actor_id,
                     },
                 ),
             )
-            if recommendation in ("REVIEW", "FAIL"):
+            if recommendation == "REVIEW":
                 await publish_envelope(
                     "qc.job.needs_human_review",
                     build_envelope(
