@@ -1,5 +1,5 @@
 ---
-name: SimaOps AI
+name: SARI
 description: Auditable QC and operations control surface for a natural-extracts plant
 colors:
   ink: "#020617"
@@ -89,13 +89,13 @@ components:
     rounded: "{rounded.md}"
 ---
 
-# Design System: SimaOps AI
+# Design System: SARI
 
 ## 1. Overview
 
 **Creative North Star: "The Instrument Panel"**
 
-SimaOps is read the way an operator reads a gauge: state first, at a glance, with
+SARI is read the way an operator reads a gauge: state first, at a glance, with
 zero ambiguity. The surface is a calm, near-white slate field that recedes so the
 information on it carries the meaning. Hierarchy comes from weight and color, not
 from chrome; a lot's status is always the loudest thing in view, and the control

@@ -1,4 +1,4 @@
-# SimaOps AI — Load Test Harness
+# SARI — Load Test Harness
 
 k6 + Prometheus remote-write harness that drives the live cluster
 through the full lot → QC → review → assign pipeline. Three scenarios

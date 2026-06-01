@@ -1,4 +1,4 @@
-# SimaOps AI — Design
+# SARI — Design
 
 > Reads from: [`requirements.md`](./requirements.md)
 > Drives: [`tasks.md`](./tasks.md)
