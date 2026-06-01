@@ -114,8 +114,18 @@
     return entityOptions.find((option) => option.value === value)?.label ?? (value || '-');
   }
 
-  function metaForAction(action: string) {
-    return actionMeta[action] ?? { tone: 'bg-slate-100 text-slate-700 ring-slate-200', dot: 'bg-slate-400', label: 'System' };
+  function metaForAction(log: { action: string; afterJson?: string }) {
+    // qc.reviewed covers approve/reject/recheck — derive the real outcome from
+    // the recorded decision rather than a static label.
+    if (log.action === 'qc.reviewed') {
+      let decision = '';
+      try { decision = JSON.parse(log.afterJson ?? '{}')?.decision ?? ''; } catch { /* ignore */ }
+      if (decision.includes('REJECTED')) return { tone: 'bg-red-100 text-red-700 ring-red-200', dot: 'bg-red-500', label: 'Rejected' };
+      if (decision.includes('RECHECK')) return { tone: 'bg-orange-100 text-orange-700 ring-orange-200', dot: 'bg-orange-500', label: 'Recheck' };
+      if (decision.includes('APPROVED')) return { tone: 'bg-emerald-100 text-emerald-700 ring-emerald-200', dot: 'bg-emerald-500', label: 'Approved' };
+      return { tone: 'bg-slate-100 text-slate-700 ring-slate-200', dot: 'bg-slate-400', label: 'Reviewed' };
+    }
+    return actionMeta[log.action] ?? { tone: 'bg-slate-100 text-slate-700 ring-slate-200', dot: 'bg-slate-400', label: 'System' };
   }
 
   function prettyJson(value?: string) {
@@ -291,7 +301,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100">
             {#each logs as log}
-              {@const action = metaForAction(log.action)}
+              {@const action = metaForAction(log)}
               <tr class="transition-colors hover:bg-slate-50" use:highlightOnChange={log.id}>
                 <td class="whitespace-nowrap px-4 py-3 align-middle text-xs text-slate-500" title={formatDate(log.createdAt?.seconds)}>
                   {formatDate(log.createdAt?.seconds)}

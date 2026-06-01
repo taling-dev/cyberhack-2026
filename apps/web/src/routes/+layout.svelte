@@ -1,7 +1,7 @@
 <script lang="ts">
   import '../app.css';
   import '$lib/i18n';
-  import { t, locale } from 'svelte-i18n';
+  import { t } from 'svelte-i18n';
   import { get } from 'svelte/store';
   import { page } from '$app/stores';
   import { invalidateAll } from '$app/navigation';
@@ -50,10 +50,6 @@
     location.reload();
   }
 
-  function toggleLocale() {
-    locale.set($locale === 'en' ? 'id' : 'en');
-  }
-
   const user = $derived(data.user);
   const userRoles = $derived(user?.roles ?? []);
   const navItems = $derived(
@@ -96,38 +92,9 @@
 
   let realtime = $state<RealtimeHandle | null>(null);
   let realtimeStatus = $derived(realtime?.state.status ?? 'idle');
-
-  function statusLabelKey(status: string): string {
-    switch (status) {
-      case 'live':
-        return 'realtime.live';
-      case 'reconnecting':
-      case 'connecting':
-        return 'realtime.reconnecting';
-      case 're-authenticating':
-        return 'realtime.re_authenticating';
-      case 'session-expired':
-        return 'realtime.session_expired';
-      default:
-        return 'realtime.live';
-    }
-  }
-
-  function statusDotClass(status: string): string {
-    switch (status) {
-      case 'live':
-        return 'bg-green-500';
-      case 'reconnecting':
-      case 'connecting':
-        return 'bg-blue-500 animate-pulse';
-      case 're-authenticating':
-        return 'bg-amber-500 animate-pulse';
-      case 'session-expired':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-400';
-    }
-  }
+  let profileMenuOpen = $state(false);
+  let profileButton = $state<HTMLButtonElement | null>(null);
+  let profileMenu = $state<HTMLDivElement | null>(null);
 
   function translateFn(key: string, opts?: { values?: Record<string, any> }) {
     return get(t)(key, opts);
@@ -147,7 +114,21 @@
   onMount(() => {
     if (!browser) return;
     sweepOldDrafts();
+
+    function closeProfileMenuOnOutsideClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!profileMenuOpen) return;
+      if (profileButton?.contains(target) || profileMenu?.contains(target)) return;
+      profileMenuOpen = false;
+    }
+
+    document.addEventListener('mousedown', closeProfileMenuOnOutsideClick);
+    return () => document.removeEventListener('mousedown', closeProfileMenuOnOutsideClick);
   });
+
+  function closeProfileMenu() {
+    profileMenuOpen = false;
+  }
 
   $effect(() => {
     const u = user;
@@ -299,59 +280,104 @@
     </nav>
 
     {#if user}
-      <div class="p-3 md:p-4">
-        <div class="rounded-full bg-white/[0.08] p-1.5 md:flex md:items-center md:gap-3 md:rounded-xl md:border md:border-white/10 md:p-3">
-          <div class="relative mx-auto flex size-10 shrink-0 items-center justify-center rounded-full bg-lime-500 text-sm font-bold text-slate-950 md:mx-0">
+      <div class="relative p-3 md:p-4">
+        <button
+          bind:this={profileButton}
+          type="button"
+          class="w-full rounded-full bg-white/[0.08] p-1.5 text-left transition-colors hover:bg-white/[0.12] focus:outline-none focus:ring-2 focus:ring-white/20 md:flex md:items-center md:gap-3 md:rounded-xl md:border md:border-white/10 md:p-3"
+          aria-haspopup="menu"
+          aria-expanded={profileMenuOpen}
+          aria-controls="sidebar-profile-menu"
+          onclick={() => profileMenuOpen = !profileMenuOpen}
+          onkeydown={(event) => {
+            if (event.key === 'Escape') profileMenuOpen = false;
+          }}
+        >
+          <span class="relative mx-auto flex size-10 shrink-0 items-center justify-center rounded-full bg-lime-500 text-sm font-bold text-slate-950 md:mx-0">
             {initials(user.name)}
             <span class="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-[#071326] bg-green-500"></span>
-          </div>
-          <div class="hidden min-w-0 flex-1 md:block">
-            <div class="truncate text-sm font-bold text-white">{user.name}</div>
-            <div class="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-normal text-slate-300">
+          </span>
+          <span class="hidden min-w-0 flex-1 md:block">
+            <span class="block truncate text-sm font-bold text-white">{user.name}</span>
+            <span class="mt-0.5 block truncate text-[11px] font-semibold uppercase tracking-normal text-slate-300">
               {userRoles[0] ?? 'USER'}
-            </div>
-            <div class="mt-2 flex items-center gap-1.5 text-[11px] text-slate-300">
+            </span>
+            <span class="mt-2 flex items-center gap-1.5 text-[11px] text-slate-300">
               <span class="size-2 rounded-full bg-green-500"></span>
               Online
+            </span>
+          </span>
+          <span class="hidden shrink-0 text-slate-400 md:block" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7 10 5 5 5-5" />
+            </svg>
+          </span>
+        </button>
+
+        {#if profileMenuOpen}
+          <div
+            bind:this={profileMenu}
+            id="sidebar-profile-menu"
+            role="menu"
+            aria-label="Account menu"
+            tabindex="-1"
+            class="absolute bottom-full left-3 z-50 mb-2 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white p-1 text-slate-700 shadow-xl md:left-4"
+            onkeydown={(event) => {
+              if (event.key === 'Escape') {
+                profileMenuOpen = false;
+                profileButton?.focus();
+              }
+            }}
+          >
+            <div class="border-b border-slate-100 px-3 py-2">
+              <p class="truncate text-sm font-bold text-slate-950">{user.name}</p>
+              <p class="mt-0.5 truncate text-xs text-slate-500">{user.email || user.username}</p>
+            </div>
+            <div class="py-1">
+              <a
+                href="/settings"
+                role="menuitem"
+                onclick={closeProfileMenu}
+                class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+              >
+                <svg viewBox="0 0 24 24" class="size-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M5 21a7 7 0 0 1 14 0" />
+                </svg>
+                Profile
+              </a>
+              <a
+                href="/settings"
+                role="menuitem"
+                onclick={closeProfileMenu}
+                class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+              >
+                <svg viewBox="0 0 24 24" class="size-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.1 2.1-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20h-3v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L6.6 16.6l.1-.1A1.7 1.7 0 0 0 7 14.6a1.7 1.7 0 0 0-1.5-1H5v-3h.5A1.7 1.7 0 0 0 7 9.5a1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.1-2.1.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V4h3v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.1 2.1-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.5v3h-.5a1.7 1.7 0 0 0-1.5 1Z" />
+                </svg>
+                {$t('nav.settings')}
+              </a>
+              <a
+                href="/auth/logout"
+                role="menuitem"
+                class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 focus:bg-red-50 focus:outline-none"
+              >
+                <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
+                {$t('nav.logout')}
+              </a>
             </div>
           </div>
-        </div>
+        {/if}
       </div>
     {/if}
   </aside>
 
   <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-    <header class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm md:px-6">
-      <div class="min-w-0 truncate text-sm font-medium text-slate-500">
-        {$t('app.name')}
-      </div>
-      <div class="flex min-w-0 items-center gap-2 md:gap-3">
-        {#if user && realtimeStatus !== 'idle'}
-          <span class="hidden items-center gap-1.5 text-xs font-medium text-slate-500 sm:flex" aria-live="polite">
-            <span class="inline-block size-2 rounded-full {statusDotClass(realtimeStatus)}" aria-hidden="true"></span>
-            {$t(statusLabelKey(realtimeStatus))}
-          </span>
-        {/if}
-        <button
-          onclick={toggleLocale}
-          class="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
-          aria-label="Switch language"
-          title="Switch language"
-        >
-          {$t(`locale.${$locale === 'en' ? 'id' : 'en'}`)}
-        </button>
-        {#if user}
-          <a href="/auth/logout" class="h-9 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium leading-5 text-slate-700 shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700">
-            {$t('nav.logout')}
-          </a>
-        {:else}
-          <a href="/auth/login" class="h-9 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium leading-5 text-white shadow-sm transition-colors hover:bg-blue-700">
-            {$t('nav.login')}
-          </a>
-        {/if}
-      </div>
-    </header>
-
     <main class="flex-1 overflow-auto bg-slate-50 p-4 md:p-6">
       {#if $page.data.impersonating}
         <div class="mb-4 flex flex-col gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm sm:flex-row sm:items-center sm:justify-between">
