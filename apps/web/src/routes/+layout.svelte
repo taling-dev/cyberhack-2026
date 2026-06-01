@@ -52,6 +52,9 @@
 
   const user = $derived(data.user);
   const userRoles = $derived(user?.roles ?? []);
+  // Highest-privilege role wins (an admin with extra roles must read as ADMIN, not roles[0]).
+  const ROLE_PRIORITY = ['ADMIN', 'MANAGER', 'QC_SUPERVISOR', 'WAREHOUSE_STAFF', 'OPERATOR'];
+  const primaryRole = $derived(ROLE_PRIORITY.find((r) => userRoles.includes(r)) ?? userRoles[0] ?? 'USER');
   const navItems = $derived(
     allNavItems.filter((item) => userRoles.some((role: string) => item.roles.includes(role))),
   );
@@ -300,7 +303,7 @@
           <span class="hidden min-w-0 flex-1 md:block">
             <span class="block truncate text-sm font-bold text-white">{user.name}</span>
             <span class="mt-0.5 block truncate text-[11px] font-semibold uppercase tracking-normal text-slate-300">
-              {userRoles[0] ?? 'USER'}
+              {primaryRole}
             </span>
             <span class="mt-2 flex items-center gap-1.5 text-[11px] text-slate-300">
               <span class="size-2 rounded-full bg-green-500"></span>

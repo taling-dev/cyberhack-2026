@@ -20,7 +20,9 @@
   const user = $derived($page.data.user);
   const roles = $derived(user?.roles ?? []);
   const isAdmin = $derived(roles.includes('ADMIN'));
-  const primaryRole = $derived(roles[0] ?? 'USER');
+  const primaryRole = $derived(
+    ['ADMIN', 'MANAGER', 'QC_SUPERVISOR', 'WAREHOUSE_STAFF', 'OPERATOR'].find((r) => roles.includes(r)) ?? roles[0] ?? 'USER'
+  );
 
   // AI QC thresholds
   const thresholdsQuery = createQuery(() => ({

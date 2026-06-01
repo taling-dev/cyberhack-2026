@@ -75,10 +75,20 @@ ORDER BY r.created_at DESC
 LIMIT 1;
 
 -- name: QCTrendByDay :many
+-- Effective outcome per result: a supervisor decision overrides the AI
+-- recommendation (APPROVED->PASS, REJECTED->FAIL, RECHECK->REVIEW); results
+-- not yet reviewed fall back to the AI recommendation.
 SELECT DATE(created_at) AS day,
-       SUM(recommendation = 'PASS')   AS pass_count,
-       SUM(recommendation = 'REVIEW') AS review_count,
-       SUM(recommendation = 'FAIL')   AS fail_count
+       SUM(CASE WHEN supervisor_decision = 'APPROVED' THEN 1
+                WHEN supervisor_decision = 'REJECTED' THEN 0
+                WHEN supervisor_decision = 'RECHECK'  THEN 0
+                ELSE recommendation = 'PASS' END)   AS pass_count,
+       SUM(CASE WHEN supervisor_decision = 'RECHECK' THEN 1
+                WHEN supervisor_decision IN ('APPROVED','REJECTED') THEN 0
+                ELSE recommendation = 'REVIEW' END)  AS review_count,
+       SUM(CASE WHEN supervisor_decision = 'REJECTED' THEN 1
+                WHEN supervisor_decision IN ('APPROVED','RECHECK') THEN 0
+                ELSE recommendation = 'FAIL' END)   AS fail_count
 FROM qc_results
 WHERE created_at >= ?
 GROUP BY DATE(created_at)
