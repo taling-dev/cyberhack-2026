@@ -109,6 +109,9 @@ type Querier interface {
 	// manually resets it (e.g., after a NATS / config fix).
 	MarkOutboxFailed(ctx context.Context, id string) error
 	MarkOutboxPublished(ctx context.Context, id string) error
+	// Effective outcome per result: a supervisor decision overrides the AI
+	// recommendation (APPROVED->PASS, REJECTED->FAIL, RECHECK->REVIEW); results
+	// not yet reviewed fall back to the AI recommendation.
 	QCTrendByDay(ctx context.Context, createdAt time.Time) ([]QCTrendByDayRow, error)
 	// Returns a single claimed event back to PENDING with retry_count incremented.
 	// Used when the publish call to NATS fails but the event hasn't yet exhausted
