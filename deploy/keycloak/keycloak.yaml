@@ -1,0 +1,78 @@
+# Production Keycloak — Postgres-backed, realm imported on boot.
+#
+# Prereqs (secrets, created out-of-band; values NOT committed):
+#   kubectl -n platform create secret generic keycloak-db \
+#     --from-literal=username=keycloak --from-literal=password=<db-pass>
+#   kubectl -n platform create secret generic keycloak-admin \
+#     --from-literal=username=admin --from-literal=password=<bootstrap-admin-pass>
+#
+# Realm import: the simaops-realm ConfigMap (generated from
+# deploy/keycloak/simaops-realm.json) is mounted at /opt/keycloak/data/import
+# and applied with --import-realm (skipped if the realm already exists in PG).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: platform
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: docker.io/keycloak/keycloak:26.0
+          args: ["start", "--import-realm"]
+          env:
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: jdbc:postgresql://keycloak-postgres.platform:5432/keycloak
+            - name: KC_DB_USERNAME
+              valueFrom: { secretKeyRef: { name: keycloak-db, key: username } }
+            - name: KC_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: keycloak-db, key: password } }
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              valueFrom: { secretKeyRef: { name: keycloak-admin, key: username } }
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom: { secretKeyRef: { name: keycloak-admin, key: password } }
+            - name: KC_HOSTNAME
+              value: https://auth.161.118.244.229.sslip.io
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 8080
+            - containerPort: 9000
+          volumeMounts:
+            - name: realm-import
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 9000 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet: { path: /health/live, port: 9000 }
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 200m, memory: 768Mi }
+            limits: { cpu: "1", memory: 1536Mi }
+      volumes:
+        - name: realm-import
+          configMap:
+            name: simaops-realm

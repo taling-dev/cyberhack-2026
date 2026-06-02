@@ -103,7 +103,15 @@ helm repo update
 kubectl create namespace platform
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -n platform
 helm upgrade --install cert-manager jetstack/cert-manager -n platform --set installCRDs=true
-helm upgrade --install keycloak bitnami/keycloak -n platform
+# Keycloak — Postgres-backed (persistent realm), imported on first boot.
+kubectl -n platform create secret generic keycloak-db \
+  --from-literal=username=keycloak --from-literal=password="$(openssl rand -base64 18)"
+kubectl -n platform create secret generic keycloak-admin \
+  --from-literal=username=admin --from-literal=password="$(openssl rand -base64 18)"
+# Realm import source (secrets via ${ENV} placeholders are substituted before this step).
+kubectl -n platform create configmap simaops-realm --from-file=simaops-realm.json=deploy/keycloak/simaops-realm.json
+kubectl apply -f deploy/keycloak/keycloak-postgres.yaml
+kubectl apply -f deploy/keycloak/keycloak.yaml
 helm upgrade --install tidb-operator pingcap/tidb-operator -n platform
 helm upgrade --install minio bitnami/minio -n platform
 helm upgrade --install nats nats/nats -n platform --set jetstream.enabled=true

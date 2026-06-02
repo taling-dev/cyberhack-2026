@@ -5,7 +5,6 @@
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "sslRequired": "external",
-
   "ssoSessionMaxLifespan": 259200,
   "ssoSessionIdleTimeout": 86400,
   "accessTokenLifespan": 300,
@@ -14,11 +13,26 @@
   "offlineSessionIdleTimeout": 2592000,
   "roles": {
     "realm": [
-      { "name": "OPERATOR", "description": "Lot intake and QC image upload" },
-      { "name": "QC_SUPERVISOR", "description": "Approve/reject QC results" },
-      { "name": "WAREHOUSE_STAFF", "description": "Assign warehouse slots" },
-      { "name": "MANAGER", "description": "View dashboards and audit logs" },
-      { "name": "ADMIN", "description": "Full system access" }
+      {
+        "name": "OPERATOR",
+        "description": "Lot intake and QC image upload"
+      },
+      {
+        "name": "QC_SUPERVISOR",
+        "description": "Approve/reject QC results"
+      },
+      {
+        "name": "WAREHOUSE_STAFF",
+        "description": "Assign warehouse slots"
+      },
+      {
+        "name": "MANAGER",
+        "description": "View dashboards and audit logs"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Full system access"
+      }
     ]
   },
   "clients": [
@@ -41,7 +55,11 @@
       ],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "roles"]
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "roles"
+      ]
     },
     {
       "clientId": "simaops-api",
@@ -52,17 +70,16 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
       "secret": "${SIMAOPS_API_CLIENT_SECRET}",
-      "protocol": "openid-connect",
-      "serviceAccountClientRoles": {
-        "realm-management": ["manage-users", "view-users", "view-realm", "manage-realm"]
-      }
+      "protocol": "openid-connect"
     }
   ],
   "clientScopes": [
     {
       "name": "roles",
       "protocol": "openid-connect",
-      "attributes": { "include.in.token.scope": "true" },
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
       "protocolMappers": [
         {
           "name": "realm roles",
@@ -88,8 +105,16 @@
       "lastName": "Operator",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_OPERATOR_PASSWORD}", "temporary": true }],
-      "realmRoles": ["OPERATOR"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIMAOPS_SEED_OPERATOR_PASSWORD}",
+          "temporary": true
+        }
+      ],
+      "realmRoles": [
+        "OPERATOR"
+      ]
     },
     {
       "username": "qc_supervisor",
@@ -98,8 +123,16 @@
       "lastName": "QC Supervisor",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_QC_PASSWORD}", "temporary": true }],
-      "realmRoles": ["QC_SUPERVISOR"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIMAOPS_SEED_QC_PASSWORD}",
+          "temporary": true
+        }
+      ],
+      "realmRoles": [
+        "QC_SUPERVISOR"
+      ]
     },
     {
       "username": "warehouse",
@@ -108,8 +141,16 @@
       "lastName": "Warehouse",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_WAREHOUSE_PASSWORD}", "temporary": true }],
-      "realmRoles": ["WAREHOUSE_STAFF"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIMAOPS_SEED_WAREHOUSE_PASSWORD}",
+          "temporary": true
+        }
+      ],
+      "realmRoles": [
+        "WAREHOUSE_STAFF"
+      ]
     },
     {
       "username": "manager",
@@ -118,8 +159,16 @@
       "lastName": "Manager",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_MANAGER_PASSWORD}", "temporary": true }],
-      "realmRoles": ["MANAGER"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIMAOPS_SEED_MANAGER_PASSWORD}",
+          "temporary": true
+        }
+      ],
+      "realmRoles": [
+        "MANAGER"
+      ]
     },
     {
       "username": "admin",
@@ -128,8 +177,16 @@
       "lastName": "Admin",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "${SIMAOPS_SEED_ADMIN_PASSWORD}", "temporary": true }],
-      "realmRoles": ["ADMIN"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${SIMAOPS_SEED_ADMIN_PASSWORD}",
+          "temporary": true
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
     }
   ]
 }
