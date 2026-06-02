@@ -83,6 +83,40 @@
   }));
   const whBadgeCount = $derived(whBadgeQuery.data?.totalCount ?? 0);
 
+  // Cold-chain temperature alerts shown app-wide, but only to roles allowed to
+  // view warehouse status (same gate as the warehouse nav/badge). Deduped per
+  // zone+status so each transition alerts once, not on every 10s poll.
+  const coldChainQuery = createQuery(() => ({
+    queryKey: ['coldchain-status'],
+    queryFn: async () => {
+      const r = await fetch('/api/coldchain');
+      if (!r.ok) throw new Error('coldchain');
+      return r.json();
+    },
+    enabled: whBadgeEnabled,
+    refetchInterval: 10_000,
+  }));
+  const coldChain = $derived(coldChainQuery.data?.equipment ?? []);
+  const alertedZones = new Map<string, string>();
+  $effect(() => {
+    for (const eq of coldChain) {
+      const status = eq.health?.status ?? 'NO_DATA';
+      const key = eq.equipment_id;
+      if (status === 'CRITICAL' || status === 'WARNING') {
+        if (alertedZones.get(key) === status) continue;
+        alertedZones.set(key, status);
+        pushToast({
+          variant: status === 'CRITICAL' ? 'error' : 'warning',
+          title: `${$t('warehouse.zone')} ${key}: ${status === 'CRITICAL' ? $t('coldchain.critical') : $t('coldchain.warning')}`,
+          body: eq.latest_alert?.message ?? `${eq.latest_temperature ?? '—'}°C — ${$t('coldchain.out_of_range')}`,
+          timeoutMs: status === 'CRITICAL' ? 0 : 6000,
+        });
+      } else {
+        alertedZones.delete(key);
+      }
+    }
+  });
+
   function badgeFor(href: string): number {
     if (href === '/qc') return qcBadgeCount;
     if (href === '/warehouse') return whBadgeCount;
