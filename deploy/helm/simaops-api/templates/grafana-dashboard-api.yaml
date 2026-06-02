@@ -206,7 +206,7 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))",
+              "expr": "histogram_quantile(0.50, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket{rpc!=\"events\"}[5m])))",
               "refId": "A",
               "legendFormat": "p50",
               "datasource": {
@@ -215,7 +215,7 @@ data:
               }
             },
             {
-              "expr": "histogram_quantile(0.95, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))",
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket{rpc!=\"events\"}[5m])))",
               "refId": "B",
               "legendFormat": "p95",
               "datasource": {
@@ -224,7 +224,7 @@ data:
               }
             },
             {
-              "expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))",
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket{rpc!=\"events\"}[5m])))",
               "refId": "C",
               "legendFormat": "p99",
               "datasource": {
@@ -281,7 +281,7 @@ data:
           },
           "targets": [
             {
-              "expr": "topk(5, histogram_quantile(0.95, sum by (le, rpc) (rate(simaops_api_http_request_duration_seconds_bucket[5m]))))",
+              "expr": "topk(5, histogram_quantile(0.95, sum by (le, rpc) (rate(simaops_api_http_request_duration_seconds_bucket{rpc!=\"events\"}[5m]))))",
               "refId": "A",
               "legendFormat": "{{`{{rpc}}`}}",
               "datasource": {
