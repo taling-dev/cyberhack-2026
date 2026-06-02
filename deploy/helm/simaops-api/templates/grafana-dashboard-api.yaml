@@ -9,162 +9,618 @@ metadata:
 data:
   simaops-api.json: |
     {
-      "title": "SimaOps — API",
+      "title": "SimaOps \u2014 API",
       "uid": "simaops-api",
-      "tags": ["simaops"],
+      "tags": [
+        "simaops"
+      ],
       "timezone": "browser",
       "schemaVersion": 38,
       "refresh": "30s",
-      "time": {"from": "now-1h", "to": "now"},
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
       "panels": [
         {
           "id": 1,
           "type": "stat",
           "title": "Request rate (1m)",
-          "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
-          "targets": [{"expr": "sum(rate(simaops_api_http_requests_total[1m]))", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "reqps", "decimals": 2}}
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(simaops_api_http_requests_total[1m]))",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "decimals": 2
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 2,
           "type": "stat",
           "title": "Error rate (5m)",
-          "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+          "gridPos": {
+            "x": 6,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
           "targets": [
-            {"expr": "100 * sum(rate(simaops_api_http_requests_total{code=~\"5..\"}[5m])) / clamp_min(sum(rate(simaops_api_http_requests_total[5m])),1)", "refId": "A"}
+            {
+              "expr": "100 * sum(rate(simaops_api_http_requests_total{code=~\"5..\"}[5m])) / clamp_min(sum(rate(simaops_api_http_requests_total[5m])),1)",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
           ],
-          "fieldConfig": {"defaults": {"unit": "percent", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]}}}
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 5
+                  }
+                ]
+              }
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 3,
           "type": "stat",
           "title": "Auth failures (5m)",
-          "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
-          "targets": [{"expr": "sum(rate(simaops_api_http_requests_total{code=~\"401|403\"}[5m]))", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "reqps", "decimals": 2}}
+          "gridPos": {
+            "x": 12,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(simaops_api_http_requests_total{code=~\"401|403\"}[5m]))",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "decimals": 2
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 4,
           "type": "stat",
           "title": "Idempotency hit rate",
-          "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
-          "targets": [{"expr": "sum(rate(simaops_api_idempotency_total{outcome=\"hit\"}[5m])) / clamp_min(sum(rate(simaops_api_idempotency_total[5m])),1)", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "percentunit", "decimals": 2}}
+          "gridPos": {
+            "x": 18,
+            "y": 0,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(simaops_api_idempotency_total{outcome=\"hit\"}[5m])) / clamp_min(sum(rate(simaops_api_idempotency_total[5m])),1)",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "decimals": 2
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 5,
           "type": "timeseries",
           "title": "Request rate by RPC",
-          "gridPos": {"x": 0, "y": 4, "w": 12, "h": 8},
-          "targets": [{"expr": "sum by (rpc) (rate(simaops_api_http_requests_total[1m]))", "refId": "A", "legendFormat": "{{`{{rpc}}`}}"}],
-          "fieldConfig": {"defaults": {"unit": "reqps"}}
+          "gridPos": {
+            "x": 0,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum by (rpc) (rate(simaops_api_http_requests_total[1m]))",
+              "refId": "A",
+              "legendFormat": "{{`{{rpc}}`}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 6,
           "type": "timeseries",
           "title": "Latency p50 / p95 / p99",
-          "gridPos": {"x": 12, "y": 4, "w": 12, "h": 8},
+          "gridPos": {
+            "x": 12,
+            "y": 4,
+            "w": 12,
+            "h": 8
+          },
           "targets": [
-            {"expr": "histogram_quantile(0.50, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))", "refId": "A", "legendFormat": "p50"},
-            {"expr": "histogram_quantile(0.95, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))", "refId": "B", "legendFormat": "p95"},
-            {"expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))", "refId": "C", "legendFormat": "p99"}
+            {
+              "expr": "histogram_quantile(0.50, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))",
+              "refId": "A",
+              "legendFormat": "p50",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))",
+              "refId": "B",
+              "legendFormat": "p95",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_http_request_duration_seconds_bucket[5m])))",
+              "refId": "C",
+              "legendFormat": "p99",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
           ],
-          "fieldConfig": {"defaults": {"unit": "s"}}
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 7,
           "type": "timeseries",
           "title": "HTTP status codes",
-          "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
-          "targets": [{"expr": "sum by (code) (rate(simaops_api_http_requests_total[1m]))", "refId": "A", "legendFormat": "{{`{{code}}`}}"}]
+          "gridPos": {
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum by (code) (rate(simaops_api_http_requests_total[1m]))",
+              "refId": "A",
+              "legendFormat": "{{`{{code}}`}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 8,
           "type": "timeseries",
           "title": "Top 5 slowest RPCs (p95)",
-          "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
-          "targets": [{"expr": "topk(5, histogram_quantile(0.95, sum by (le, rpc) (rate(simaops_api_http_request_duration_seconds_bucket[5m]))))", "refId": "A", "legendFormat": "{{`{{rpc}}`}}"}],
-          "fieldConfig": {"defaults": {"unit": "s"}}
+          "gridPos": {
+            "x": 12,
+            "y": 12,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "topk(5, histogram_quantile(0.95, sum by (le, rpc) (rate(simaops_api_http_request_duration_seconds_bucket[5m]))))",
+              "refId": "A",
+              "legendFormat": "{{`{{rpc}}`}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 100,
           "type": "row",
           "title": "SSE / Realtime",
-          "gridPos": {"x": 0, "y": 20, "w": 24, "h": 1},
+          "gridPos": {
+            "x": 0,
+            "y": 20,
+            "w": 24,
+            "h": 1
+          },
           "collapsed": false
         },
         {
           "id": 101,
           "type": "stat",
           "title": "Active SSE connections",
-          "gridPos": {"x": 0, "y": 21, "w": 6, "h": 4},
-          "targets": [{"expr": "sum(simaops_api_sse_active_connections)", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "short"}}
+          "gridPos": {
+            "x": 0,
+            "y": 21,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(simaops_api_sse_active_connections)",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 102,
           "type": "stat",
           "title": "Events delivered/sec",
-          "gridPos": {"x": 6, "y": 21, "w": 6, "h": 4},
-          "targets": [{"expr": "sum(rate(simaops_api_sse_events_sent_total[1m]))", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "rps"}}
+          "gridPos": {
+            "x": 6,
+            "y": 21,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(simaops_api_sse_events_sent_total[1m]))",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "rps"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 103,
           "type": "stat",
           "title": "Drop rate (5m)",
-          "gridPos": {"x": 12, "y": 21, "w": 6, "h": 4},
-          "targets": [{"expr": "sum(rate(simaops_api_sse_events_dropped_total[5m]))", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "rps", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1}]}}}
+          "gridPos": {
+            "x": 12,
+            "y": 21,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(simaops_api_sse_events_dropped_total[5m]))",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "rps",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.5
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 104,
           "type": "stat",
-          "title": "API ↔ Keycloak clock skew (s)",
-          "gridPos": {"x": 18, "y": 21, "w": 6, "h": 4},
-          "targets": [{"expr": "simaops_api_clock_skew_seconds", "refId": "A"}],
-          "fieldConfig": {"defaults": {"unit": "s", "color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green"}, {"color": "yellow", "value": 30}, {"color": "red", "value": 60}]}}}
+          "title": "API \u2194 Keycloak clock skew (s)",
+          "gridPos": {
+            "x": 18,
+            "y": 21,
+            "w": 6,
+            "h": 4
+          },
+          "targets": [
+            {
+              "expr": "simaops_api_clock_skew_seconds",
+              "refId": "A",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "thresholds"
+              },
+              "thresholds": {
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 30
+                  },
+                  {
+                    "color": "red",
+                    "value": 60
+                  }
+                ]
+              }
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 105,
           "type": "timeseries",
           "title": "SSE active connections by role",
-          "gridPos": {"x": 0, "y": 25, "w": 12, "h": 8},
-          "targets": [{"expr": "simaops_api_sse_active_connections", "refId": "A", "legendFormat": "{{`{{role}}`}}"}]
+          "gridPos": {
+            "x": 0,
+            "y": 25,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "simaops_api_sse_active_connections",
+              "refId": "A",
+              "legendFormat": "{{`{{role}}`}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 106,
           "type": "timeseries",
           "title": "Events sent by subject",
-          "gridPos": {"x": 12, "y": 25, "w": 12, "h": 8},
-          "targets": [{"expr": "sum by (subject) (rate(simaops_api_sse_events_sent_total[1m]))", "refId": "A", "legendFormat": "{{`{{subject}}`}}"}],
-          "fieldConfig": {"defaults": {"unit": "rps"}}
+          "gridPos": {
+            "x": 12,
+            "y": 25,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum by (subject) (rate(simaops_api_sse_events_sent_total[1m]))",
+              "refId": "A",
+              "legendFormat": "{{`{{subject}}`}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "rps"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 107,
           "type": "timeseries",
           "title": "Drops by reason",
-          "gridPos": {"x": 0, "y": 33, "w": 12, "h": 8},
-          "targets": [{"expr": "sum by (reason) (rate(simaops_api_sse_events_dropped_total[1m]))", "refId": "A", "legendFormat": "{{`{{reason}}`}}"}],
-          "fieldConfig": {"defaults": {"unit": "rps"}}
+          "gridPos": {
+            "x": 0,
+            "y": 33,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum by (reason) (rate(simaops_api_sse_events_dropped_total[1m]))",
+              "refId": "A",
+              "legendFormat": "{{`{{reason}}`}}",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "rps"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 108,
           "type": "timeseries",
           "title": "Hub dispatch p99 (s)",
-          "gridPos": {"x": 12, "y": 33, "w": 12, "h": 8},
-          "targets": [{"expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_sse_hub_dispatch_duration_seconds_bucket[5m])))", "refId": "A", "legendFormat": "p99"}],
-          "fieldConfig": {"defaults": {"unit": "s"}}
+          "gridPos": {
+            "x": 12,
+            "y": 33,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum by (le) (rate(simaops_api_sse_hub_dispatch_duration_seconds_bucket[5m])))",
+              "refId": "A",
+              "legendFormat": "p99",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            }
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "id": 109,
           "type": "timeseries",
           "title": "Per-user evictions / dispatch panics (1m)",
-          "gridPos": {"x": 0, "y": 41, "w": 24, "h": 6},
+          "gridPos": {
+            "x": 0,
+            "y": 41,
+            "w": 24,
+            "h": 6
+          },
           "targets": [
-            {"expr": "rate(simaops_api_sse_connections_evicted_total[1m])", "refId": "A", "legendFormat": "evictions/s"},
-            {"expr": "rate(simaops_api_sse_dispatch_panics_total[1m])", "refId": "B", "legendFormat": "panics/s"}
-          ]
+            {
+              "expr": "rate(simaops_api_sse_connections_evicted_total[1m])",
+              "refId": "A",
+              "legendFormat": "evictions/s",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            },
+            {
+              "expr": "rate(simaops_api_sse_dispatch_panics_total[1m])",
+              "refId": "B",
+              "legendFormat": "panics/s",
+              "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+              }
+            }
+          ],
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         }
       ]
     }
