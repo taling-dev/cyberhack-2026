@@ -18,3 +18,35 @@ prometheus:
           resources:
             requests:
               storage: 20Gi
+
+# Grafana SSO via Keycloak (realm: simaops, client: grafana).
+# The client secret is NOT committed — it lives in the grafana-oauth secret:
+#   kubectl -n observability create secret generic grafana-oauth \
+#     --from-literal=client_secret=<grafana client secret from Keycloak>
+# Local admin is retained as break-glass (login form stays enabled).
+grafana:
+  # client secret injected via env from the grafana-oauth secret (chart blocks
+  # defining sensitive keys directly in grafana.ini).
+  envValueFrom:
+    GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+      secretKeyRef:
+        name: grafana-oauth
+        key: client_secret
+  grafana.ini:
+    server:
+      root_url: https://grafana.161.118.244.229.sslip.io
+    auth.generic_oauth:
+      enabled: true
+      name: Keycloak
+      client_id: grafana
+      scopes: openid profile email roles
+      auth_url: https://auth.161.118.244.229.sslip.io/realms/simaops/protocol/openid-connect/auth
+      token_url: https://auth.161.118.244.229.sslip.io/realms/simaops/protocol/openid-connect/token
+      api_url: https://auth.161.118.244.229.sslip.io/realms/simaops/protocol/openid-connect/userinfo
+      # Map Keycloak realm roles -> Grafana org roles.
+      role_attribute_path: "contains(realm_access.roles[*], 'ADMIN') && 'Admin' || contains(realm_access.roles[*], 'MANAGER') && 'Editor' || 'Viewer'"
+      role_attribute_strict: false
+      login_attribute_path: preferred_username
+      email_attribute_path: email
+      name_attribute_path: name
+      use_pkce: true
