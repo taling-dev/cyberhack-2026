@@ -110,7 +110,8 @@ helm upgrade --install nats nats/nats -n platform --set jetstream.enabled=true
 
 # Observability namespace
 kubectl create namespace observability
-helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n observability
+helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n observability \
+  -f infra/values/kube-prometheus-stack.yaml  # PVC-backed storage + 30d retention
 helm upgrade --install loki grafana/loki-stack -n observability
 helm upgrade --install tempo grafana/tempo -n observability
 

@@ -1,0 +1,20 @@
+# Helm values for kube-prometheus-stack (namespace: observability).
+# Applied with:
+#   helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack \
+#     -n observability -f infra/values/kube-prometheus-stack.yaml
+#
+# Without this, the chart defaults Prometheus to an emptyDir volume with 24h
+# retention — metrics are lost on every pod restart and history is capped at a
+# day. This makes Prometheus durable so Grafana dashboards retain history.
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          # OCI block volume; minimum provisioned size is 50Gi even if less is requested.
+          storageClassName: oci-bv
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
