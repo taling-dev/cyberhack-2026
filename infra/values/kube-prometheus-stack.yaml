@@ -23,7 +23,8 @@ prometheus:
 # The client secret is NOT committed — it lives in the grafana-oauth secret:
 #   kubectl -n observability create secret generic grafana-oauth \
 #     --from-literal=client_secret=<grafana client secret from Keycloak>
-# Local admin is retained as break-glass (login form stays enabled).
+# Break-glass local admin is login "grafana_admin" (renamed from "admin" to
+# avoid colliding with the Keycloak "admin" user during OAuth user creation).
 grafana:
   # client secret injected via env from the grafana-oauth secret (chart blocks
   # defining sensitive keys directly in grafana.ini).
