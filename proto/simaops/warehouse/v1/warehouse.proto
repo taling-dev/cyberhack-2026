@@ -9,6 +9,8 @@ service WarehouseService {
   rpc ListLocations(ListLocationsRequest) returns (ListLocationsResponse);
   rpc RecommendSlot(RecommendSlotRequest) returns (RecommendSlotResponse);
   rpc AssignSlot(AssignSlotRequest) returns (AssignSlotResponse);
+  rpc UnassignSlot(UnassignSlotRequest) returns (UnassignSlotResponse);
+  rpc ListSlotDecisions(ListSlotDecisionsRequest) returns (ListSlotDecisionsResponse);
   rpc GetWarehouseAssignments(GetWarehouseAssignmentsRequest) returns (GetWarehouseAssignmentsResponse);
 }
 
@@ -25,6 +27,13 @@ enum AssignmentStatus {
   ASSIGNMENT_STATUS_UNSPECIFIED = 0;
   ASSIGNMENT_STATUS_ACTIVE = 1;
   ASSIGNMENT_STATUS_RELEASED = 2;
+}
+
+enum DecisionType {
+  DECISION_TYPE_UNSPECIFIED = 0;
+  DECISION_TYPE_AUTO = 1;      // AI/system auto-assigned
+  DECISION_TYPE_MANUAL = 2;    // Human explicitly assigned
+  DECISION_TYPE_OVERRIDE = 3;  // Human overrode an auto-decision
 }
 
 // ─── Messages ────────────────────────────────────────────────────
@@ -49,12 +58,26 @@ message WarehouseAssignment {
   string assigned_by = 5;
   google.protobuf.Timestamp assigned_at = 6;
   AssignmentStatus status = 7;
+  DecisionType decision_type = 8;  // AUTO, MANUAL, OVERRIDE
+  string reason = 9;               // Why this slot was recommended/assigned
 }
 
 message SlotRecommendation {
   WarehouseLocation location = 1;
   string reason = 2;
   double score = 3;
+  bool is_auto_assignable = 4;  // True if this can be auto-assigned
+}
+
+message SlotDecision {
+  string id = 1;
+  string lot_id = 2;
+  string location_id = 3;
+  string location_code = 4;
+  DecisionType decision_type = 5;
+  string reason = 6;
+  string actor_id = 7;
+  google.protobuf.Timestamp created_at = 8;
 }
 
 // ─── Requests / Responses ────────────────────────────────────────
@@ -95,5 +118,31 @@ message GetWarehouseAssignmentsRequest {
 
 message GetWarehouseAssignmentsResponse {
   repeated WarehouseAssignment assignments = 1;
+  string next_page_token = 2;
+}
+
+// ─── UnassignSlot ─────────────────────────────────────────────────
+
+message UnassignSlotRequest {
+  string lot_id = 1;
+  string reason = 2;            // Required: why is this being unassigned
+  string idempotency_key = 3;
+}
+
+message UnassignSlotResponse {
+  WarehouseAssignment assignment = 1;  // The released assignment
+  string lot_status = 4;               // "QC_APPROVED" - the new status
+}
+
+// ─── ListSlotDecisions ────────────────────────────────────────────
+
+message ListSlotDecisionsRequest {
+  string lot_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListSlotDecisionsResponse {
+  repeated SlotDecision decisions = 1;
   string next_page_token = 2;
 }

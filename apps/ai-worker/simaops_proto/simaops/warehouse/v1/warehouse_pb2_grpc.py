@@ -5,7 +5,7 @@ import grpc
 from simaops.warehouse.v1 import warehouse_pb2 as simaops_dot_warehouse_dot_v1_dot_warehouse__pb2
 
 
-class WarehouseServiceStub(object):
+class WarehouseServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -29,6 +29,16 @@ class WarehouseServiceStub(object):
                 request_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.AssignSlotRequest.SerializeToString,
                 response_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.AssignSlotResponse.FromString,
                 _registered_method=True)
+        self.UnassignSlot = channel.unary_unary(
+                '/simaops.warehouse.v1.WarehouseService/UnassignSlot',
+                request_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.UnassignSlotRequest.SerializeToString,
+                response_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.UnassignSlotResponse.FromString,
+                _registered_method=True)
+        self.ListSlotDecisions = channel.unary_unary(
+                '/simaops.warehouse.v1.WarehouseService/ListSlotDecisions',
+                request_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.ListSlotDecisionsRequest.SerializeToString,
+                response_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.ListSlotDecisionsResponse.FromString,
+                _registered_method=True)
         self.GetWarehouseAssignments = channel.unary_unary(
                 '/simaops.warehouse.v1.WarehouseService/GetWarehouseAssignments',
                 request_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.GetWarehouseAssignmentsRequest.SerializeToString,
@@ -36,7 +46,7 @@ class WarehouseServiceStub(object):
                 _registered_method=True)
 
 
-class WarehouseServiceServicer(object):
+class WarehouseServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def ListLocations(self, request, context):
@@ -52,6 +62,18 @@ class WarehouseServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def AssignSlot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UnassignSlot(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListSlotDecisions(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -81,6 +103,16 @@ def add_WarehouseServiceServicer_to_server(servicer, server):
                     request_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.AssignSlotRequest.FromString,
                     response_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.AssignSlotResponse.SerializeToString,
             ),
+            'UnassignSlot': grpc.unary_unary_rpc_method_handler(
+                    servicer.UnassignSlot,
+                    request_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.UnassignSlotRequest.FromString,
+                    response_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.UnassignSlotResponse.SerializeToString,
+            ),
+            'ListSlotDecisions': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSlotDecisions,
+                    request_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.ListSlotDecisionsRequest.FromString,
+                    response_serializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.ListSlotDecisionsResponse.SerializeToString,
+            ),
             'GetWarehouseAssignments': grpc.unary_unary_rpc_method_handler(
                     servicer.GetWarehouseAssignments,
                     request_deserializer=simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.GetWarehouseAssignmentsRequest.FromString,
@@ -94,7 +126,7 @@ def add_WarehouseServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class WarehouseService(object):
+class WarehouseService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -168,6 +200,60 @@ class WarehouseService(object):
             '/simaops.warehouse.v1.WarehouseService/AssignSlot',
             simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.AssignSlotRequest.SerializeToString,
             simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.AssignSlotResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UnassignSlot(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.warehouse.v1.WarehouseService/UnassignSlot',
+            simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.UnassignSlotRequest.SerializeToString,
+            simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.UnassignSlotResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSlotDecisions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/simaops.warehouse.v1.WarehouseService/ListSlotDecisions',
+            simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.ListSlotDecisionsRequest.SerializeToString,
+            simaops_dot_warehouse_dot_v1_dot_warehouse__pb2.ListSlotDecisionsResponse.FromString,
             options,
             channel_credentials,
             insecure,

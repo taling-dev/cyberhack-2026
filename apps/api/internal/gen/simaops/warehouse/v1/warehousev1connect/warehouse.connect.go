@@ -42,6 +42,12 @@ const (
 	// WarehouseServiceAssignSlotProcedure is the fully-qualified name of the WarehouseService's
 	// AssignSlot RPC.
 	WarehouseServiceAssignSlotProcedure = "/simaops.warehouse.v1.WarehouseService/AssignSlot"
+	// WarehouseServiceUnassignSlotProcedure is the fully-qualified name of the WarehouseService's
+	// UnassignSlot RPC.
+	WarehouseServiceUnassignSlotProcedure = "/simaops.warehouse.v1.WarehouseService/UnassignSlot"
+	// WarehouseServiceListSlotDecisionsProcedure is the fully-qualified name of the WarehouseService's
+	// ListSlotDecisions RPC.
+	WarehouseServiceListSlotDecisionsProcedure = "/simaops.warehouse.v1.WarehouseService/ListSlotDecisions"
 	// WarehouseServiceGetWarehouseAssignmentsProcedure is the fully-qualified name of the
 	// WarehouseService's GetWarehouseAssignments RPC.
 	WarehouseServiceGetWarehouseAssignmentsProcedure = "/simaops.warehouse.v1.WarehouseService/GetWarehouseAssignments"
@@ -52,6 +58,8 @@ type WarehouseServiceClient interface {
 	ListLocations(context.Context, *connect.Request[v1.ListLocationsRequest]) (*connect.Response[v1.ListLocationsResponse], error)
 	RecommendSlot(context.Context, *connect.Request[v1.RecommendSlotRequest]) (*connect.Response[v1.RecommendSlotResponse], error)
 	AssignSlot(context.Context, *connect.Request[v1.AssignSlotRequest]) (*connect.Response[v1.AssignSlotResponse], error)
+	UnassignSlot(context.Context, *connect.Request[v1.UnassignSlotRequest]) (*connect.Response[v1.UnassignSlotResponse], error)
+	ListSlotDecisions(context.Context, *connect.Request[v1.ListSlotDecisionsRequest]) (*connect.Response[v1.ListSlotDecisionsResponse], error)
 	GetWarehouseAssignments(context.Context, *connect.Request[v1.GetWarehouseAssignmentsRequest]) (*connect.Response[v1.GetWarehouseAssignmentsResponse], error)
 }
 
@@ -84,6 +92,18 @@ func NewWarehouseServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(warehouseServiceMethods.ByName("AssignSlot")),
 			connect.WithClientOptions(opts...),
 		),
+		unassignSlot: connect.NewClient[v1.UnassignSlotRequest, v1.UnassignSlotResponse](
+			httpClient,
+			baseURL+WarehouseServiceUnassignSlotProcedure,
+			connect.WithSchema(warehouseServiceMethods.ByName("UnassignSlot")),
+			connect.WithClientOptions(opts...),
+		),
+		listSlotDecisions: connect.NewClient[v1.ListSlotDecisionsRequest, v1.ListSlotDecisionsResponse](
+			httpClient,
+			baseURL+WarehouseServiceListSlotDecisionsProcedure,
+			connect.WithSchema(warehouseServiceMethods.ByName("ListSlotDecisions")),
+			connect.WithClientOptions(opts...),
+		),
 		getWarehouseAssignments: connect.NewClient[v1.GetWarehouseAssignmentsRequest, v1.GetWarehouseAssignmentsResponse](
 			httpClient,
 			baseURL+WarehouseServiceGetWarehouseAssignmentsProcedure,
@@ -98,6 +118,8 @@ type warehouseServiceClient struct {
 	listLocations           *connect.Client[v1.ListLocationsRequest, v1.ListLocationsResponse]
 	recommendSlot           *connect.Client[v1.RecommendSlotRequest, v1.RecommendSlotResponse]
 	assignSlot              *connect.Client[v1.AssignSlotRequest, v1.AssignSlotResponse]
+	unassignSlot            *connect.Client[v1.UnassignSlotRequest, v1.UnassignSlotResponse]
+	listSlotDecisions       *connect.Client[v1.ListSlotDecisionsRequest, v1.ListSlotDecisionsResponse]
 	getWarehouseAssignments *connect.Client[v1.GetWarehouseAssignmentsRequest, v1.GetWarehouseAssignmentsResponse]
 }
 
@@ -116,6 +138,16 @@ func (c *warehouseServiceClient) AssignSlot(ctx context.Context, req *connect.Re
 	return c.assignSlot.CallUnary(ctx, req)
 }
 
+// UnassignSlot calls simaops.warehouse.v1.WarehouseService.UnassignSlot.
+func (c *warehouseServiceClient) UnassignSlot(ctx context.Context, req *connect.Request[v1.UnassignSlotRequest]) (*connect.Response[v1.UnassignSlotResponse], error) {
+	return c.unassignSlot.CallUnary(ctx, req)
+}
+
+// ListSlotDecisions calls simaops.warehouse.v1.WarehouseService.ListSlotDecisions.
+func (c *warehouseServiceClient) ListSlotDecisions(ctx context.Context, req *connect.Request[v1.ListSlotDecisionsRequest]) (*connect.Response[v1.ListSlotDecisionsResponse], error) {
+	return c.listSlotDecisions.CallUnary(ctx, req)
+}
+
 // GetWarehouseAssignments calls simaops.warehouse.v1.WarehouseService.GetWarehouseAssignments.
 func (c *warehouseServiceClient) GetWarehouseAssignments(ctx context.Context, req *connect.Request[v1.GetWarehouseAssignmentsRequest]) (*connect.Response[v1.GetWarehouseAssignmentsResponse], error) {
 	return c.getWarehouseAssignments.CallUnary(ctx, req)
@@ -127,6 +159,8 @@ type WarehouseServiceHandler interface {
 	ListLocations(context.Context, *connect.Request[v1.ListLocationsRequest]) (*connect.Response[v1.ListLocationsResponse], error)
 	RecommendSlot(context.Context, *connect.Request[v1.RecommendSlotRequest]) (*connect.Response[v1.RecommendSlotResponse], error)
 	AssignSlot(context.Context, *connect.Request[v1.AssignSlotRequest]) (*connect.Response[v1.AssignSlotResponse], error)
+	UnassignSlot(context.Context, *connect.Request[v1.UnassignSlotRequest]) (*connect.Response[v1.UnassignSlotResponse], error)
+	ListSlotDecisions(context.Context, *connect.Request[v1.ListSlotDecisionsRequest]) (*connect.Response[v1.ListSlotDecisionsResponse], error)
 	GetWarehouseAssignments(context.Context, *connect.Request[v1.GetWarehouseAssignmentsRequest]) (*connect.Response[v1.GetWarehouseAssignmentsResponse], error)
 }
 
@@ -155,6 +189,18 @@ func NewWarehouseServiceHandler(svc WarehouseServiceHandler, opts ...connect.Han
 		connect.WithSchema(warehouseServiceMethods.ByName("AssignSlot")),
 		connect.WithHandlerOptions(opts...),
 	)
+	warehouseServiceUnassignSlotHandler := connect.NewUnaryHandler(
+		WarehouseServiceUnassignSlotProcedure,
+		svc.UnassignSlot,
+		connect.WithSchema(warehouseServiceMethods.ByName("UnassignSlot")),
+		connect.WithHandlerOptions(opts...),
+	)
+	warehouseServiceListSlotDecisionsHandler := connect.NewUnaryHandler(
+		WarehouseServiceListSlotDecisionsProcedure,
+		svc.ListSlotDecisions,
+		connect.WithSchema(warehouseServiceMethods.ByName("ListSlotDecisions")),
+		connect.WithHandlerOptions(opts...),
+	)
 	warehouseServiceGetWarehouseAssignmentsHandler := connect.NewUnaryHandler(
 		WarehouseServiceGetWarehouseAssignmentsProcedure,
 		svc.GetWarehouseAssignments,
@@ -169,6 +215,10 @@ func NewWarehouseServiceHandler(svc WarehouseServiceHandler, opts ...connect.Han
 			warehouseServiceRecommendSlotHandler.ServeHTTP(w, r)
 		case WarehouseServiceAssignSlotProcedure:
 			warehouseServiceAssignSlotHandler.ServeHTTP(w, r)
+		case WarehouseServiceUnassignSlotProcedure:
+			warehouseServiceUnassignSlotHandler.ServeHTTP(w, r)
+		case WarehouseServiceListSlotDecisionsProcedure:
+			warehouseServiceListSlotDecisionsHandler.ServeHTTP(w, r)
 		case WarehouseServiceGetWarehouseAssignmentsProcedure:
 			warehouseServiceGetWarehouseAssignmentsHandler.ServeHTTP(w, r)
 		default:
@@ -190,6 +240,14 @@ func (UnimplementedWarehouseServiceHandler) RecommendSlot(context.Context, *conn
 
 func (UnimplementedWarehouseServiceHandler) AssignSlot(context.Context, *connect.Request[v1.AssignSlotRequest]) (*connect.Response[v1.AssignSlotResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.warehouse.v1.WarehouseService.AssignSlot is not implemented"))
+}
+
+func (UnimplementedWarehouseServiceHandler) UnassignSlot(context.Context, *connect.Request[v1.UnassignSlotRequest]) (*connect.Response[v1.UnassignSlotResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.warehouse.v1.WarehouseService.UnassignSlot is not implemented"))
+}
+
+func (UnimplementedWarehouseServiceHandler) ListSlotDecisions(context.Context, *connect.Request[v1.ListSlotDecisionsRequest]) (*connect.Response[v1.ListSlotDecisionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("simaops.warehouse.v1.WarehouseService.ListSlotDecisions is not implemented"))
 }
 
 func (UnimplementedWarehouseServiceHandler) GetWarehouseAssignments(context.Context, *connect.Request[v1.GetWarehouseAssignmentsRequest]) (*connect.Response[v1.GetWarehouseAssignmentsResponse], error) {

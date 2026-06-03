@@ -5,7 +5,7 @@ import grpc
 from simaops.admin.v1 import admin_pb2 as simaops_dot_admin_dot_v1_dot_admin__pb2
 
 
-class AdminServiceStub(object):
+class AdminServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -76,7 +76,7 @@ class AdminServiceStub(object):
                 _registered_method=True)
 
 
-class AdminServiceServicer(object):
+class AdminServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def ListUsers(self, request, context):
@@ -222,7 +222,7 @@ def add_AdminServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class AdminService(object):
+class AdminService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

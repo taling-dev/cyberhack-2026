@@ -124,6 +124,58 @@ func (AssignmentStatus) EnumDescriptor() ([]byte, []int) {
 	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{1}
 }
 
+type DecisionType int32
+
+const (
+	DecisionType_DECISION_TYPE_UNSPECIFIED DecisionType = 0
+	DecisionType_DECISION_TYPE_AUTO        DecisionType = 1 // AI/system auto-assigned
+	DecisionType_DECISION_TYPE_MANUAL      DecisionType = 2 // Human explicitly assigned
+	DecisionType_DECISION_TYPE_OVERRIDE    DecisionType = 3 // Human overrode an auto-decision
+)
+
+// Enum value maps for DecisionType.
+var (
+	DecisionType_name = map[int32]string{
+		0: "DECISION_TYPE_UNSPECIFIED",
+		1: "DECISION_TYPE_AUTO",
+		2: "DECISION_TYPE_MANUAL",
+		3: "DECISION_TYPE_OVERRIDE",
+	}
+	DecisionType_value = map[string]int32{
+		"DECISION_TYPE_UNSPECIFIED": 0,
+		"DECISION_TYPE_AUTO":        1,
+		"DECISION_TYPE_MANUAL":      2,
+		"DECISION_TYPE_OVERRIDE":    3,
+	}
+)
+
+func (x DecisionType) Enum() *DecisionType {
+	p := new(DecisionType)
+	*p = x
+	return p
+}
+
+func (x DecisionType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DecisionType) Descriptor() protoreflect.EnumDescriptor {
+	return file_simaops_warehouse_v1_warehouse_proto_enumTypes[2].Descriptor()
+}
+
+func (DecisionType) Type() protoreflect.EnumType {
+	return &file_simaops_warehouse_v1_warehouse_proto_enumTypes[2]
+}
+
+func (x DecisionType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DecisionType.Descriptor instead.
+func (DecisionType) EnumDescriptor() ([]byte, []int) {
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{2}
+}
+
 type WarehouseLocation struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -241,6 +293,8 @@ type WarehouseAssignment struct {
 	AssignedBy    string                 `protobuf:"bytes,5,opt,name=assigned_by,json=assignedBy,proto3" json:"assigned_by,omitempty"`
 	AssignedAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=assigned_at,json=assignedAt,proto3" json:"assigned_at,omitempty"`
 	Status        AssignmentStatus       `protobuf:"varint,7,opt,name=status,proto3,enum=simaops.warehouse.v1.AssignmentStatus" json:"status,omitempty"`
+	DecisionType  DecisionType           `protobuf:"varint,8,opt,name=decision_type,json=decisionType,proto3,enum=simaops.warehouse.v1.DecisionType" json:"decision_type,omitempty"` // AUTO, MANUAL, OVERRIDE
+	Reason        string                 `protobuf:"bytes,9,opt,name=reason,proto3" json:"reason,omitempty"`                                                                         // Why this slot was recommended/assigned
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -324,13 +378,28 @@ func (x *WarehouseAssignment) GetStatus() AssignmentStatus {
 	return AssignmentStatus_ASSIGNMENT_STATUS_UNSPECIFIED
 }
 
+func (x *WarehouseAssignment) GetDecisionType() DecisionType {
+	if x != nil {
+		return x.DecisionType
+	}
+	return DecisionType_DECISION_TYPE_UNSPECIFIED
+}
+
+func (x *WarehouseAssignment) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
 type SlotRecommendation struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Location      *WarehouseLocation     `protobuf:"bytes,1,opt,name=location,proto3" json:"location,omitempty"`
-	Reason        string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
-	Score         float64                `protobuf:"fixed64,3,opt,name=score,proto3" json:"score,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Location         *WarehouseLocation     `protobuf:"bytes,1,opt,name=location,proto3" json:"location,omitempty"`
+	Reason           string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	Score            float64                `protobuf:"fixed64,3,opt,name=score,proto3" json:"score,omitempty"`
+	IsAutoAssignable bool                   `protobuf:"varint,4,opt,name=is_auto_assignable,json=isAutoAssignable,proto3" json:"is_auto_assignable,omitempty"` // True if this can be auto-assigned
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *SlotRecommendation) Reset() {
@@ -384,6 +453,113 @@ func (x *SlotRecommendation) GetScore() float64 {
 	return 0
 }
 
+func (x *SlotRecommendation) GetIsAutoAssignable() bool {
+	if x != nil {
+		return x.IsAutoAssignable
+	}
+	return false
+}
+
+type SlotDecision struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	LotId         string                 `protobuf:"bytes,2,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"`
+	LocationId    string                 `protobuf:"bytes,3,opt,name=location_id,json=locationId,proto3" json:"location_id,omitempty"`
+	LocationCode  string                 `protobuf:"bytes,4,opt,name=location_code,json=locationCode,proto3" json:"location_code,omitempty"`
+	DecisionType  DecisionType           `protobuf:"varint,5,opt,name=decision_type,json=decisionType,proto3,enum=simaops.warehouse.v1.DecisionType" json:"decision_type,omitempty"`
+	Reason        string                 `protobuf:"bytes,6,opt,name=reason,proto3" json:"reason,omitempty"`
+	ActorId       string                 `protobuf:"bytes,7,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SlotDecision) Reset() {
+	*x = SlotDecision{}
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SlotDecision) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SlotDecision) ProtoMessage() {}
+
+func (x *SlotDecision) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SlotDecision.ProtoReflect.Descriptor instead.
+func (*SlotDecision) Descriptor() ([]byte, []int) {
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *SlotDecision) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SlotDecision) GetLotId() string {
+	if x != nil {
+		return x.LotId
+	}
+	return ""
+}
+
+func (x *SlotDecision) GetLocationId() string {
+	if x != nil {
+		return x.LocationId
+	}
+	return ""
+}
+
+func (x *SlotDecision) GetLocationCode() string {
+	if x != nil {
+		return x.LocationCode
+	}
+	return ""
+}
+
+func (x *SlotDecision) GetDecisionType() DecisionType {
+	if x != nil {
+		return x.DecisionType
+	}
+	return DecisionType_DECISION_TYPE_UNSPECIFIED
+}
+
+func (x *SlotDecision) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *SlotDecision) GetActorId() string {
+	if x != nil {
+		return x.ActorId
+	}
+	return ""
+}
+
+func (x *SlotDecision) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
 type ListLocationsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ZoneFilter    string                 `protobuf:"bytes,1,opt,name=zone_filter,json=zoneFilter,proto3" json:"zone_filter,omitempty"`
@@ -394,7 +570,7 @@ type ListLocationsRequest struct {
 
 func (x *ListLocationsRequest) Reset() {
 	*x = ListLocationsRequest{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[3]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -406,7 +582,7 @@ func (x *ListLocationsRequest) String() string {
 func (*ListLocationsRequest) ProtoMessage() {}
 
 func (x *ListLocationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[3]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -419,7 +595,7 @@ func (x *ListLocationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListLocationsRequest.ProtoReflect.Descriptor instead.
 func (*ListLocationsRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{3}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListLocationsRequest) GetZoneFilter() string {
@@ -445,7 +621,7 @@ type ListLocationsResponse struct {
 
 func (x *ListLocationsResponse) Reset() {
 	*x = ListLocationsResponse{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[4]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -457,7 +633,7 @@ func (x *ListLocationsResponse) String() string {
 func (*ListLocationsResponse) ProtoMessage() {}
 
 func (x *ListLocationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[4]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -470,7 +646,7 @@ func (x *ListLocationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListLocationsResponse.ProtoReflect.Descriptor instead.
 func (*ListLocationsResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{4}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListLocationsResponse) GetLocations() []*WarehouseLocation {
@@ -489,7 +665,7 @@ type RecommendSlotRequest struct {
 
 func (x *RecommendSlotRequest) Reset() {
 	*x = RecommendSlotRequest{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[5]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -501,7 +677,7 @@ func (x *RecommendSlotRequest) String() string {
 func (*RecommendSlotRequest) ProtoMessage() {}
 
 func (x *RecommendSlotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[5]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -514,7 +690,7 @@ func (x *RecommendSlotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecommendSlotRequest.ProtoReflect.Descriptor instead.
 func (*RecommendSlotRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{5}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *RecommendSlotRequest) GetLotId() string {
@@ -533,7 +709,7 @@ type RecommendSlotResponse struct {
 
 func (x *RecommendSlotResponse) Reset() {
 	*x = RecommendSlotResponse{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[6]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -545,7 +721,7 @@ func (x *RecommendSlotResponse) String() string {
 func (*RecommendSlotResponse) ProtoMessage() {}
 
 func (x *RecommendSlotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[6]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -558,7 +734,7 @@ func (x *RecommendSlotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecommendSlotResponse.ProtoReflect.Descriptor instead.
 func (*RecommendSlotResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{6}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RecommendSlotResponse) GetRecommendations() []*SlotRecommendation {
@@ -579,7 +755,7 @@ type AssignSlotRequest struct {
 
 func (x *AssignSlotRequest) Reset() {
 	*x = AssignSlotRequest{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[7]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -591,7 +767,7 @@ func (x *AssignSlotRequest) String() string {
 func (*AssignSlotRequest) ProtoMessage() {}
 
 func (x *AssignSlotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[7]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -604,7 +780,7 @@ func (x *AssignSlotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignSlotRequest.ProtoReflect.Descriptor instead.
 func (*AssignSlotRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{7}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AssignSlotRequest) GetLotId() string {
@@ -637,7 +813,7 @@ type AssignSlotResponse struct {
 
 func (x *AssignSlotResponse) Reset() {
 	*x = AssignSlotResponse{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[8]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -649,7 +825,7 @@ func (x *AssignSlotResponse) String() string {
 func (*AssignSlotResponse) ProtoMessage() {}
 
 func (x *AssignSlotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[8]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -662,7 +838,7 @@ func (x *AssignSlotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignSlotResponse.ProtoReflect.Descriptor instead.
 func (*AssignSlotResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{8}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *AssignSlotResponse) GetAssignment() *WarehouseAssignment {
@@ -684,7 +860,7 @@ type GetWarehouseAssignmentsRequest struct {
 
 func (x *GetWarehouseAssignmentsRequest) Reset() {
 	*x = GetWarehouseAssignmentsRequest{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[9]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -696,7 +872,7 @@ func (x *GetWarehouseAssignmentsRequest) String() string {
 func (*GetWarehouseAssignmentsRequest) ProtoMessage() {}
 
 func (x *GetWarehouseAssignmentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[9]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -709,7 +885,7 @@ func (x *GetWarehouseAssignmentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWarehouseAssignmentsRequest.ProtoReflect.Descriptor instead.
 func (*GetWarehouseAssignmentsRequest) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{9}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetWarehouseAssignmentsRequest) GetLotId() string {
@@ -750,7 +926,7 @@ type GetWarehouseAssignmentsResponse struct {
 
 func (x *GetWarehouseAssignmentsResponse) Reset() {
 	*x = GetWarehouseAssignmentsResponse{}
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[10]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -762,7 +938,7 @@ func (x *GetWarehouseAssignmentsResponse) String() string {
 func (*GetWarehouseAssignmentsResponse) ProtoMessage() {}
 
 func (x *GetWarehouseAssignmentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[10]
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -775,7 +951,7 @@ func (x *GetWarehouseAssignmentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWarehouseAssignmentsResponse.ProtoReflect.Descriptor instead.
 func (*GetWarehouseAssignmentsResponse) Descriptor() ([]byte, []int) {
-	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{10}
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetWarehouseAssignmentsResponse) GetAssignments() []*WarehouseAssignment {
@@ -786,6 +962,230 @@ func (x *GetWarehouseAssignmentsResponse) GetAssignments() []*WarehouseAssignmen
 }
 
 func (x *GetWarehouseAssignmentsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
+type UnassignSlotRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	LotId          string                 `protobuf:"bytes,1,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"`
+	Reason         string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"` // Required: why is this being unassigned
+	IdempotencyKey string                 `protobuf:"bytes,3,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *UnassignSlotRequest) Reset() {
+	*x = UnassignSlotRequest{}
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnassignSlotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnassignSlotRequest) ProtoMessage() {}
+
+func (x *UnassignSlotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnassignSlotRequest.ProtoReflect.Descriptor instead.
+func (*UnassignSlotRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UnassignSlotRequest) GetLotId() string {
+	if x != nil {
+		return x.LotId
+	}
+	return ""
+}
+
+func (x *UnassignSlotRequest) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *UnassignSlotRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+type UnassignSlotResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Assignment    *WarehouseAssignment   `protobuf:"bytes,1,opt,name=assignment,proto3" json:"assignment,omitempty"`                // The released assignment
+	LotStatus     string                 `protobuf:"bytes,4,opt,name=lot_status,json=lotStatus,proto3" json:"lot_status,omitempty"` // "QC_APPROVED" - the new status
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnassignSlotResponse) Reset() {
+	*x = UnassignSlotResponse{}
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnassignSlotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnassignSlotResponse) ProtoMessage() {}
+
+func (x *UnassignSlotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnassignSlotResponse.ProtoReflect.Descriptor instead.
+func (*UnassignSlotResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *UnassignSlotResponse) GetAssignment() *WarehouseAssignment {
+	if x != nil {
+		return x.Assignment
+	}
+	return nil
+}
+
+func (x *UnassignSlotResponse) GetLotStatus() string {
+	if x != nil {
+		return x.LotStatus
+	}
+	return ""
+}
+
+type ListSlotDecisionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	LotId         string                 `protobuf:"bytes,1,opt,name=lot_id,json=lotId,proto3" json:"lot_id,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                 `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSlotDecisionsRequest) Reset() {
+	*x = ListSlotDecisionsRequest{}
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSlotDecisionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSlotDecisionsRequest) ProtoMessage() {}
+
+func (x *ListSlotDecisionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSlotDecisionsRequest.ProtoReflect.Descriptor instead.
+func (*ListSlotDecisionsRequest) Descriptor() ([]byte, []int) {
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListSlotDecisionsRequest) GetLotId() string {
+	if x != nil {
+		return x.LotId
+	}
+	return ""
+}
+
+func (x *ListSlotDecisionsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListSlotDecisionsRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+type ListSlotDecisionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Decisions     []*SlotDecision        `protobuf:"bytes,1,rep,name=decisions,proto3" json:"decisions,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSlotDecisionsResponse) Reset() {
+	*x = ListSlotDecisionsResponse{}
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSlotDecisionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSlotDecisionsResponse) ProtoMessage() {}
+
+func (x *ListSlotDecisionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_simaops_warehouse_v1_warehouse_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSlotDecisionsResponse.ProtoReflect.Descriptor instead.
+func (*ListSlotDecisionsResponse) Descriptor() ([]byte, []int) {
+	return file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListSlotDecisionsResponse) GetDecisions() []*SlotDecision {
+	if x != nil {
+		return x.Decisions
+	}
+	return nil
+}
+
+func (x *ListSlotDecisionsResponse) GetNextPageToken() string {
 	if x != nil {
 		return x.NextPageToken
 	}
@@ -806,7 +1206,7 @@ const file_simaops_warehouse_v1_warehouse_proto_rawDesc = "" +
 	"\x0ehazard_allowed\x18\x06 \x03(\x0e2\x1b.simaops.lot.v1.HazardClassR\rhazardAllowed\x12-\n" +
 	"\x12drum_compatibility\x18\a \x03(\tR\x11drumCompatibility\x12\x1a\n" +
 	"\bcapacity\x18\b \x01(\x05R\bcapacity\x12K\n" +
-	"\x0ecurrent_status\x18\t \x01(\x0e2$.simaops.warehouse.v1.LocationStatusR\rcurrentStatus\"\xa0\x02\n" +
+	"\x0ecurrent_status\x18\t \x01(\x0e2$.simaops.warehouse.v1.LocationStatusR\rcurrentStatus\"\x81\x03\n" +
 	"\x13WarehouseAssignment\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
 	"\x06lot_id\x18\x02 \x01(\tR\x05lotId\x12\x1f\n" +
@@ -817,11 +1217,25 @@ const file_simaops_warehouse_v1_warehouse_proto_rawDesc = "" +
 	"assignedBy\x12;\n" +
 	"\vassigned_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"assignedAt\x12>\n" +
-	"\x06status\x18\a \x01(\x0e2&.simaops.warehouse.v1.AssignmentStatusR\x06status\"\x87\x01\n" +
+	"\x06status\x18\a \x01(\x0e2&.simaops.warehouse.v1.AssignmentStatusR\x06status\x12G\n" +
+	"\rdecision_type\x18\b \x01(\x0e2\".simaops.warehouse.v1.DecisionTypeR\fdecisionType\x12\x16\n" +
+	"\x06reason\x18\t \x01(\tR\x06reason\"\xb5\x01\n" +
 	"\x12SlotRecommendation\x12C\n" +
 	"\blocation\x18\x01 \x01(\v2'.simaops.warehouse.v1.WarehouseLocationR\blocation\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\x12\x14\n" +
-	"\x05score\x18\x03 \x01(\x01R\x05score\"\x82\x01\n" +
+	"\x05score\x18\x03 \x01(\x01R\x05score\x12,\n" +
+	"\x12is_auto_assignable\x18\x04 \x01(\bR\x10isAutoAssignable\"\xb2\x02\n" +
+	"\fSlotDecision\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n" +
+	"\x06lot_id\x18\x02 \x01(\tR\x05lotId\x12\x1f\n" +
+	"\vlocation_id\x18\x03 \x01(\tR\n" +
+	"locationId\x12#\n" +
+	"\rlocation_code\x18\x04 \x01(\tR\flocationCode\x12G\n" +
+	"\rdecision_type\x18\x05 \x01(\x0e2\".simaops.warehouse.v1.DecisionTypeR\fdecisionType\x12\x16\n" +
+	"\x06reason\x18\x06 \x01(\tR\x06reason\x12\x19\n" +
+	"\bactor_id\x18\a \x01(\tR\aactorId\x129\n" +
+	"\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\x82\x01\n" +
 	"\x14ListLocationsRequest\x12\x1f\n" +
 	"\vzone_filter\x18\x01 \x01(\tR\n" +
 	"zoneFilter\x12I\n" +
@@ -850,6 +1264,24 @@ const file_simaops_warehouse_v1_warehouse_proto_rawDesc = "" +
 	"page_token\x18\x04 \x01(\tR\tpageToken\"\x96\x01\n" +
 	"\x1fGetWarehouseAssignmentsResponse\x12K\n" +
 	"\vassignments\x18\x01 \x03(\v2).simaops.warehouse.v1.WarehouseAssignmentR\vassignments\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"m\n" +
+	"\x13UnassignSlotRequest\x12\x15\n" +
+	"\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\x12'\n" +
+	"\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"\x80\x01\n" +
+	"\x14UnassignSlotResponse\x12I\n" +
+	"\n" +
+	"assignment\x18\x01 \x01(\v2).simaops.warehouse.v1.WarehouseAssignmentR\n" +
+	"assignment\x12\x1d\n" +
+	"\n" +
+	"lot_status\x18\x04 \x01(\tR\tlotStatus\"m\n" +
+	"\x18ListSlotDecisionsRequest\x12\x15\n" +
+	"\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\"\x85\x01\n" +
+	"\x19ListSlotDecisionsResponse\x12@\n" +
+	"\tdecisions\x18\x01 \x03(\v2\".simaops.warehouse.v1.SlotDecisionR\tdecisions\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x8f\x01\n" +
 	"\x0eLocationStatus\x12\x1f\n" +
 	"\x1bLOCATION_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
@@ -859,12 +1291,19 @@ const file_simaops_warehouse_v1_warehouse_proto_rawDesc = "" +
 	"\x10AssignmentStatus\x12!\n" +
 	"\x1dASSIGNMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18ASSIGNMENT_STATUS_ACTIVE\x10\x01\x12\x1e\n" +
-	"\x1aASSIGNMENT_STATUS_RELEASED\x10\x022\xd0\x03\n" +
+	"\x1aASSIGNMENT_STATUS_RELEASED\x10\x02*{\n" +
+	"\fDecisionType\x12\x1d\n" +
+	"\x19DECISION_TYPE_UNSPECIFIED\x10\x00\x12\x16\n" +
+	"\x12DECISION_TYPE_AUTO\x10\x01\x12\x18\n" +
+	"\x14DECISION_TYPE_MANUAL\x10\x02\x12\x1a\n" +
+	"\x16DECISION_TYPE_OVERRIDE\x10\x032\xad\x05\n" +
 	"\x10WarehouseService\x12h\n" +
 	"\rListLocations\x12*.simaops.warehouse.v1.ListLocationsRequest\x1a+.simaops.warehouse.v1.ListLocationsResponse\x12h\n" +
 	"\rRecommendSlot\x12*.simaops.warehouse.v1.RecommendSlotRequest\x1a+.simaops.warehouse.v1.RecommendSlotResponse\x12_\n" +
 	"\n" +
-	"AssignSlot\x12'.simaops.warehouse.v1.AssignSlotRequest\x1a(.simaops.warehouse.v1.AssignSlotResponse\x12\x86\x01\n" +
+	"AssignSlot\x12'.simaops.warehouse.v1.AssignSlotRequest\x1a(.simaops.warehouse.v1.AssignSlotResponse\x12e\n" +
+	"\fUnassignSlot\x12).simaops.warehouse.v1.UnassignSlotRequest\x1a*.simaops.warehouse.v1.UnassignSlotResponse\x12t\n" +
+	"\x11ListSlotDecisions\x12..simaops.warehouse.v1.ListSlotDecisionsRequest\x1a/.simaops.warehouse.v1.ListSlotDecisionsResponse\x12\x86\x01\n" +
 	"\x17GetWarehouseAssignments\x124.simaops.warehouse.v1.GetWarehouseAssignmentsRequest\x1a5.simaops.warehouse.v1.GetWarehouseAssignmentsResponseB\xf9\x01\n" +
 	"\x18com.simaops.warehouse.v1B\x0eWarehouseProtoP\x01Z[github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1;warehousev1\xa2\x02\x03SWX\xaa\x02\x14Simaops.Warehouse.V1\xca\x02\x14Simaops\\Warehouse\\V1\xe2\x02 Simaops\\Warehouse\\V1\\GPBMetadata\xea\x02\x16Simaops::Warehouse::V1b\x06proto3"
 
@@ -880,49 +1319,64 @@ func file_simaops_warehouse_v1_warehouse_proto_rawDescGZIP() []byte {
 	return file_simaops_warehouse_v1_warehouse_proto_rawDescData
 }
 
-var file_simaops_warehouse_v1_warehouse_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_simaops_warehouse_v1_warehouse_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_simaops_warehouse_v1_warehouse_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_simaops_warehouse_v1_warehouse_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_simaops_warehouse_v1_warehouse_proto_goTypes = []any{
 	(LocationStatus)(0),                     // 0: simaops.warehouse.v1.LocationStatus
 	(AssignmentStatus)(0),                   // 1: simaops.warehouse.v1.AssignmentStatus
-	(*WarehouseLocation)(nil),               // 2: simaops.warehouse.v1.WarehouseLocation
-	(*WarehouseAssignment)(nil),             // 3: simaops.warehouse.v1.WarehouseAssignment
-	(*SlotRecommendation)(nil),              // 4: simaops.warehouse.v1.SlotRecommendation
-	(*ListLocationsRequest)(nil),            // 5: simaops.warehouse.v1.ListLocationsRequest
-	(*ListLocationsResponse)(nil),           // 6: simaops.warehouse.v1.ListLocationsResponse
-	(*RecommendSlotRequest)(nil),            // 7: simaops.warehouse.v1.RecommendSlotRequest
-	(*RecommendSlotResponse)(nil),           // 8: simaops.warehouse.v1.RecommendSlotResponse
-	(*AssignSlotRequest)(nil),               // 9: simaops.warehouse.v1.AssignSlotRequest
-	(*AssignSlotResponse)(nil),              // 10: simaops.warehouse.v1.AssignSlotResponse
-	(*GetWarehouseAssignmentsRequest)(nil),  // 11: simaops.warehouse.v1.GetWarehouseAssignmentsRequest
-	(*GetWarehouseAssignmentsResponse)(nil), // 12: simaops.warehouse.v1.GetWarehouseAssignmentsResponse
-	(v1.HazardClass)(0),                     // 13: simaops.lot.v1.HazardClass
-	(*timestamppb.Timestamp)(nil),           // 14: google.protobuf.Timestamp
+	(DecisionType)(0),                       // 2: simaops.warehouse.v1.DecisionType
+	(*WarehouseLocation)(nil),               // 3: simaops.warehouse.v1.WarehouseLocation
+	(*WarehouseAssignment)(nil),             // 4: simaops.warehouse.v1.WarehouseAssignment
+	(*SlotRecommendation)(nil),              // 5: simaops.warehouse.v1.SlotRecommendation
+	(*SlotDecision)(nil),                    // 6: simaops.warehouse.v1.SlotDecision
+	(*ListLocationsRequest)(nil),            // 7: simaops.warehouse.v1.ListLocationsRequest
+	(*ListLocationsResponse)(nil),           // 8: simaops.warehouse.v1.ListLocationsResponse
+	(*RecommendSlotRequest)(nil),            // 9: simaops.warehouse.v1.RecommendSlotRequest
+	(*RecommendSlotResponse)(nil),           // 10: simaops.warehouse.v1.RecommendSlotResponse
+	(*AssignSlotRequest)(nil),               // 11: simaops.warehouse.v1.AssignSlotRequest
+	(*AssignSlotResponse)(nil),              // 12: simaops.warehouse.v1.AssignSlotResponse
+	(*GetWarehouseAssignmentsRequest)(nil),  // 13: simaops.warehouse.v1.GetWarehouseAssignmentsRequest
+	(*GetWarehouseAssignmentsResponse)(nil), // 14: simaops.warehouse.v1.GetWarehouseAssignmentsResponse
+	(*UnassignSlotRequest)(nil),             // 15: simaops.warehouse.v1.UnassignSlotRequest
+	(*UnassignSlotResponse)(nil),            // 16: simaops.warehouse.v1.UnassignSlotResponse
+	(*ListSlotDecisionsRequest)(nil),        // 17: simaops.warehouse.v1.ListSlotDecisionsRequest
+	(*ListSlotDecisionsResponse)(nil),       // 18: simaops.warehouse.v1.ListSlotDecisionsResponse
+	(v1.HazardClass)(0),                     // 19: simaops.lot.v1.HazardClass
+	(*timestamppb.Timestamp)(nil),           // 20: google.protobuf.Timestamp
 }
 var file_simaops_warehouse_v1_warehouse_proto_depIdxs = []int32{
-	13, // 0: simaops.warehouse.v1.WarehouseLocation.hazard_allowed:type_name -> simaops.lot.v1.HazardClass
+	19, // 0: simaops.warehouse.v1.WarehouseLocation.hazard_allowed:type_name -> simaops.lot.v1.HazardClass
 	0,  // 1: simaops.warehouse.v1.WarehouseLocation.current_status:type_name -> simaops.warehouse.v1.LocationStatus
-	14, // 2: simaops.warehouse.v1.WarehouseAssignment.assigned_at:type_name -> google.protobuf.Timestamp
+	20, // 2: simaops.warehouse.v1.WarehouseAssignment.assigned_at:type_name -> google.protobuf.Timestamp
 	1,  // 3: simaops.warehouse.v1.WarehouseAssignment.status:type_name -> simaops.warehouse.v1.AssignmentStatus
-	2,  // 4: simaops.warehouse.v1.SlotRecommendation.location:type_name -> simaops.warehouse.v1.WarehouseLocation
-	0,  // 5: simaops.warehouse.v1.ListLocationsRequest.status_filter:type_name -> simaops.warehouse.v1.LocationStatus
-	2,  // 6: simaops.warehouse.v1.ListLocationsResponse.locations:type_name -> simaops.warehouse.v1.WarehouseLocation
-	4,  // 7: simaops.warehouse.v1.RecommendSlotResponse.recommendations:type_name -> simaops.warehouse.v1.SlotRecommendation
-	3,  // 8: simaops.warehouse.v1.AssignSlotResponse.assignment:type_name -> simaops.warehouse.v1.WarehouseAssignment
-	3,  // 9: simaops.warehouse.v1.GetWarehouseAssignmentsResponse.assignments:type_name -> simaops.warehouse.v1.WarehouseAssignment
-	5,  // 10: simaops.warehouse.v1.WarehouseService.ListLocations:input_type -> simaops.warehouse.v1.ListLocationsRequest
-	7,  // 11: simaops.warehouse.v1.WarehouseService.RecommendSlot:input_type -> simaops.warehouse.v1.RecommendSlotRequest
-	9,  // 12: simaops.warehouse.v1.WarehouseService.AssignSlot:input_type -> simaops.warehouse.v1.AssignSlotRequest
-	11, // 13: simaops.warehouse.v1.WarehouseService.GetWarehouseAssignments:input_type -> simaops.warehouse.v1.GetWarehouseAssignmentsRequest
-	6,  // 14: simaops.warehouse.v1.WarehouseService.ListLocations:output_type -> simaops.warehouse.v1.ListLocationsResponse
-	8,  // 15: simaops.warehouse.v1.WarehouseService.RecommendSlot:output_type -> simaops.warehouse.v1.RecommendSlotResponse
-	10, // 16: simaops.warehouse.v1.WarehouseService.AssignSlot:output_type -> simaops.warehouse.v1.AssignSlotResponse
-	12, // 17: simaops.warehouse.v1.WarehouseService.GetWarehouseAssignments:output_type -> simaops.warehouse.v1.GetWarehouseAssignmentsResponse
-	14, // [14:18] is the sub-list for method output_type
-	10, // [10:14] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	2,  // 4: simaops.warehouse.v1.WarehouseAssignment.decision_type:type_name -> simaops.warehouse.v1.DecisionType
+	3,  // 5: simaops.warehouse.v1.SlotRecommendation.location:type_name -> simaops.warehouse.v1.WarehouseLocation
+	2,  // 6: simaops.warehouse.v1.SlotDecision.decision_type:type_name -> simaops.warehouse.v1.DecisionType
+	20, // 7: simaops.warehouse.v1.SlotDecision.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 8: simaops.warehouse.v1.ListLocationsRequest.status_filter:type_name -> simaops.warehouse.v1.LocationStatus
+	3,  // 9: simaops.warehouse.v1.ListLocationsResponse.locations:type_name -> simaops.warehouse.v1.WarehouseLocation
+	5,  // 10: simaops.warehouse.v1.RecommendSlotResponse.recommendations:type_name -> simaops.warehouse.v1.SlotRecommendation
+	4,  // 11: simaops.warehouse.v1.AssignSlotResponse.assignment:type_name -> simaops.warehouse.v1.WarehouseAssignment
+	4,  // 12: simaops.warehouse.v1.GetWarehouseAssignmentsResponse.assignments:type_name -> simaops.warehouse.v1.WarehouseAssignment
+	4,  // 13: simaops.warehouse.v1.UnassignSlotResponse.assignment:type_name -> simaops.warehouse.v1.WarehouseAssignment
+	6,  // 14: simaops.warehouse.v1.ListSlotDecisionsResponse.decisions:type_name -> simaops.warehouse.v1.SlotDecision
+	7,  // 15: simaops.warehouse.v1.WarehouseService.ListLocations:input_type -> simaops.warehouse.v1.ListLocationsRequest
+	9,  // 16: simaops.warehouse.v1.WarehouseService.RecommendSlot:input_type -> simaops.warehouse.v1.RecommendSlotRequest
+	11, // 17: simaops.warehouse.v1.WarehouseService.AssignSlot:input_type -> simaops.warehouse.v1.AssignSlotRequest
+	15, // 18: simaops.warehouse.v1.WarehouseService.UnassignSlot:input_type -> simaops.warehouse.v1.UnassignSlotRequest
+	17, // 19: simaops.warehouse.v1.WarehouseService.ListSlotDecisions:input_type -> simaops.warehouse.v1.ListSlotDecisionsRequest
+	13, // 20: simaops.warehouse.v1.WarehouseService.GetWarehouseAssignments:input_type -> simaops.warehouse.v1.GetWarehouseAssignmentsRequest
+	8,  // 21: simaops.warehouse.v1.WarehouseService.ListLocations:output_type -> simaops.warehouse.v1.ListLocationsResponse
+	10, // 22: simaops.warehouse.v1.WarehouseService.RecommendSlot:output_type -> simaops.warehouse.v1.RecommendSlotResponse
+	12, // 23: simaops.warehouse.v1.WarehouseService.AssignSlot:output_type -> simaops.warehouse.v1.AssignSlotResponse
+	16, // 24: simaops.warehouse.v1.WarehouseService.UnassignSlot:output_type -> simaops.warehouse.v1.UnassignSlotResponse
+	18, // 25: simaops.warehouse.v1.WarehouseService.ListSlotDecisions:output_type -> simaops.warehouse.v1.ListSlotDecisionsResponse
+	14, // 26: simaops.warehouse.v1.WarehouseService.GetWarehouseAssignments:output_type -> simaops.warehouse.v1.GetWarehouseAssignmentsResponse
+	21, // [21:27] is the sub-list for method output_type
+	15, // [15:21] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_simaops_warehouse_v1_warehouse_proto_init() }
@@ -935,8 +1389,8 @@ func file_simaops_warehouse_v1_warehouse_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_simaops_warehouse_v1_warehouse_proto_rawDesc), len(file_simaops_warehouse_v1_warehouse_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   11,
+			NumEnums:      3,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

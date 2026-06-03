@@ -32,6 +32,23 @@ SELECT * FROM warehouse_assignments WHERE lot_id = ? AND status = 'ACTIVE';
 -- name: ListWarehouseAssignments :many
 SELECT * FROM warehouse_assignments ORDER BY assigned_at DESC LIMIT ? OFFSET ?;
 
+-- name: CreateWarehouseAssignmentWithDecisionType :exec
+INSERT INTO warehouse_assignments (id, lot_id, location_id, assigned_by, decision_type)
+VALUES (?, ?, ?, ?, ?);
+
+-- name: GetActiveWarehouseAssignment :one
+SELECT * FROM warehouse_assignments WHERE lot_id = ? AND status = 'ACTIVE';
+
+-- name: ReleaseWarehouseAssignment :exec
+UPDATE warehouse_assignments SET status = ? WHERE id = ?;
+
+-- name: CreateSlotDecision :exec
+INSERT INTO slot_decisions (id, lot_id, location_id, decision_type, reason, actor_id)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- name: ListSlotDecisionsByLot :many
+SELECT * FROM slot_decisions WHERE lot_id = ? ORDER BY created_at DESC;
+
 -- name: ZoneCapacityMetrics :many
 -- `capacity` is REMAINING slots (AssignSlot decrements it), so it equals
 -- "available". Occupancy is the count of ACTIVE assignments for the zone's

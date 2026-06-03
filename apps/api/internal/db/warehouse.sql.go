@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createWarehouseAssignment = `-- name: CreateWarehouseAssignment :exec
@@ -27,6 +28,30 @@ func (q *Queries) CreateWarehouseAssignment(ctx context.Context, arg CreateWareh
 		arg.LotID,
 		arg.LocationID,
 		arg.AssignedBy,
+	)
+	return err
+}
+
+const createWarehouseAssignmentWithDecisionType = `-- name: CreateWarehouseAssignmentWithDecisionType :exec
+INSERT INTO warehouse_assignments (id, lot_id, location_id, assigned_by, decision_type)
+VALUES (?, ?, ?, ?, ?)
+`
+
+type CreateWarehouseAssignmentWithDecisionTypeParams struct {
+	ID           string `json:"id"`
+	LotID        string `json:"lot_id"`
+	LocationID   string `json:"location_id"`
+	AssignedBy   string `json:"assigned_by"`
+	DecisionType string `json:"decision_type"`
+}
+
+func (q *Queries) CreateWarehouseAssignmentWithDecisionType(ctx context.Context, arg CreateWarehouseAssignmentWithDecisionTypeParams) error {
+	_, err := q.db.ExecContext(ctx, createWarehouseAssignmentWithDecisionType,
+		arg.ID,
+		arg.LotID,
+		arg.LocationID,
+		arg.AssignedBy,
+		arg.DecisionType,
 	)
 	return err
 }
@@ -53,7 +78,7 @@ func (q *Queries) DecrementLocationCapacityAtomic(ctx context.Context, id string
 }
 
 const getWarehouseAssignmentByLot = `-- name: GetWarehouseAssignmentByLot :one
-SELECT id, lot_id, location_id, assigned_by, assigned_at, status FROM warehouse_assignments WHERE lot_id = ? AND status = 'ACTIVE'
+SELECT id, lot_id, location_id, assigned_by, assigned_at, status, decision_type FROM warehouse_assignments WHERE lot_id = ? AND status = 'ACTIVE'
 `
 
 func (q *Queries) GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error) {
@@ -66,6 +91,7 @@ func (q *Queries) GetWarehouseAssignmentByLot(ctx context.Context, lotID string)
 		&i.AssignedBy,
 		&i.AssignedAt,
 		&i.Status,
+		&i.DecisionType,
 	)
 	return i, err
 }
@@ -141,7 +167,7 @@ func (q *Queries) ListAvailableLocations(ctx context.Context) ([]WarehouseLocati
 }
 
 const listWarehouseAssignments = `-- name: ListWarehouseAssignments :many
-SELECT id, lot_id, location_id, assigned_by, assigned_at, status FROM warehouse_assignments ORDER BY assigned_at DESC LIMIT ? OFFSET ?
+SELECT id, lot_id, location_id, assigned_by, assigned_at, status, decision_type FROM warehouse_assignments ORDER BY assigned_at DESC LIMIT ? OFFSET ?
 `
 
 type ListWarehouseAssignmentsParams struct {
@@ -165,6 +191,7 @@ func (q *Queries) ListWarehouseAssignments(ctx context.Context, arg ListWarehous
 			&i.AssignedBy,
 			&i.AssignedAt,
 			&i.Status,
+			&i.DecisionType,
 		); err != nil {
 			return nil, err
 		}
@@ -265,6 +292,104 @@ type UpdateLocationStatusParams struct {
 func (q *Queries) UpdateLocationStatus(ctx context.Context, arg UpdateLocationStatusParams) error {
 	_, err := q.db.ExecContext(ctx, updateLocationStatus, arg.CurrentStatus, arg.ID)
 	return err
+}
+
+// GetActiveWarehouseAssignment gets the active assignment for a lot
+const getActiveWarehouseAssignment = `-- name: GetActiveWarehouseAssignment :one
+SELECT id, lot_id, location_id, assigned_by, assigned_at, status, COALESCE(decision_type, 'MANUAL') as decision_type FROM warehouse_assignments WHERE lot_id = ? AND status = 'ACTIVE'
+`
+
+func (q *Queries) GetActiveWarehouseAssignment(ctx context.Context, lotID string) (WarehouseAssignment, error) {
+	row := q.db.QueryRowContext(ctx, getActiveWarehouseAssignment, lotID)
+	var i WarehouseAssignment
+	err := row.Scan(
+		&i.ID,
+		&i.LotID,
+		&i.LocationID,
+		&i.AssignedBy,
+		&i.AssignedAt,
+		&i.Status,
+		&i.DecisionType,
+	)
+	return i, err
+}
+
+// ReleaseWarehouseAssignment releases an assignment (sets status)
+const releaseWarehouseAssignment = `-- name: ReleaseWarehouseAssignment :exec
+UPDATE warehouse_assignments SET status = ? WHERE id = ?
+`
+
+type ReleaseWarehouseAssignmentParams struct {
+	Status WarehouseAssignmentsStatus `json:"status"`
+	ID     string                     `json:"id"`
+}
+
+func (q *Queries) ReleaseWarehouseAssignment(ctx context.Context, arg ReleaseWarehouseAssignmentParams) error {
+	_, err := q.db.ExecContext(ctx, releaseWarehouseAssignment, arg.Status, arg.ID)
+	return err
+}
+
+// CreateSlotDecision creates an audit record for slot assignment
+const createSlotDecision = `-- name: CreateSlotDecision :exec
+INSERT INTO slot_decisions (id, lot_id, location_id, decision_type, reason, actor_id)
+VALUES (?, ?, ?, ?, ?, ?)
+`
+
+type CreateSlotDecisionParams struct {
+	ID            string `json:"id"`
+	LotID         string `json:"lot_id"`
+	LocationID    string `json:"location_id"`
+	DecisionType  string `json:"decision_type"`
+	Reason        sql.NullString `json:"reason"`
+	ActorID       string `json:"actor_id"`
+}
+
+func (q *Queries) CreateSlotDecision(ctx context.Context, arg CreateSlotDecisionParams) error {
+	_, err := q.db.ExecContext(ctx, createSlotDecision,
+		arg.ID,
+		arg.LotID,
+		arg.LocationID,
+		arg.DecisionType,
+		arg.Reason,
+		arg.ActorID,
+	)
+	return err
+}
+
+// ListSlotDecisionsByLot returns all slot decisions for a lot
+const listSlotDecisionsByLot = `-- name: ListSlotDecisionsByLot :many
+SELECT id, lot_id, location_id, decision_type, reason, actor_id, created_at FROM slot_decisions WHERE lot_id = ? ORDER BY created_at DESC
+`
+
+func (q *Queries) ListSlotDecisionsByLot(ctx context.Context, lotID string) ([]SlotDecision, error) {
+	rows, err := q.db.QueryContext(ctx, listSlotDecisionsByLot, lotID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SlotDecision
+	for rows.Next() {
+		var i SlotDecision
+		if err := rows.Scan(
+			&i.ID,
+			&i.LotID,
+			&i.LocationID,
+			&i.DecisionType,
+			&i.Reason,
+			&i.ActorID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const zoneCapacityMetrics = `-- name: ZoneCapacityMetrics :many

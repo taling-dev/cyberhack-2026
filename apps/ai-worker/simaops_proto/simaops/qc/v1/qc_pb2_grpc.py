@@ -5,7 +5,7 @@ import grpc
 from simaops.qc.v1 import qc_pb2 as simaops_dot_qc_dot_v1_dot_qc__pb2
 
 
-class QCServiceStub(object):
+class QCServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -51,7 +51,7 @@ class QCServiceStub(object):
                 _registered_method=True)
 
 
-class QCServiceServicer(object):
+class QCServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def CreateQCUploadUrl(self, request, context):
@@ -142,7 +142,7 @@ def add_QCServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class QCService(object):
+class QCService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

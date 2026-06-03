@@ -7,9 +7,11 @@
   import { transport } from '$lib/connect';
   import { LotService } from '$lib/gen/simaops/lot/v1/lot_pb';
   import { QCService } from '$lib/gen/simaops/qc/v1/qc_pb';
+  import { WarehouseService } from '$lib/gen/simaops/warehouse/v1/warehouse_pb';
 
   const lotClient = createClient(LotService, transport);
   const qcClient = createClient(QCService, transport);
+  const whClient = createClient(WarehouseService, transport);
   const queryClient = getQueryClientContext();
 
   const lotId = $derived($page.params.id);
@@ -126,6 +128,48 @@
   const isResubmit = $derived(
     [4, 6].includes(lotQuery.data?.lot?.status ?? 0)
   );
+
+  // Warehouse slot decisions query (only for lots with warehouse assignment)
+  const slotDecisionsQuery = createQuery(() => ({
+    queryKey: ['slot-decisions', lotId],
+    queryFn: () => whClient.listSlotDecisions({ lotId }),
+    enabled: !!lotId && [7, 8].includes(lotQuery.data?.lot?.status ?? 0),
+  }));
+
+  // Unassign functionality
+  let showUnassignModal = $state(false);
+  let unassignReason = $state('');
+  let unassigning = $state(false);
+  let unassignError = $state('');
+
+  async function openUnassign() {
+    unassignReason = '';
+    unassignError = '';
+    showUnassignModal = true;
+  }
+
+  async function doUnassign() {
+    if (!unassignReason.trim()) {
+      unassignError = 'Please provide a reason';
+      return;
+    }
+    unassigning = true;
+    unassignError = '';
+    try {
+      await whClient.unassignSlot({
+        lotId,
+        reason: unassignReason,
+        idempotencyKey: crypto.randomUUID(),
+      });
+      showUnassignModal = false;
+      queryClient.invalidateQueries({ queryKey: ['lot', lotId] });
+      queryClient.invalidateQueries({ queryKey: ['slot-decisions', lotId] });
+    } catch (e: any) {
+      unassignError = e.message || 'Unassign failed';
+    } finally {
+      unassigning = false;
+    }
+  }
 </script>
 
 <div class="max-w-3xl space-y-6">
@@ -167,6 +211,87 @@
           <div class="flex justify-between"><dt class="text-slate-500">{$t('lot.hazard_class')}</dt><dd class="text-slate-950">{lot.storageRequirement?.hazardClass ? $t(`hazard.${lot.storageRequirement.hazardClass}`) : '—'}</dd></div>
         </dl>
       </div>
+
+      <!-- Warehouse Assignment Section (only show for assigned/ready lots) -->
+      {#if [7, 8].includes(lot.status)}
+        <div class="border border-slate-200 shadow-sm rounded-lg p-4 space-y-3 bg-white md:col-span-2">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-sm text-slate-500 uppercase tracking-normal">{$t('lot.warehouse_assignment')}</h2>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold {lot.assignment?.decisionType === 1 ? 'bg-blue-100 text-blue-700' : lot.assignment?.decisionType === 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}">
+                {#if lot.assignment?.decisionType === 1}
+                  <svg viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+                  Auto-assigned
+                {:else if lot.assignment?.decisionType === 3}
+                  <svg viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 4m22 6-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+                  Override
+                {:else}
+                  Manual
+                {/if}
+              </span>
+            </div>
+          </div>
+
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-slate-500">Slot</dt>
+              <dd class="text-slate-950 font-mono font-semibold">{lot.assignment?.locationCode ?? '—'}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-slate-500">Assigned by</dt>
+              <dd class="text-slate-950">{lot.assignment?.assignedBy ?? '—'}</dd>
+            </div>
+            {#if lot.assignment?.assignedAt}
+              <div class="flex justify-between">
+                <dt class="text-slate-500">Assigned at</dt>
+                <dd class="text-slate-950">{new Date(Number(lot.assignment.assignedAt.seconds) * 1000).toLocaleString()}</dd>
+              </div>
+            {/if}
+            {#if lot.assignment?.reason}
+              <div class="flex justify-between">
+                <dt class="text-slate-500">Reason</dt>
+                <dd class="text-slate-950">{lot.assignment.reason}</dd>
+              </div>
+            {/if}
+          </dl>
+
+          <!-- Slot Decision History -->
+          {#if slotDecisionsQuery.data?.decisions?.length}
+            <div class="mt-4 pt-4 border-t border-slate-100">
+              <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-normal mb-2">Decision History</h3>
+              <div class="space-y-2">
+                {#each slotDecisionsQuery.data.decisions as decision}
+                  <div class="flex items-start gap-2 text-xs">
+                    <div class="w-2 h-2 rounded-full mt-1 shrink-0 {decision.decisionType === 1 ? 'bg-blue-400' : decision.decisionType === 3 ? 'bg-amber-400' : 'bg-slate-400'}"></div>
+                    <div class="flex-1">
+                      <span class="font-medium">{decision.decisionType === 1 ? 'Auto-assigned' : decision.decisionType === 3 ? 'Override' : 'Manual'}</span>
+                      to <span class="font-mono">{decision.locationCode}</span>
+                      by {decision.actorId}
+                      {#if decision.reason}
+                        — {decision.reason}
+                      {/if}
+                    </div>
+                    <span class="text-slate-400 shrink-0">{new Date(Number(decision.createdAt.seconds) * 1000).toLocaleString()}</span>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+
+          <!-- Unassign Button -->
+          {#if [7, 8].includes(lot.status)}
+            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+              <button
+                onclick={openUnassign}
+                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-200 bg-white px-3 text-xs font-semibold text-red-600 shadow-sm transition-colors hover:bg-red-50"
+              >
+                <svg viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+                Release Slot
+              </button>
+            </div>
+          {/if}
+        </div>
+      {/if}
     </div>
 
     <!-- QC Image Upload -->
@@ -254,5 +379,58 @@
         <p class="text-slate-400 text-sm">{$t('lot.no_timeline')}</p>
       {/if}
     </div>
+
+    <!-- Unassign Modal -->
+    {#if showUnassignModal}
+      <div
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="unassign-title"
+        onclick={(event) => {
+          if (event.target === event.currentTarget) showUnassignModal = false;
+        }}
+      >
+        <div class="w-full max-w-md overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+          <div class="border-b border-slate-200 px-5 py-4">
+            <p class="text-xs font-semibold uppercase tracking-normal text-red-600">Release Slot Assignment</p>
+            <h2 id="unassign-title" class="mt-1 text-lg font-bold text-slate-950">Release Slot for {lot.lotNumber}</h2>
+          </div>
+          <div class="px-5 py-4">
+            <p class="mb-4 text-sm text-slate-600">
+              This will release the slot and move the lot back to QC_APPROVED status.
+            </p>
+            <label for="unassign-reason" class="block text-sm font-medium text-slate-700">
+              Reason <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              id="unassign-reason"
+              bind:value={unassignReason}
+              rows="3"
+              placeholder="Why are you releasing this slot?"
+              class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            ></textarea>
+            {#if unassignError}
+              <p class="mt-2 text-sm text-red-600" role="alert">{unassignError}</p>
+            {/if}
+          </div>
+          <div class="flex justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3">
+            <button
+              onclick={() => showUnassignModal = false}
+              class="h-9 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              onclick={doUnassign}
+              disabled={unassigning || !unassignReason.trim()}
+              class="inline-flex h-9 items-center gap-2 rounded-md bg-red-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {unassigning ? 'Releasing...' : 'Release Slot'}
+            </button>
+          </div>
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>

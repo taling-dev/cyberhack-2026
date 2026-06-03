@@ -5,7 +5,7 @@ import grpc
 from simaops.dispatch.v1 import dispatch_pb2 as simaops_dot_dispatch_dot_v1_dot_dispatch__pb2
 
 
-class DispatchServiceStub(object):
+class DispatchServiceStub:
     """DispatchService is the final stage of the Integrated Operations System:
     it tracks finished, production-ready lots leaving the facility — closing
     the loop from supplier intake → QC → warehouse → production handoff →
@@ -40,7 +40,7 @@ class DispatchServiceStub(object):
                 _registered_method=True)
 
 
-class DispatchServiceServicer(object):
+class DispatchServiceServicer:
     """DispatchService is the final stage of the Integrated Operations System:
     it tracks finished, production-ready lots leaving the facility — closing
     the loop from supplier intake → QC → warehouse → production handoff →
@@ -102,7 +102,7 @@ def add_DispatchServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class DispatchService(object):
+class DispatchService:
     """DispatchService is the final stage of the Integrated Operations System:
     it tracks finished, production-ready lots leaving the facility — closing
     the loop from supplier intake → QC → warehouse → production handoff →

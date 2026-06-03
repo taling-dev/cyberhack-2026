@@ -59,18 +59,76 @@ const dispatch: Record<string, Spec> = {
     }),
   },
   'warehouse.slot_assigned': {
-    roles: ['MANAGER', 'ADMIN'],
+    roles: ['OPERATOR', 'WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'],
     operatorOwnerOnly: true,
     build: (e, t) => ({
       title: t('toast.warehouse_assigned.title'),
-      body: t('toast.warehouse_assigned.body', {
-        values: {
-          lot: e.envelope.payload?.lot_number ?? '',
-          slot: e.envelope.payload?.location_code ?? '',
-        },
-      }),
+      body: e.envelope.payload?.decision_type === 'AUTO'
+        ? t('toast.warehouse_assigned.auto', {
+            values: {
+              lot: e.envelope.payload?.lot_number ?? '',
+              slot: e.envelope.payload?.location_code ?? '',
+            },
+          })
+        : t('toast.warehouse_assigned.body', {
+            values: {
+              lot: e.envelope.payload?.lot_number ?? '',
+              slot: e.envelope.payload?.location_code ?? '',
+            },
+          }),
       href: `/lots/${e.envelope.payload?.lot_id ?? ''}`,
       variant: 'success',
+    }),
+  },
+  'warehouse.slot_unassigned': {
+    roles: ['OPERATOR', 'WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'],
+    operatorOwnerOnly: true,
+    build: (e, t) => ({
+      title: t('toast.warehouse_unassigned.title'),
+      body: t('toast.warehouse_unassigned.body', {
+        values: {
+          lot: e.envelope.payload?.lot_number ?? '',
+          reason: e.envelope.payload?.reason ?? '',
+        },
+      }),
+      href: `/warehouse?lot=${e.envelope.payload?.lot_id ?? ''}`,
+      variant: 'warning',
+    }),
+  },
+  'review_request.created': {
+    roles: ['QC_SUPERVISOR', 'MANAGER', 'ADMIN'],
+    build: (e, t) => ({
+      title: t('toast.review_request.title'),
+      body: t('toast.review_request.body', {
+        values: {
+          lot: e.envelope.payload?.lot_number ?? '',
+          requester: e.envelope.payload?.requester_id ?? '',
+          type: e.envelope.payload?.request_type ?? '',
+        },
+      }),
+      href: `/review-requests`,
+      variant: 'info',
+    }),
+  },
+  'review_request.resolved': {
+    roles: ['OPERATOR', 'WAREHOUSE_STAFF', 'MANAGER', 'ADMIN'],
+    operatorOwnerOnly: true,
+    build: (e, t) => ({
+      title: e.envelope.payload?.approved
+        ? t('toast.review_request_approved.title')
+        : t('toast.review_request_rejected.title'),
+      body: e.envelope.payload?.approved
+        ? t('toast.review_request_approved.body', {
+            values: { lot: e.envelope.payload?.lot_number ?? '' },
+          })
+        : t('toast.review_request_rejected.body', {
+            values: {
+              lot: e.envelope.payload?.lot_number ?? '',
+              note: e.envelope.payload?.review_note ?? '',
+            },
+          }),
+      href: `/lots/${e.envelope.payload?.lot_id ?? ''}`,
+      variant: e.envelope.payload?.approved ? 'success' : 'warning',
     }),
   },
   'lot.ready_for_production': {

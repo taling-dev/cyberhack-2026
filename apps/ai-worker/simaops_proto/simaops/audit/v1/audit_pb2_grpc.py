@@ -5,7 +5,7 @@ import grpc
 from simaops.audit.v1 import audit_pb2 as simaops_dot_audit_dot_v1_dot_audit__pb2
 
 
-class AuditServiceStub(object):
+class AuditServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -26,7 +26,7 @@ class AuditServiceStub(object):
                 _registered_method=True)
 
 
-class AuditServiceServicer(object):
+class AuditServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def ListAuditLogs(self, request, context):
@@ -62,7 +62,7 @@ def add_AuditServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class AuditService(object):
+class AuditService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

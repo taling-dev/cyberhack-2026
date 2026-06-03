@@ -539,12 +539,13 @@ type UsersProfile struct {
 }
 
 type WarehouseAssignment struct {
-	ID         string                     `json:"id"`
-	LotID      string                     `json:"lot_id"`
-	LocationID string                     `json:"location_id"`
-	AssignedBy string                     `json:"assigned_by"`
-	AssignedAt time.Time                  `json:"assigned_at"`
-	Status     WarehouseAssignmentsStatus `json:"status"`
+	ID           string                     `json:"id"`
+	LotID        string                     `json:"lot_id"`
+	LocationID   string                     `json:"location_id"`
+	AssignedBy   string                     `json:"assigned_by"`
+	AssignedAt   time.Time                 `json:"assigned_at"`
+	Status       WarehouseAssignmentsStatus `json:"status"`
+	DecisionType string                     `json:"decision_type"` // AUTO, MANUAL, OVERRIDE
 }
 
 type WarehouseLocation struct {
@@ -557,4 +558,50 @@ type WarehouseLocation struct {
 	DrumCompatibility json.RawMessage                 `json:"drum_compatibility"`
 	Capacity          int32                           `json:"capacity"`
 	CurrentStatus     WarehouseLocationsCurrentStatus `json:"current_status"`
+}
+
+type SlotDecision struct {
+	ID            string    `json:"id"`
+	LotID         string    `json:"lot_id"`
+	LocationID    string    `json:"location_id"`
+	DecisionType  string    `json:"decision_type"`
+	Reason        sql.NullString `json:"reason"`
+	ActorID       string    `json:"actor_id"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type ReviewRequestsStatus string
+
+const (
+	ReviewRequestsStatusPENDING   ReviewRequestsStatus = "PENDING"
+	ReviewRequestsStatusAPPROVED   ReviewRequestsStatus = "APPROVED"
+	ReviewRequestsStatusREJECTED   ReviewRequestsStatus = "REJECTED"
+	ReviewRequestsStatusCANCELLED  ReviewRequestsStatus = "CANCELLED"
+)
+
+func (e *ReviewRequestsStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReviewRequestsStatus(s)
+	case string:
+		*e = ReviewRequestsStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReviewRequestsStatus: %T", src)
+	}
+	return nil
+}
+
+type ReviewRequest struct {
+	ID          string                `json:"id"`
+	LotID       string                `json:"lot_id"`
+	RequesterID string                `json:"requester_id"`
+	RequesterRole string              `json:"requester_role"`
+	TargetRole  string                `json:"target_role"`
+	RequestType string                `json:"request_type"`
+	Reason      string                `json:"reason"`
+	Status      ReviewRequestsStatus `json:"status"`
+	ReviewedBy  sql.NullString        `json:"reviewed_by"`
+	ReviewNote  sql.NullString        `json:"review_note"`
+	CreatedAt   time.Time             `json:"created_at"`
+	ReviewedAt  sql.NullTime          `json:"reviewed_at"`
 }

@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package simaops.review.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service ReviewRequestService {
+  // Create a review request (e.g., operator requests supervisor review for warehouse assignment)
+  rpc CreateReviewRequest(CreateReviewRequestRequest) returns (CreateReviewRequestResponse);
+
+  // List review requests (for supervisors/managers)
+  rpc ListReviewRequests(ListReviewRequestsRequest) returns (ListReviewRequestsResponse);
+
+  // Resolve a review request (approve or reject)
+  rpc ResolveReviewRequest(ResolveReviewRequestRequest) returns (ResolveReviewRequestResponse);
+}
+
+// ─── Enums ───────────────────────────────────────────────────────
+
+enum RequestType {
+  REQUEST_TYPE_UNSPECIFIED = 0;
+  REQUEST_TYPE_WAREHOUSE_REASSIGN = 1;  // Request different slot assignment
+  REQUEST_TYPE_STATUS_CHANGE = 2;        // Request status transition approval
+}
+
+enum ReviewStatus {
+  REVIEW_STATUS_UNSPECIFIED = 0;
+  REVIEW_STATUS_PENDING = 1;
+  REVIEW_STATUS_APPROVED = 2;
+  REVIEW_STATUS_REJECTED = 3;
+  REVIEW_STATUS_CANCELLED = 4;
+}
+
+// ─── Messages ────────────────────────────────────────────────────
+
+message ReviewRequest {
+  string id = 1;
+  string lot_id = 2;
+  string lot_number = 3;
+  RequestType request_type = 4;
+  string requester_id = 5;
+  string requester_role = 6;
+  string target_role = 7;
+  string reason = 8;
+  ReviewStatus status = 9;
+  string reviewed_by = 10;
+  string review_note = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp reviewed_at = 13;
+}
+
+// ─── Requests / Responses ────────────────────────────────────────
+
+message CreateReviewRequestRequest {
+  string lot_id = 1;
+  RequestType request_type = 2;
+  string target_role = 3;   // 'QC_SUPERVISOR', 'MANAGER', etc.
+  string reason = 4;        // Why is this review needed
+  string idempotency_key = 5;
+}
+
+message CreateReviewRequestResponse {
+  ReviewRequest request = 1;
+}
+
+message ListReviewRequestsRequest {
+  ReviewStatus status_filter = 1;  // Filter by status (default: PENDING)
+  string target_role_filter = 2;   // Filter by target role
+  int32 page_size = 3;
+  string page_token = 4;
+}
+
+message ListReviewRequestsResponse {
+  repeated ReviewRequest requests = 1;
+  string next_page_token = 2;
+}
+
+message ResolveReviewRequestRequest {
+  string request_id = 1;
+  bool approved = 2;          // true = approve, false = reject
+  string review_note = 3;     // Optional note explaining decision
+  string idempotency_key = 4;
+}
+
+message ResolveReviewRequestResponse {
+  ReviewRequest request = 1;
+}

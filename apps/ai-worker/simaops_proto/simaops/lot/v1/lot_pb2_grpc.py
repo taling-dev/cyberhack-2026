@@ -5,7 +5,7 @@ import grpc
 from simaops.lot.v1 import lot_pb2 as simaops_dot_lot_dot_v1_dot_lot__pb2
 
 
-class LotServiceStub(object):
+class LotServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -41,7 +41,7 @@ class LotServiceStub(object):
                 _registered_method=True)
 
 
-class LotServiceServicer(object):
+class LotServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def CreateLot(self, request, context):
@@ -110,7 +110,7 @@ def add_LotServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class LotService(object):
+class LotService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

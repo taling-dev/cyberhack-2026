@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file simaops/warehouse/v1/warehouse.proto.
  */
 export const file_simaops_warehouse_v1_warehouse: GenFile = /*@__PURE__*/
-  fileDesc("CiRzaW1hb3BzL3dhcmVob3VzZS92MS93YXJlaG91c2UucHJvdG8SFHNpbWFvcHMud2FyZWhvdXNlLnYxIo4CChFXYXJlaG91c2VMb2NhdGlvbhIKCgJpZBgBIAEoCRIMCgRjb2RlGAIgASgJEgwKBHpvbmUYAyABKAkSFwoPdGVtcGVyYXR1cmVfbWluGAQgASgBEhcKD3RlbXBlcmF0dXJlX21heBgFIAEoARIzCg5oYXphcmRfYWxsb3dlZBgGIAMoDjIbLnNpbWFvcHMubG90LnYxLkhhemFyZENsYXNzEhoKEmRydW1fY29tcGF0aWJpbGl0eRgHIAMoCRIQCghjYXBhY2l0eRgIIAEoBRI8Cg5jdXJyZW50X3N0YXR1cxgJIAEoDjIkLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxvY2F0aW9uU3RhdHVzItsBChNXYXJlaG91c2VBc3NpZ25tZW50EgoKAmlkGAEgASgJEg4KBmxvdF9pZBgCIAEoCRITCgtsb2NhdGlvbl9pZBgDIAEoCRIVCg1sb2NhdGlvbl9jb2RlGAQgASgJEhMKC2Fzc2lnbmVkX2J5GAUgASgJEi8KC2Fzc2lnbmVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBI2CgZzdGF0dXMYByABKA4yJi5zaW1hb3BzLndhcmVob3VzZS52MS5Bc3NpZ25tZW50U3RhdHVzIm4KElNsb3RSZWNvbW1lbmRhdGlvbhI5Cghsb2NhdGlvbhgBIAEoCzInLnNpbWFvcHMud2FyZWhvdXNlLnYxLldhcmVob3VzZUxvY2F0aW9uEg4KBnJlYXNvbhgCIAEoCRINCgVzY29yZRgDIAEoASJoChRMaXN0TG9jYXRpb25zUmVxdWVzdBITCgt6b25lX2ZpbHRlchgBIAEoCRI7Cg1zdGF0dXNfZmlsdGVyGAIgASgOMiQuc2ltYW9wcy53YXJlaG91c2UudjEuTG9jYXRpb25TdGF0dXMiUwoVTGlzdExvY2F0aW9uc1Jlc3BvbnNlEjoKCWxvY2F0aW9ucxgBIAMoCzInLnNpbWFvcHMud2FyZWhvdXNlLnYxLldhcmVob3VzZUxvY2F0aW9uIiYKFFJlY29tbWVuZFNsb3RSZXF1ZXN0Eg4KBmxvdF9pZBgBIAEoCSJaChVSZWNvbW1lbmRTbG90UmVzcG9uc2USQQoPcmVjb21tZW5kYXRpb25zGAEgAygLMiguc2ltYW9wcy53YXJlaG91c2UudjEuU2xvdFJlY29tbWVuZGF0aW9uIlEKEUFzc2lnblNsb3RSZXF1ZXN0Eg4KBmxvdF9pZBgBIAEoCRITCgtsb2NhdGlvbl9pZBgCIAEoCRIXCg9pZGVtcG90ZW5jeV9rZXkYAyABKAkiUwoSQXNzaWduU2xvdFJlc3BvbnNlEj0KCmFzc2lnbm1lbnQYASABKAsyKS5zaW1hb3BzLndhcmVob3VzZS52MS5XYXJlaG91c2VBc3NpZ25tZW50ImwKHkdldFdhcmVob3VzZUFzc2lnbm1lbnRzUmVxdWVzdBIOCgZsb3RfaWQYASABKAkSEwoLbG9jYXRpb25faWQYAiABKAkSEQoJcGFnZV9zaXplGAMgASgFEhIKCnBhZ2VfdG9rZW4YBCABKAkiegofR2V0V2FyZWhvdXNlQXNzaWdubWVudHNSZXNwb25zZRI+Cgthc3NpZ25tZW50cxgBIAMoCzIpLnNpbWFvcHMud2FyZWhvdXNlLnYxLldhcmVob3VzZUFzc2lnbm1lbnQSFwoPbmV4dF9wYWdlX3Rva2VuGAIgASgJKo8BCg5Mb2NhdGlvblN0YXR1cxIfChtMT0NBVElPTl9TVEFUVVNfVU5TUEVDSUZJRUQQABIdChlMT0NBVElPTl9TVEFUVVNfQVZBSUxBQkxFEAESHAoYTE9DQVRJT05fU1RBVFVTX09DQ1VQSUVEEAISHwobTE9DQVRJT05fU1RBVFVTX01BSU5URU5BTkNFEAMqcwoQQXNzaWdubWVudFN0YXR1cxIhCh1BU1NJR05NRU5UX1NUQVRVU19VTlNQRUNJRklFRBAAEhwKGEFTU0lHTk1FTlRfU1RBVFVTX0FDVElWRRABEh4KGkFTU0lHTk1FTlRfU1RBVFVTX1JFTEVBU0VEEAIy0AMKEFdhcmVob3VzZVNlcnZpY2USaAoNTGlzdExvY2F0aW9ucxIqLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxpc3RMb2NhdGlvbnNSZXF1ZXN0Gisuc2ltYW9wcy53YXJlaG91c2UudjEuTGlzdExvY2F0aW9uc1Jlc3BvbnNlEmgKDVJlY29tbWVuZFNsb3QSKi5zaW1hb3BzLndhcmVob3VzZS52MS5SZWNvbW1lbmRTbG90UmVxdWVzdBorLnNpbWFvcHMud2FyZWhvdXNlLnYxLlJlY29tbWVuZFNsb3RSZXNwb25zZRJfCgpBc3NpZ25TbG90Eicuc2ltYW9wcy53YXJlaG91c2UudjEuQXNzaWduU2xvdFJlcXVlc3QaKC5zaW1hb3BzLndhcmVob3VzZS52MS5Bc3NpZ25TbG90UmVzcG9uc2UShgEKF0dldFdhcmVob3VzZUFzc2lnbm1lbnRzEjQuc2ltYW9wcy53YXJlaG91c2UudjEuR2V0V2FyZWhvdXNlQXNzaWdubWVudHNSZXF1ZXN0GjUuc2ltYW9wcy53YXJlaG91c2UudjEuR2V0V2FyZWhvdXNlQXNzaWdubWVudHNSZXNwb25zZUL5AQoYY29tLnNpbWFvcHMud2FyZWhvdXNlLnYxQg5XYXJlaG91c2VQcm90b1ABWltnaXRodWIuY29tL3RhbGluZy1kZXYvQ1lCRVJIQUNLLTIwMjYvYXBwcy9hcGkvaW50ZXJuYWwvZ2VuL3NpbWFvcHMvd2FyZWhvdXNlL3YxO3dhcmVob3VzZXYxogIDU1dYqgIUU2ltYW9wcy5XYXJlaG91c2UuVjHKAhRTaW1hb3BzXFdhcmVob3VzZVxWMeICIFNpbWFvcHNcV2FyZWhvdXNlXFYxXEdQQk1ldGFkYXRh6gIWU2ltYW9wczo6V2FyZWhvdXNlOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp, file_simaops_lot_v1_lot]);
+  fileDesc("CiRzaW1hb3BzL3dhcmVob3VzZS92MS93YXJlaG91c2UucHJvdG8SFHNpbWFvcHMud2FyZWhvdXNlLnYxIo4CChFXYXJlaG91c2VMb2NhdGlvbhIKCgJpZBgBIAEoCRIMCgRjb2RlGAIgASgJEgwKBHpvbmUYAyABKAkSFwoPdGVtcGVyYXR1cmVfbWluGAQgASgBEhcKD3RlbXBlcmF0dXJlX21heBgFIAEoARIzCg5oYXphcmRfYWxsb3dlZBgGIAMoDjIbLnNpbWFvcHMubG90LnYxLkhhemFyZENsYXNzEhoKEmRydW1fY29tcGF0aWJpbGl0eRgHIAMoCRIQCghjYXBhY2l0eRgIIAEoBRI8Cg5jdXJyZW50X3N0YXR1cxgJIAEoDjIkLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxvY2F0aW9uU3RhdHVzIqYCChNXYXJlaG91c2VBc3NpZ25tZW50EgoKAmlkGAEgASgJEg4KBmxvdF9pZBgCIAEoCRITCgtsb2NhdGlvbl9pZBgDIAEoCRIVCg1sb2NhdGlvbl9jb2RlGAQgASgJEhMKC2Fzc2lnbmVkX2J5GAUgASgJEi8KC2Fzc2lnbmVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBI2CgZzdGF0dXMYByABKA4yJi5zaW1hb3BzLndhcmVob3VzZS52MS5Bc3NpZ25tZW50U3RhdHVzEjkKDWRlY2lzaW9uX3R5cGUYCCABKA4yIi5zaW1hb3BzLndhcmVob3VzZS52MS5EZWNpc2lvblR5cGUSDgoGcmVhc29uGAkgASgJIooBChJTbG90UmVjb21tZW5kYXRpb24SOQoIbG9jYXRpb24YASABKAsyJy5zaW1hb3BzLndhcmVob3VzZS52MS5XYXJlaG91c2VMb2NhdGlvbhIOCgZyZWFzb24YAiABKAkSDQoFc2NvcmUYAyABKAESGgoSaXNfYXV0b19hc3NpZ25hYmxlGAQgASgIIuMBCgxTbG90RGVjaXNpb24SCgoCaWQYASABKAkSDgoGbG90X2lkGAIgASgJEhMKC2xvY2F0aW9uX2lkGAMgASgJEhUKDWxvY2F0aW9uX2NvZGUYBCABKAkSOQoNZGVjaXNpb25fdHlwZRgFIAEoDjIiLnNpbWFvcHMud2FyZWhvdXNlLnYxLkRlY2lzaW9uVHlwZRIOCgZyZWFzb24YBiABKAkSEAoIYWN0b3JfaWQYByABKAkSLgoKY3JlYXRlZF9hdBgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiaAoUTGlzdExvY2F0aW9uc1JlcXVlc3QSEwoLem9uZV9maWx0ZXIYASABKAkSOwoNc3RhdHVzX2ZpbHRlchgCIAEoDjIkLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxvY2F0aW9uU3RhdHVzIlMKFUxpc3RMb2NhdGlvbnNSZXNwb25zZRI6Cglsb2NhdGlvbnMYASADKAsyJy5zaW1hb3BzLndhcmVob3VzZS52MS5XYXJlaG91c2VMb2NhdGlvbiImChRSZWNvbW1lbmRTbG90UmVxdWVzdBIOCgZsb3RfaWQYASABKAkiWgoVUmVjb21tZW5kU2xvdFJlc3BvbnNlEkEKD3JlY29tbWVuZGF0aW9ucxgBIAMoCzIoLnNpbWFvcHMud2FyZWhvdXNlLnYxLlNsb3RSZWNvbW1lbmRhdGlvbiJRChFBc3NpZ25TbG90UmVxdWVzdBIOCgZsb3RfaWQYASABKAkSEwoLbG9jYXRpb25faWQYAiABKAkSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJIlMKEkFzc2lnblNsb3RSZXNwb25zZRI9Cgphc3NpZ25tZW50GAEgASgLMikuc2ltYW9wcy53YXJlaG91c2UudjEuV2FyZWhvdXNlQXNzaWdubWVudCJsCh5HZXRXYXJlaG91c2VBc3NpZ25tZW50c1JlcXVlc3QSDgoGbG90X2lkGAEgASgJEhMKC2xvY2F0aW9uX2lkGAIgASgJEhEKCXBhZ2Vfc2l6ZRgDIAEoBRISCgpwYWdlX3Rva2VuGAQgASgJInoKH0dldFdhcmVob3VzZUFzc2lnbm1lbnRzUmVzcG9uc2USPgoLYXNzaWdubWVudHMYASADKAsyKS5zaW1hb3BzLndhcmVob3VzZS52MS5XYXJlaG91c2VBc3NpZ25tZW50EhcKD25leHRfcGFnZV90b2tlbhgCIAEoCSJOChNVbmFzc2lnblNsb3RSZXF1ZXN0Eg4KBmxvdF9pZBgBIAEoCRIOCgZyZWFzb24YAiABKAkSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJImkKFFVuYXNzaWduU2xvdFJlc3BvbnNlEj0KCmFzc2lnbm1lbnQYASABKAsyKS5zaW1hb3BzLndhcmVob3VzZS52MS5XYXJlaG91c2VBc3NpZ25tZW50EhIKCmxvdF9zdGF0dXMYBCABKAkiUQoYTGlzdFNsb3REZWNpc2lvbnNSZXF1ZXN0Eg4KBmxvdF9pZBgBIAEoCRIRCglwYWdlX3NpemUYAiABKAUSEgoKcGFnZV90b2tlbhgDIAEoCSJrChlMaXN0U2xvdERlY2lzaW9uc1Jlc3BvbnNlEjUKCWRlY2lzaW9ucxgBIAMoCzIiLnNpbWFvcHMud2FyZWhvdXNlLnYxLlNsb3REZWNpc2lvbhIXCg9uZXh0X3BhZ2VfdG9rZW4YAiABKAkqjwEKDkxvY2F0aW9uU3RhdHVzEh8KG0xPQ0FUSU9OX1NUQVRVU19VTlNQRUNJRklFRBAAEh0KGUxPQ0FUSU9OX1NUQVRVU19BVkFJTEFCTEUQARIcChhMT0NBVElPTl9TVEFUVVNfT0NDVVBJRUQQAhIfChtMT0NBVElPTl9TVEFUVVNfTUFJTlRFTkFOQ0UQAypzChBBc3NpZ25tZW50U3RhdHVzEiEKHUFTU0lHTk1FTlRfU1RBVFVTX1VOU1BFQ0lGSUVEEAASHAoYQVNTSUdOTUVOVF9TVEFUVVNfQUNUSVZFEAESHgoaQVNTSUdOTUVOVF9TVEFUVVNfUkVMRUFTRUQQAip7CgxEZWNpc2lvblR5cGUSHQoZREVDSVNJT05fVFlQRV9VTlNQRUNJRklFRBAAEhYKEkRFQ0lTSU9OX1RZUEVfQVVUTxABEhgKFERFQ0lTSU9OX1RZUEVfTUFOVUFMEAISGgoWREVDSVNJT05fVFlQRV9PVkVSUklERRADMq0FChBXYXJlaG91c2VTZXJ2aWNlEmgKDUxpc3RMb2NhdGlvbnMSKi5zaW1hb3BzLndhcmVob3VzZS52MS5MaXN0TG9jYXRpb25zUmVxdWVzdBorLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxpc3RMb2NhdGlvbnNSZXNwb25zZRJoCg1SZWNvbW1lbmRTbG90Eiouc2ltYW9wcy53YXJlaG91c2UudjEuUmVjb21tZW5kU2xvdFJlcXVlc3QaKy5zaW1hb3BzLndhcmVob3VzZS52MS5SZWNvbW1lbmRTbG90UmVzcG9uc2USXwoKQXNzaWduU2xvdBInLnNpbWFvcHMud2FyZWhvdXNlLnYxLkFzc2lnblNsb3RSZXF1ZXN0Giguc2ltYW9wcy53YXJlaG91c2UudjEuQXNzaWduU2xvdFJlc3BvbnNlEmUKDFVuYXNzaWduU2xvdBIpLnNpbWFvcHMud2FyZWhvdXNlLnYxLlVuYXNzaWduU2xvdFJlcXVlc3QaKi5zaW1hb3BzLndhcmVob3VzZS52MS5VbmFzc2lnblNsb3RSZXNwb25zZRJ0ChFMaXN0U2xvdERlY2lzaW9ucxIuLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxpc3RTbG90RGVjaXNpb25zUmVxdWVzdBovLnNpbWFvcHMud2FyZWhvdXNlLnYxLkxpc3RTbG90RGVjaXNpb25zUmVzcG9uc2UShgEKF0dldFdhcmVob3VzZUFzc2lnbm1lbnRzEjQuc2ltYW9wcy53YXJlaG91c2UudjEuR2V0V2FyZWhvdXNlQXNzaWdubWVudHNSZXF1ZXN0GjUuc2ltYW9wcy53YXJlaG91c2UudjEuR2V0V2FyZWhvdXNlQXNzaWdubWVudHNSZXNwb25zZUL5AQoYY29tLnNpbWFvcHMud2FyZWhvdXNlLnYxQg5XYXJlaG91c2VQcm90b1ABWltnaXRodWIuY29tL3RhbGluZy1kZXYvQ1lCRVJIQUNLLTIwMjYvYXBwcy9hcGkvaW50ZXJuYWwvZ2VuL3NpbWFvcHMvd2FyZWhvdXNlL3YxO3dhcmVob3VzZXYxogIDU1dYqgIUU2ltYW9wcy5XYXJlaG91c2UuVjHKAhRTaW1hb3BzXFdhcmVob3VzZVxWMeICIFNpbWFvcHNcV2FyZWhvdXNlXFYxXEdQQk1ldGFkYXRh6gIWU2ltYW9wczo6V2FyZWhvdXNlOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp, file_simaops_lot_v1_lot]);
 
 /**
  * @generated from message simaops.warehouse.v1.WarehouseLocation
@@ -111,6 +111,20 @@ export type WarehouseAssignment = Message<"simaops.warehouse.v1.WarehouseAssignm
    * @generated from field: simaops.warehouse.v1.AssignmentStatus status = 7;
    */
   status: AssignmentStatus;
+
+  /**
+   * AUTO, MANUAL, OVERRIDE
+   *
+   * @generated from field: simaops.warehouse.v1.DecisionType decision_type = 8;
+   */
+  decisionType: DecisionType;
+
+  /**
+   * Why this slot was recommended/assigned
+   *
+   * @generated from field: string reason = 9;
+   */
+  reason: string;
 };
 
 /**
@@ -138,6 +152,13 @@ export type SlotRecommendation = Message<"simaops.warehouse.v1.SlotRecommendatio
    * @generated from field: double score = 3;
    */
   score: number;
+
+  /**
+   * True if this can be auto-assigned
+   *
+   * @generated from field: bool is_auto_assignable = 4;
+   */
+  isAutoAssignable: boolean;
 };
 
 /**
@@ -146,6 +167,58 @@ export type SlotRecommendation = Message<"simaops.warehouse.v1.SlotRecommendatio
  */
 export const SlotRecommendationSchema: GenMessage<SlotRecommendation> = /*@__PURE__*/
   messageDesc(file_simaops_warehouse_v1_warehouse, 2);
+
+/**
+ * @generated from message simaops.warehouse.v1.SlotDecision
+ */
+export type SlotDecision = Message<"simaops.warehouse.v1.SlotDecision"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string lot_id = 2;
+   */
+  lotId: string;
+
+  /**
+   * @generated from field: string location_id = 3;
+   */
+  locationId: string;
+
+  /**
+   * @generated from field: string location_code = 4;
+   */
+  locationCode: string;
+
+  /**
+   * @generated from field: simaops.warehouse.v1.DecisionType decision_type = 5;
+   */
+  decisionType: DecisionType;
+
+  /**
+   * @generated from field: string reason = 6;
+   */
+  reason: string;
+
+  /**
+   * @generated from field: string actor_id = 7;
+   */
+  actorId: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 8;
+   */
+  createdAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message simaops.warehouse.v1.SlotDecision.
+ * Use `create(SlotDecisionSchema)` to create a new message.
+ */
+export const SlotDecisionSchema: GenMessage<SlotDecision> = /*@__PURE__*/
+  messageDesc(file_simaops_warehouse_v1_warehouse, 3);
 
 /**
  * @generated from message simaops.warehouse.v1.ListLocationsRequest
@@ -167,7 +240,7 @@ export type ListLocationsRequest = Message<"simaops.warehouse.v1.ListLocationsRe
  * Use `create(ListLocationsRequestSchema)` to create a new message.
  */
 export const ListLocationsRequestSchema: GenMessage<ListLocationsRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 3);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 4);
 
 /**
  * @generated from message simaops.warehouse.v1.ListLocationsResponse
@@ -184,7 +257,7 @@ export type ListLocationsResponse = Message<"simaops.warehouse.v1.ListLocationsR
  * Use `create(ListLocationsResponseSchema)` to create a new message.
  */
 export const ListLocationsResponseSchema: GenMessage<ListLocationsResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 4);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 5);
 
 /**
  * @generated from message simaops.warehouse.v1.RecommendSlotRequest
@@ -201,7 +274,7 @@ export type RecommendSlotRequest = Message<"simaops.warehouse.v1.RecommendSlotRe
  * Use `create(RecommendSlotRequestSchema)` to create a new message.
  */
 export const RecommendSlotRequestSchema: GenMessage<RecommendSlotRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 5);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 6);
 
 /**
  * @generated from message simaops.warehouse.v1.RecommendSlotResponse
@@ -218,7 +291,7 @@ export type RecommendSlotResponse = Message<"simaops.warehouse.v1.RecommendSlotR
  * Use `create(RecommendSlotResponseSchema)` to create a new message.
  */
 export const RecommendSlotResponseSchema: GenMessage<RecommendSlotResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 6);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 7);
 
 /**
  * @generated from message simaops.warehouse.v1.AssignSlotRequest
@@ -245,7 +318,7 @@ export type AssignSlotRequest = Message<"simaops.warehouse.v1.AssignSlotRequest"
  * Use `create(AssignSlotRequestSchema)` to create a new message.
  */
 export const AssignSlotRequestSchema: GenMessage<AssignSlotRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 7);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 8);
 
 /**
  * @generated from message simaops.warehouse.v1.AssignSlotResponse
@@ -262,7 +335,7 @@ export type AssignSlotResponse = Message<"simaops.warehouse.v1.AssignSlotRespons
  * Use `create(AssignSlotResponseSchema)` to create a new message.
  */
 export const AssignSlotResponseSchema: GenMessage<AssignSlotResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 8);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 9);
 
 /**
  * @generated from message simaops.warehouse.v1.GetWarehouseAssignmentsRequest
@@ -294,7 +367,7 @@ export type GetWarehouseAssignmentsRequest = Message<"simaops.warehouse.v1.GetWa
  * Use `create(GetWarehouseAssignmentsRequestSchema)` to create a new message.
  */
 export const GetWarehouseAssignmentsRequestSchema: GenMessage<GetWarehouseAssignmentsRequest> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 9);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 10);
 
 /**
  * @generated from message simaops.warehouse.v1.GetWarehouseAssignmentsResponse
@@ -316,7 +389,111 @@ export type GetWarehouseAssignmentsResponse = Message<"simaops.warehouse.v1.GetW
  * Use `create(GetWarehouseAssignmentsResponseSchema)` to create a new message.
  */
 export const GetWarehouseAssignmentsResponseSchema: GenMessage<GetWarehouseAssignmentsResponse> = /*@__PURE__*/
-  messageDesc(file_simaops_warehouse_v1_warehouse, 10);
+  messageDesc(file_simaops_warehouse_v1_warehouse, 11);
+
+/**
+ * @generated from message simaops.warehouse.v1.UnassignSlotRequest
+ */
+export type UnassignSlotRequest = Message<"simaops.warehouse.v1.UnassignSlotRequest"> & {
+  /**
+   * @generated from field: string lot_id = 1;
+   */
+  lotId: string;
+
+  /**
+   * Required: why is this being unassigned
+   *
+   * @generated from field: string reason = 2;
+   */
+  reason: string;
+
+  /**
+   * @generated from field: string idempotency_key = 3;
+   */
+  idempotencyKey: string;
+};
+
+/**
+ * Describes the message simaops.warehouse.v1.UnassignSlotRequest.
+ * Use `create(UnassignSlotRequestSchema)` to create a new message.
+ */
+export const UnassignSlotRequestSchema: GenMessage<UnassignSlotRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_warehouse_v1_warehouse, 12);
+
+/**
+ * @generated from message simaops.warehouse.v1.UnassignSlotResponse
+ */
+export type UnassignSlotResponse = Message<"simaops.warehouse.v1.UnassignSlotResponse"> & {
+  /**
+   * The released assignment
+   *
+   * @generated from field: simaops.warehouse.v1.WarehouseAssignment assignment = 1;
+   */
+  assignment?: WarehouseAssignment | undefined;
+
+  /**
+   * "QC_APPROVED" - the new status
+   *
+   * @generated from field: string lot_status = 4;
+   */
+  lotStatus: string;
+};
+
+/**
+ * Describes the message simaops.warehouse.v1.UnassignSlotResponse.
+ * Use `create(UnassignSlotResponseSchema)` to create a new message.
+ */
+export const UnassignSlotResponseSchema: GenMessage<UnassignSlotResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_warehouse_v1_warehouse, 13);
+
+/**
+ * @generated from message simaops.warehouse.v1.ListSlotDecisionsRequest
+ */
+export type ListSlotDecisionsRequest = Message<"simaops.warehouse.v1.ListSlotDecisionsRequest"> & {
+  /**
+   * @generated from field: string lot_id = 1;
+   */
+  lotId: string;
+
+  /**
+   * @generated from field: int32 page_size = 2;
+   */
+  pageSize: number;
+
+  /**
+   * @generated from field: string page_token = 3;
+   */
+  pageToken: string;
+};
+
+/**
+ * Describes the message simaops.warehouse.v1.ListSlotDecisionsRequest.
+ * Use `create(ListSlotDecisionsRequestSchema)` to create a new message.
+ */
+export const ListSlotDecisionsRequestSchema: GenMessage<ListSlotDecisionsRequest> = /*@__PURE__*/
+  messageDesc(file_simaops_warehouse_v1_warehouse, 14);
+
+/**
+ * @generated from message simaops.warehouse.v1.ListSlotDecisionsResponse
+ */
+export type ListSlotDecisionsResponse = Message<"simaops.warehouse.v1.ListSlotDecisionsResponse"> & {
+  /**
+   * @generated from field: repeated simaops.warehouse.v1.SlotDecision decisions = 1;
+   */
+  decisions: SlotDecision[];
+
+  /**
+   * @generated from field: string next_page_token = 2;
+   */
+  nextPageToken: string;
+};
+
+/**
+ * Describes the message simaops.warehouse.v1.ListSlotDecisionsResponse.
+ * Use `create(ListSlotDecisionsResponseSchema)` to create a new message.
+ */
+export const ListSlotDecisionsResponseSchema: GenMessage<ListSlotDecisionsResponse> = /*@__PURE__*/
+  messageDesc(file_simaops_warehouse_v1_warehouse, 15);
 
 /**
  * @generated from enum simaops.warehouse.v1.LocationStatus
@@ -376,6 +553,43 @@ export const AssignmentStatusSchema: GenEnum<AssignmentStatus> = /*@__PURE__*/
   enumDesc(file_simaops_warehouse_v1_warehouse, 1);
 
 /**
+ * @generated from enum simaops.warehouse.v1.DecisionType
+ */
+export enum DecisionType {
+  /**
+   * @generated from enum value: DECISION_TYPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * AI/system auto-assigned
+   *
+   * @generated from enum value: DECISION_TYPE_AUTO = 1;
+   */
+  AUTO = 1,
+
+  /**
+   * Human explicitly assigned
+   *
+   * @generated from enum value: DECISION_TYPE_MANUAL = 2;
+   */
+  MANUAL = 2,
+
+  /**
+   * Human overrode an auto-decision
+   *
+   * @generated from enum value: DECISION_TYPE_OVERRIDE = 3;
+   */
+  OVERRIDE = 3,
+}
+
+/**
+ * Describes the enum simaops.warehouse.v1.DecisionType.
+ */
+export const DecisionTypeSchema: GenEnum<DecisionType> = /*@__PURE__*/
+  enumDesc(file_simaops_warehouse_v1_warehouse, 2);
+
+/**
  * @generated from service simaops.warehouse.v1.WarehouseService
  */
 export const WarehouseService: GenService<{
@@ -402,6 +616,22 @@ export const WarehouseService: GenService<{
     methodKind: "unary";
     input: typeof AssignSlotRequestSchema;
     output: typeof AssignSlotResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.warehouse.v1.WarehouseService.UnassignSlot
+   */
+  unassignSlot: {
+    methodKind: "unary";
+    input: typeof UnassignSlotRequestSchema;
+    output: typeof UnassignSlotResponseSchema;
+  },
+  /**
+   * @generated from rpc simaops.warehouse.v1.WarehouseService.ListSlotDecisions
+   */
+  listSlotDecisions: {
+    methodKind: "unary";
+    input: typeof ListSlotDecisionsRequestSchema;
+    output: typeof ListSlotDecisionsResponseSchema;
   },
   /**
    * @generated from rpc simaops.warehouse.v1.WarehouseService.GetWarehouseAssignments

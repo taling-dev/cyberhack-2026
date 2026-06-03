@@ -39,14 +39,15 @@ func (s *WarehouseService) autoAssign(ctx context.Context, lotID string) {
 	if err != nil || len(recResp.Msg.Recommendations) == 0 {
 		return
 	}
-	top := recResp.Msg.Recommendations[0].Location
-	if top == nil {
+	top := recResp.Msg.Recommendations[0]
+	if top.Location == nil {
 		return
 	}
-	_, _ = s.AssignSlot(ctx, connect.NewRequest(&whv1.AssignSlotRequest{
+	// Auto-assign with AUTO decision type - visibility is key
+	_, _ = s.AssignSlotWithDecisionType(ctx, connect.NewRequest(&whv1.AssignSlotRequest{
 		LotId:      lotID,
-		LocationId: top.Id,
-	}))
+		LocationId: top.Location.Id,
+	}), whv1.DecisionType_DECISION_TYPE_AUTO, top.Reason)
 }
 
 func (s *WarehouseService) ListLocations(ctx context.Context, req *connect.Request[whv1.ListLocationsRequest]) (*connect.Response[whv1.ListLocationsResponse], error) {
@@ -121,9 +122,10 @@ func recommendSlotInline(lot db.Lot, available []db.WarehouseLocation) []*whv1.S
 		}
 
 		recs = append(recs, &whv1.SlotRecommendation{
-			Location: dbLocationToProto(loc),
-			Reason:   reason,
-			Score:    score,
+			Location:         dbLocationToProto(loc),
+			Reason:           reason,
+			Score:            score,
+			IsAutoAssignable: true, // All recommendations from inline are auto-assignable
 		})
 	}
 
@@ -131,6 +133,11 @@ func recommendSlotInline(lot db.Lot, available []db.WarehouseLocation) []*whv1.S
 }
 
 func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[whv1.AssignSlotRequest]) (*connect.Response[whv1.AssignSlotResponse], error) {
+	// Default to MANUAL for explicit user assignments
+	return s.AssignSlotWithDecisionType(ctx, req, whv1.DecisionType_DECISION_TYPE_MANUAL, "")
+}
+
+func (s *WarehouseService) AssignSlotWithDecisionType(ctx context.Context, req *connect.Request[whv1.AssignSlotRequest], decisionType whv1.DecisionType, reason string) (*connect.Response[whv1.AssignSlotResponse], error) {
 	msg := req.Msg
 	if msg.LotId == "" || msg.LocationId == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id and location_id required"))
@@ -138,6 +145,7 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 
 	assignedBy := userFromCtx(ctx)
 	assignmentID := uuid.NewString()
+	decisionID := uuid.NewString()
 
 	// Single transaction wrapping every mutation:
 	//   1. Lock the lot row + validate status (FOR UPDATE — prevents concurrent
@@ -146,12 +154,10 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 	//      WHERE id = ? AND capacity > 0` returning rowsAffected=1 only if
 	//      we won the race for the last unit.
 	//   3. Read the location for the response.
-	//   4. Insert the assignment row.
-	//   5. Advance the lot to READY_FOR_PRODUCTION.
-	//   6. Append both outbox events (warehouse.slot_assigned + lot.status_changed).
-	//
-	// On any failure between (2) and (6), the deferred Rollback undoes the
-	// capacity decrement automatically — no more "best-effort restore" dance.
+	//   4. Insert the assignment row with decision_type.
+	//   5. Insert slot_decision audit row.
+	//   6. Advance the lot to READY_FOR_PRODUCTION.
+	//   7. Append both outbox events (warehouse.slot_assigned + lot.status_changed).
 	tx, err := s.dbx.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
@@ -199,17 +205,31 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		}
 	}
 
-	// 4. Insert the assignment row.
-	if err := qtx.CreateWarehouseAssignment(ctx, db.CreateWarehouseAssignmentParams{
-		ID:         assignmentID,
-		LotID:      msg.LotId,
-		LocationID: msg.LocationId,
-		AssignedBy: assignedBy,
+	// 4. Insert the assignment row with decision_type.
+	dt := decisionTypeToDB(decisionType)
+	if err := qtx.CreateWarehouseAssignmentWithDecisionType(ctx, db.CreateWarehouseAssignmentWithDecisionTypeParams{
+		ID:           assignmentID,
+		LotID:        msg.LotId,
+		LocationID:   msg.LocationId,
+		AssignedBy:   assignedBy,
+		DecisionType: dt,
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create assignment: %w", err))
 	}
 
-	// 5. Advance the lot.
+	// 5. Insert slot_decision audit row for visibility.
+	if err := qtx.CreateSlotDecision(ctx, db.CreateSlotDecisionParams{
+		ID:            decisionID,
+		LotID:         msg.LotId,
+		LocationID:    msg.LocationId,
+		DecisionType:  dt,
+		Reason:        sql.NullString{String: reason, Valid: reason != ""},
+		ActorID:       assignedBy,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create slot decision: %w", err))
+	}
+
+	// 6. Advance the lot.
 	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
 		Status: db.LotsStatusREADYFORPRODUCTION,
 		ID:     msg.LotId,
@@ -217,7 +237,7 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
 	}
 
-	// 6a. Emit warehouse.slot_assigned for SSE fan-out. Owner is the lot
+	// 7a. Emit warehouse.slot_assigned for SSE fan-out. Owner is the lot
 	//     creator so operators get a "your lot was slotted" toast.
 	whEnvelope, err := events.NewEnvelope(
 		"warehouse.slot_assigned",
@@ -232,6 +252,8 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 			"location_id":     msg.LocationId,
 			"location_code":   loc.Code,
 			"assigned_by":     assignedBy,
+			"decision_type":   decisionTypeToDB(decisionType),
+			"reason":          reason,
 		},
 	)
 	if err != nil {
@@ -245,7 +267,7 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
 	}
 
-	// 6b. Emit lot.status_changed so subscribers tracking only lot.* see the
+	// 7b. Emit lot.status_changed so subscribers tracking only lot.* see the
 	//     final transition to READY_FOR_PRODUCTION.
 	statusEnvelope, err := events.NewEnvelope(
 		"lot.status_changed",
@@ -273,7 +295,7 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create lot status outbox event: %w", err))
 	}
 
-	// 6c. Emit lot.ready_for_production — the dedicated production-handoff
+	// 7c. Emit lot.ready_for_production — the dedicated production-handoff
 	//     event. Unlike the generic lot.status_changed firehose, this carries
 	//     the full lot payload a downstream dispatch / PPIC consumer needs to
 	//     act, and is a distinct subject that can be granted via the SSE role
@@ -299,7 +321,179 @@ func (s *WarehouseService) AssignSlot(ctx context.Context, req *connect.Request[
 			AssignedBy:   assignedBy,
 			AssignedAt:   timestamppb.Now(),
 			Status:       whv1.AssignmentStatus_ASSIGNMENT_STATUS_ACTIVE,
+			DecisionType: decisionType,
+			Reason:       reason,
 		},
+	}), nil
+}
+
+// UnassignSlot releases a slot assignment and moves the lot back to QC_APPROVED.
+// This allows warehouse staff or supervisors to undo auto-assignments or reassign.
+func (s *WarehouseService) UnassignSlot(ctx context.Context, req *connect.Request[whv1.UnassignSlotRequest]) (*connect.Response[whv1.UnassignSlotResponse], error) {
+	msg := req.Msg
+	if msg.LotId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id is required"))
+	}
+	if msg.Reason == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("reason is required for unassign"))
+	}
+
+	actor := userFromCtx(ctx)
+
+	tx, err := s.dbx.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("begin tx: %w", err))
+	}
+	defer func() { _ = tx.Rollback() }()
+	qtx := s.q.WithTx(tx)
+
+	// Get lot for update
+	lot, err := qtx.GetLotForUpdate(ctx, msg.LotId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lot not found"))
+	}
+
+	// Verify lot is in WAREHOUSE_ASSIGNED or READY_FOR_PRODUCTION
+	if lot.Status != db.LotsStatusWAREHOUSEASSIGNED && lot.Status != db.LotsStatusREADYFORPRODUCTION {
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("lot must be WAREHOUSE_ASSIGNED or READY_FOR_PRODUCTION (current: %s)", lot.Status))
+	}
+
+	// Get active assignment
+	assignment, err := qtx.GetActiveWarehouseAssignment(ctx, msg.LotId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no active assignment for lot"))
+		}
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	// Get location
+	loc, err := qtx.GetWarehouseLocation(ctx, assignment.LocationID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	// Increment capacity back
+	if _, err := qtx.IncrementLocationCapacity(ctx, assignment.LocationID); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("increment capacity: %w", err))
+	}
+
+	// Update location status back to AVAILABLE if it was OCCUPIED
+	if loc.CurrentStatus == db.WarehouseLocationsCurrentStatusOCCUPIED && loc.Capacity > 0 {
+		if err := qtx.UpdateLocationStatus(ctx, db.UpdateLocationStatusParams{
+			CurrentStatus: db.WarehouseLocationsCurrentStatusAVAILABLE,
+			ID:            assignment.LocationID,
+		}); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update location status: %w", err))
+		}
+	}
+
+	// Release the assignment
+	if err := qtx.ReleaseWarehouseAssignment(ctx, db.ReleaseWarehouseAssignmentParams{
+		ID:     assignment.ID,
+		Status: db.WarehouseAssignmentsStatusRELEASED,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("release assignment: %w", err))
+	}
+
+	// Log the unassign as OVERRIDE decision type
+	decisionID := uuid.NewString()
+	if err := qtx.CreateSlotDecision(ctx, db.CreateSlotDecisionParams{
+		ID:           decisionID,
+		LotID:        msg.LotId,
+		LocationID:   assignment.LocationID,
+		DecisionType: "OVERRIDE",
+		Reason:       sql.NullString{String: msg.Reason, Valid: true},
+		ActorID:      actor,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create slot decision: %w", err))
+	}
+
+	// Move lot back to QC_APPROVED
+	if err := qtx.UpdateLotStatus(ctx, db.UpdateLotStatusParams{
+		Status: db.LotsStatusQCAPPROVED,
+		ID:     msg.LotId,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("update lot status: %w", err))
+	}
+
+	// Emit events
+	envelope, err := events.NewEnvelope(
+		"warehouse.slot_unassigned",
+		actor,
+		lot.CreatedBy,
+		msg.LotId,
+		map[string]any{
+			"lot_id":      msg.LotId,
+			"lot_number": lot.LotNumber,
+			"reason":      msg.Reason,
+			"actor_id":    actor,
+		},
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("build envelope: %w", err))
+	}
+	if err := qtx.CreateOutboxEvent(ctx, db.CreateOutboxEventParams{
+		ID:          uuid.NewString(),
+		EventType:   "warehouse.slot_unassigned",
+		PayloadJson: envelope,
+	}); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("create outbox event: %w", err))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("commit: %w", err))
+	}
+
+	return connect.NewResponse(&whv1.UnassignSlotResponse{
+		Assignment: &whv1.WarehouseAssignment{
+			Id:           assignment.ID,
+			LotId:        msg.LotId,
+			LocationId:   assignment.LocationID,
+			LocationCode: loc.Code,
+			AssignedBy:   assignment.AssignedBy,
+			AssignedAt:   timestamppb.New(assignment.AssignedAt),
+			Status:       whv1.AssignmentStatus_ASSIGNMENT_STATUS_RELEASED,
+			DecisionType: whv1.DecisionType_DECISION_TYPE_OVERRIDE,
+			Reason:       msg.Reason,
+		},
+		LotStatus: "QC_APPROVED",
+	}), nil
+}
+
+// ListSlotDecisions returns the audit trail of slot decisions for a lot.
+func (s *WarehouseService) ListSlotDecisions(ctx context.Context, req *connect.Request[whv1.ListSlotDecisionsRequest]) (*connect.Response[whv1.ListSlotDecisionsResponse], error) {
+	if req.Msg.LotId == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lot_id is required"))
+	}
+
+	decisions, err := s.q.ListSlotDecisionsByLot(ctx, req.Msg.LotId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	protos := make([]*whv1.SlotDecision, len(decisions))
+	for i, d := range decisions {
+		loc, err := s.q.GetWarehouseLocation(ctx, d.LocationID)
+		locCode := ""
+		if err == nil {
+			locCode = loc.Code
+		}
+		protos[i] = &whv1.SlotDecision{
+			Id:            d.ID,
+			LotId:         d.LotID,
+			LocationId:    d.LocationID,
+			LocationCode:  locCode,
+			DecisionType:  decisionTypeFromDB(d.DecisionType),
+			Reason:        d.Reason.String,
+			ActorId:       d.ActorID,
+			CreatedAt:     timestamppb.New(d.CreatedAt),
+		}
+	}
+
+	return connect.NewResponse(&whv1.ListSlotDecisionsResponse{
+		Decisions: protos,
 	}), nil
 }
 
@@ -311,11 +505,12 @@ func (s *WarehouseService) GetWarehouseAssignments(ctx context.Context, req *con
 	protos := make([]*whv1.WarehouseAssignment, len(assignments))
 	for i, a := range assignments {
 		protos[i] = &whv1.WarehouseAssignment{
-			Id:         a.ID,
-			LotId:      a.LotID,
-			LocationId: a.LocationID,
-			AssignedBy: a.AssignedBy,
-			AssignedAt: timestamppb.New(a.AssignedAt),
+			Id:           a.ID,
+			LotId:        a.LotID,
+			LocationId:   a.LocationID,
+			AssignedBy:   a.AssignedBy,
+			AssignedAt:   timestamppb.New(a.AssignedAt),
+			DecisionType: decisionTypeFromDB(a.DecisionType),
 		}
 	}
 	return connect.NewResponse(&whv1.GetWarehouseAssignmentsResponse{Assignments: protos}), nil
@@ -399,4 +594,30 @@ func jsonArrayIsEmpty(raw json.RawMessage) bool {
 		return true
 	}
 	return len(arr) == 0
+}
+
+func decisionTypeToDB(dt whv1.DecisionType) string {
+	switch dt {
+	case whv1.DecisionType_DECISION_TYPE_AUTO:
+		return "AUTO"
+	case whv1.DecisionType_DECISION_TYPE_MANUAL:
+		return "MANUAL"
+	case whv1.DecisionType_DECISION_TYPE_OVERRIDE:
+		return "OVERRIDE"
+	default:
+		return "MANUAL"
+	}
+}
+
+func decisionTypeFromDB(s string) whv1.DecisionType {
+	switch s {
+	case "AUTO":
+		return whv1.DecisionType_DECISION_TYPE_AUTO
+	case "MANUAL":
+		return whv1.DecisionType_DECISION_TYPE_MANUAL
+	case "OVERRIDE":
+		return whv1.DecisionType_DECISION_TYPE_OVERRIDE
+	default:
+		return whv1.DecisionType_DECISION_TYPE_UNSPECIFIED
+	}
 }

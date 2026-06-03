@@ -5,7 +5,7 @@ import grpc
 from simaops.dashboard.v1 import dashboard_pb2 as simaops_dot_dashboard_dot_v1_dot_dashboard__pb2
 
 
-class DashboardServiceStub(object):
+class DashboardServiceStub:
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -41,7 +41,7 @@ class DashboardServiceStub(object):
                 _registered_method=True)
 
 
-class DashboardServiceServicer(object):
+class DashboardServiceServicer:
     """Missing associated documentation comment in .proto file."""
 
     def GetOpsDashboard(self, request, context):
@@ -110,7 +110,7 @@ def add_DashboardServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class DashboardService(object):
+class DashboardService:
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod

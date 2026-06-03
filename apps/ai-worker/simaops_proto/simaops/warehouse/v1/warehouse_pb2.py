@@ -26,7 +26,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from simaops.lot.v1 import lot_pb2 as simaops_dot_lot_dot_v1_dot_lot__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$simaops/warehouse/v1/warehouse.proto\x12\x14simaops.warehouse.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18simaops/lot/v1/lot.proto\"\xf9\x02\n\x11WarehouseLocation\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04\x63ode\x18\x02 \x01(\tR\x04\x63ode\x12\x12\n\x04zone\x18\x03 \x01(\tR\x04zone\x12\'\n\x0ftemperature_min\x18\x04 \x01(\x01R\x0etemperatureMin\x12\'\n\x0ftemperature_max\x18\x05 \x01(\x01R\x0etemperatureMax\x12\x42\n\x0ehazard_allowed\x18\x06 \x03(\x0e\x32\x1b.simaops.lot.v1.HazardClassR\rhazardAllowed\x12-\n\x12\x64rum_compatibility\x18\x07 \x03(\tR\x11\x64rumCompatibility\x12\x1a\n\x08\x63\x61pacity\x18\x08 \x01(\x05R\x08\x63\x61pacity\x12K\n\x0e\x63urrent_status\x18\t \x01(\x0e\x32$.simaops.warehouse.v1.LocationStatusR\rcurrentStatus\"\xa0\x02\n\x13WarehouseAssignment\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n\x06lot_id\x18\x02 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x03 \x01(\tR\nlocationId\x12#\n\rlocation_code\x18\x04 \x01(\tR\x0clocationCode\x12\x1f\n\x0b\x61ssigned_by\x18\x05 \x01(\tR\nassignedBy\x12;\n\x0b\x61ssigned_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nassignedAt\x12>\n\x06status\x18\x07 \x01(\x0e\x32&.simaops.warehouse.v1.AssignmentStatusR\x06status\"\x87\x01\n\x12SlotRecommendation\x12\x43\n\x08location\x18\x01 \x01(\x0b\x32\'.simaops.warehouse.v1.WarehouseLocationR\x08location\x12\x16\n\x06reason\x18\x02 \x01(\tR\x06reason\x12\x14\n\x05score\x18\x03 \x01(\x01R\x05score\"\x82\x01\n\x14ListLocationsRequest\x12\x1f\n\x0bzone_filter\x18\x01 \x01(\tR\nzoneFilter\x12I\n\rstatus_filter\x18\x02 \x01(\x0e\x32$.simaops.warehouse.v1.LocationStatusR\x0cstatusFilter\"^\n\x15ListLocationsResponse\x12\x45\n\tlocations\x18\x01 \x03(\x0b\x32\'.simaops.warehouse.v1.WarehouseLocationR\tlocations\"-\n\x14RecommendSlotRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\"k\n\x15RecommendSlotResponse\x12R\n\x0frecommendations\x18\x01 \x03(\x0b\x32(.simaops.warehouse.v1.SlotRecommendationR\x0frecommendations\"t\n\x11\x41ssignSlotRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x02 \x01(\tR\nlocationId\x12\'\n\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"_\n\x12\x41ssignSlotResponse\x12I\n\nassignment\x18\x01 \x01(\x0b\x32).simaops.warehouse.v1.WarehouseAssignmentR\nassignment\"\x94\x01\n\x1eGetWarehouseAssignmentsRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x02 \x01(\tR\nlocationId\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\"\x96\x01\n\x1fGetWarehouseAssignmentsResponse\x12K\n\x0b\x61ssignments\x18\x01 \x03(\x0b\x32).simaops.warehouse.v1.WarehouseAssignmentR\x0b\x61ssignments\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x8f\x01\n\x0eLocationStatus\x12\x1f\n\x1bLOCATION_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n\x19LOCATION_STATUS_AVAILABLE\x10\x01\x12\x1c\n\x18LOCATION_STATUS_OCCUPIED\x10\x02\x12\x1f\n\x1bLOCATION_STATUS_MAINTENANCE\x10\x03*s\n\x10\x41ssignmentStatus\x12!\n\x1d\x41SSIGNMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n\x18\x41SSIGNMENT_STATUS_ACTIVE\x10\x01\x12\x1e\n\x1a\x41SSIGNMENT_STATUS_RELEASED\x10\x02\x32\xd0\x03\n\x10WarehouseService\x12h\n\rListLocations\x12*.simaops.warehouse.v1.ListLocationsRequest\x1a+.simaops.warehouse.v1.ListLocationsResponse\x12h\n\rRecommendSlot\x12*.simaops.warehouse.v1.RecommendSlotRequest\x1a+.simaops.warehouse.v1.RecommendSlotResponse\x12_\n\nAssignSlot\x12\'.simaops.warehouse.v1.AssignSlotRequest\x1a(.simaops.warehouse.v1.AssignSlotResponse\x12\x86\x01\n\x17GetWarehouseAssignments\x12\x34.simaops.warehouse.v1.GetWarehouseAssignmentsRequest\x1a\x35.simaops.warehouse.v1.GetWarehouseAssignmentsResponseB\xf9\x01\n\x18\x63om.simaops.warehouse.v1B\x0eWarehouseProtoP\x01Z[github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1;warehousev1\xa2\x02\x03SWX\xaa\x02\x14Simaops.Warehouse.V1\xca\x02\x14Simaops\\Warehouse\\V1\xe2\x02 Simaops\\Warehouse\\V1\\GPBMetadata\xea\x02\x16Simaops::Warehouse::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$simaops/warehouse/v1/warehouse.proto\x12\x14simaops.warehouse.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x18simaops/lot/v1/lot.proto\"\xf9\x02\n\x11WarehouseLocation\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n\x04\x63ode\x18\x02 \x01(\tR\x04\x63ode\x12\x12\n\x04zone\x18\x03 \x01(\tR\x04zone\x12\'\n\x0ftemperature_min\x18\x04 \x01(\x01R\x0etemperatureMin\x12\'\n\x0ftemperature_max\x18\x05 \x01(\x01R\x0etemperatureMax\x12\x42\n\x0ehazard_allowed\x18\x06 \x03(\x0e\x32\x1b.simaops.lot.v1.HazardClassR\rhazardAllowed\x12-\n\x12\x64rum_compatibility\x18\x07 \x03(\tR\x11\x64rumCompatibility\x12\x1a\n\x08\x63\x61pacity\x18\x08 \x01(\x05R\x08\x63\x61pacity\x12K\n\x0e\x63urrent_status\x18\t \x01(\x0e\x32$.simaops.warehouse.v1.LocationStatusR\rcurrentStatus\"\x81\x03\n\x13WarehouseAssignment\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n\x06lot_id\x18\x02 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x03 \x01(\tR\nlocationId\x12#\n\rlocation_code\x18\x04 \x01(\tR\x0clocationCode\x12\x1f\n\x0b\x61ssigned_by\x18\x05 \x01(\tR\nassignedBy\x12;\n\x0b\x61ssigned_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\nassignedAt\x12>\n\x06status\x18\x07 \x01(\x0e\x32&.simaops.warehouse.v1.AssignmentStatusR\x06status\x12G\n\rdecision_type\x18\x08 \x01(\x0e\x32\".simaops.warehouse.v1.DecisionTypeR\x0c\x64\x65\x63isionType\x12\x16\n\x06reason\x18\t \x01(\tR\x06reason\"\xb5\x01\n\x12SlotRecommendation\x12\x43\n\x08location\x18\x01 \x01(\x0b\x32\'.simaops.warehouse.v1.WarehouseLocationR\x08location\x12\x16\n\x06reason\x18\x02 \x01(\tR\x06reason\x12\x14\n\x05score\x18\x03 \x01(\x01R\x05score\x12,\n\x12is_auto_assignable\x18\x04 \x01(\x08R\x10isAutoAssignable\"\xb2\x02\n\x0cSlotDecision\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x15\n\x06lot_id\x18\x02 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x03 \x01(\tR\nlocationId\x12#\n\rlocation_code\x18\x04 \x01(\tR\x0clocationCode\x12G\n\rdecision_type\x18\x05 \x01(\x0e\x32\".simaops.warehouse.v1.DecisionTypeR\x0c\x64\x65\x63isionType\x12\x16\n\x06reason\x18\x06 \x01(\tR\x06reason\x12\x19\n\x08\x61\x63tor_id\x18\x07 \x01(\tR\x07\x61\x63torId\x12\x39\n\ncreated_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\"\x82\x01\n\x14ListLocationsRequest\x12\x1f\n\x0bzone_filter\x18\x01 \x01(\tR\nzoneFilter\x12I\n\rstatus_filter\x18\x02 \x01(\x0e\x32$.simaops.warehouse.v1.LocationStatusR\x0cstatusFilter\"^\n\x15ListLocationsResponse\x12\x45\n\tlocations\x18\x01 \x03(\x0b\x32\'.simaops.warehouse.v1.WarehouseLocationR\tlocations\"-\n\x14RecommendSlotRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\"k\n\x15RecommendSlotResponse\x12R\n\x0frecommendations\x18\x01 \x03(\x0b\x32(.simaops.warehouse.v1.SlotRecommendationR\x0frecommendations\"t\n\x11\x41ssignSlotRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x02 \x01(\tR\nlocationId\x12\'\n\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"_\n\x12\x41ssignSlotResponse\x12I\n\nassignment\x18\x01 \x01(\x0b\x32).simaops.warehouse.v1.WarehouseAssignmentR\nassignment\"\x94\x01\n\x1eGetWarehouseAssignmentsRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x1f\n\x0blocation_id\x18\x02 \x01(\tR\nlocationId\x12\x1b\n\tpage_size\x18\x03 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x04 \x01(\tR\tpageToken\"\x96\x01\n\x1fGetWarehouseAssignmentsResponse\x12K\n\x0b\x61ssignments\x18\x01 \x03(\x0b\x32).simaops.warehouse.v1.WarehouseAssignmentR\x0b\x61ssignments\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"m\n\x13UnassignSlotRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x16\n\x06reason\x18\x02 \x01(\tR\x06reason\x12\'\n\x0fidempotency_key\x18\x03 \x01(\tR\x0eidempotencyKey\"\x80\x01\n\x14UnassignSlotResponse\x12I\n\nassignment\x18\x01 \x01(\x0b\x32).simaops.warehouse.v1.WarehouseAssignmentR\nassignment\x12\x1d\n\nlot_status\x18\x04 \x01(\tR\tlotStatus\"m\n\x18ListSlotDecisionsRequest\x12\x15\n\x06lot_id\x18\x01 \x01(\tR\x05lotId\x12\x1b\n\tpage_size\x18\x02 \x01(\x05R\x08pageSize\x12\x1d\n\npage_token\x18\x03 \x01(\tR\tpageToken\"\x85\x01\n\x19ListSlotDecisionsResponse\x12@\n\tdecisions\x18\x01 \x03(\x0b\x32\".simaops.warehouse.v1.SlotDecisionR\tdecisions\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken*\x8f\x01\n\x0eLocationStatus\x12\x1f\n\x1bLOCATION_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n\x19LOCATION_STATUS_AVAILABLE\x10\x01\x12\x1c\n\x18LOCATION_STATUS_OCCUPIED\x10\x02\x12\x1f\n\x1bLOCATION_STATUS_MAINTENANCE\x10\x03*s\n\x10\x41ssignmentStatus\x12!\n\x1d\x41SSIGNMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n\x18\x41SSIGNMENT_STATUS_ACTIVE\x10\x01\x12\x1e\n\x1a\x41SSIGNMENT_STATUS_RELEASED\x10\x02*{\n\x0c\x44\x65\x63isionType\x12\x1d\n\x19\x44\x45\x43ISION_TYPE_UNSPECIFIED\x10\x00\x12\x16\n\x12\x44\x45\x43ISION_TYPE_AUTO\x10\x01\x12\x18\n\x14\x44\x45\x43ISION_TYPE_MANUAL\x10\x02\x12\x1a\n\x16\x44\x45\x43ISION_TYPE_OVERRIDE\x10\x03\x32\xad\x05\n\x10WarehouseService\x12h\n\rListLocations\x12*.simaops.warehouse.v1.ListLocationsRequest\x1a+.simaops.warehouse.v1.ListLocationsResponse\x12h\n\rRecommendSlot\x12*.simaops.warehouse.v1.RecommendSlotRequest\x1a+.simaops.warehouse.v1.RecommendSlotResponse\x12_\n\nAssignSlot\x12\'.simaops.warehouse.v1.AssignSlotRequest\x1a(.simaops.warehouse.v1.AssignSlotResponse\x12\x65\n\x0cUnassignSlot\x12).simaops.warehouse.v1.UnassignSlotRequest\x1a*.simaops.warehouse.v1.UnassignSlotResponse\x12t\n\x11ListSlotDecisions\x12..simaops.warehouse.v1.ListSlotDecisionsRequest\x1a/.simaops.warehouse.v1.ListSlotDecisionsResponse\x12\x86\x01\n\x17GetWarehouseAssignments\x12\x34.simaops.warehouse.v1.GetWarehouseAssignmentsRequest\x1a\x35.simaops.warehouse.v1.GetWarehouseAssignmentsResponseB\xf9\x01\n\x18\x63om.simaops.warehouse.v1B\x0eWarehouseProtoP\x01Z[github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1;warehousev1\xa2\x02\x03SWX\xaa\x02\x14Simaops.Warehouse.V1\xca\x02\x14Simaops\\Warehouse\\V1\xe2\x02 Simaops\\Warehouse\\V1\\GPBMetadata\xea\x02\x16Simaops::Warehouse::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,32 +34,44 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'simaops.warehouse.v1.wareho
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\030com.simaops.warehouse.v1B\016WarehouseProtoP\001Z[github.com/taling-dev/CYBERHACK-2026/apps/api/internal/gen/simaops/warehouse/v1;warehousev1\242\002\003SWX\252\002\024Simaops.Warehouse.V1\312\002\024Simaops\\Warehouse\\V1\342\002 Simaops\\Warehouse\\V1\\GPBMetadata\352\002\026Simaops::Warehouse::V1'
-  _globals['_LOCATIONSTATUS']._serialized_start=1835
-  _globals['_LOCATIONSTATUS']._serialized_end=1978
-  _globals['_ASSIGNMENTSTATUS']._serialized_start=1980
-  _globals['_ASSIGNMENTSTATUS']._serialized_end=2095
+  _globals['_LOCATIONSTATUS']._serialized_start=2776
+  _globals['_LOCATIONSTATUS']._serialized_end=2919
+  _globals['_ASSIGNMENTSTATUS']._serialized_start=2921
+  _globals['_ASSIGNMENTSTATUS']._serialized_end=3036
+  _globals['_DECISIONTYPE']._serialized_start=3038
+  _globals['_DECISIONTYPE']._serialized_end=3161
   _globals['_WAREHOUSELOCATION']._serialized_start=122
   _globals['_WAREHOUSELOCATION']._serialized_end=499
   _globals['_WAREHOUSEASSIGNMENT']._serialized_start=502
-  _globals['_WAREHOUSEASSIGNMENT']._serialized_end=790
-  _globals['_SLOTRECOMMENDATION']._serialized_start=793
-  _globals['_SLOTRECOMMENDATION']._serialized_end=928
-  _globals['_LISTLOCATIONSREQUEST']._serialized_start=931
-  _globals['_LISTLOCATIONSREQUEST']._serialized_end=1061
-  _globals['_LISTLOCATIONSRESPONSE']._serialized_start=1063
-  _globals['_LISTLOCATIONSRESPONSE']._serialized_end=1157
-  _globals['_RECOMMENDSLOTREQUEST']._serialized_start=1159
-  _globals['_RECOMMENDSLOTREQUEST']._serialized_end=1204
-  _globals['_RECOMMENDSLOTRESPONSE']._serialized_start=1206
-  _globals['_RECOMMENDSLOTRESPONSE']._serialized_end=1313
-  _globals['_ASSIGNSLOTREQUEST']._serialized_start=1315
-  _globals['_ASSIGNSLOTREQUEST']._serialized_end=1431
-  _globals['_ASSIGNSLOTRESPONSE']._serialized_start=1433
-  _globals['_ASSIGNSLOTRESPONSE']._serialized_end=1528
-  _globals['_GETWAREHOUSEASSIGNMENTSREQUEST']._serialized_start=1531
-  _globals['_GETWAREHOUSEASSIGNMENTSREQUEST']._serialized_end=1679
-  _globals['_GETWAREHOUSEASSIGNMENTSRESPONSE']._serialized_start=1682
-  _globals['_GETWAREHOUSEASSIGNMENTSRESPONSE']._serialized_end=1832
-  _globals['_WAREHOUSESERVICE']._serialized_start=2098
-  _globals['_WAREHOUSESERVICE']._serialized_end=2562
+  _globals['_WAREHOUSEASSIGNMENT']._serialized_end=887
+  _globals['_SLOTRECOMMENDATION']._serialized_start=890
+  _globals['_SLOTRECOMMENDATION']._serialized_end=1071
+  _globals['_SLOTDECISION']._serialized_start=1074
+  _globals['_SLOTDECISION']._serialized_end=1380
+  _globals['_LISTLOCATIONSREQUEST']._serialized_start=1383
+  _globals['_LISTLOCATIONSREQUEST']._serialized_end=1513
+  _globals['_LISTLOCATIONSRESPONSE']._serialized_start=1515
+  _globals['_LISTLOCATIONSRESPONSE']._serialized_end=1609
+  _globals['_RECOMMENDSLOTREQUEST']._serialized_start=1611
+  _globals['_RECOMMENDSLOTREQUEST']._serialized_end=1656
+  _globals['_RECOMMENDSLOTRESPONSE']._serialized_start=1658
+  _globals['_RECOMMENDSLOTRESPONSE']._serialized_end=1765
+  _globals['_ASSIGNSLOTREQUEST']._serialized_start=1767
+  _globals['_ASSIGNSLOTREQUEST']._serialized_end=1883
+  _globals['_ASSIGNSLOTRESPONSE']._serialized_start=1885
+  _globals['_ASSIGNSLOTRESPONSE']._serialized_end=1980
+  _globals['_GETWAREHOUSEASSIGNMENTSREQUEST']._serialized_start=1983
+  _globals['_GETWAREHOUSEASSIGNMENTSREQUEST']._serialized_end=2131
+  _globals['_GETWAREHOUSEASSIGNMENTSRESPONSE']._serialized_start=2134
+  _globals['_GETWAREHOUSEASSIGNMENTSRESPONSE']._serialized_end=2284
+  _globals['_UNASSIGNSLOTREQUEST']._serialized_start=2286
+  _globals['_UNASSIGNSLOTREQUEST']._serialized_end=2395
+  _globals['_UNASSIGNSLOTRESPONSE']._serialized_start=2398
+  _globals['_UNASSIGNSLOTRESPONSE']._serialized_end=2526
+  _globals['_LISTSLOTDECISIONSREQUEST']._serialized_start=2528
+  _globals['_LISTSLOTDECISIONSREQUEST']._serialized_end=2637
+  _globals['_LISTSLOTDECISIONSRESPONSE']._serialized_start=2640
+  _globals['_LISTSLOTDECISIONSRESPONSE']._serialized_end=2773
+  _globals['_WAREHOUSESERVICE']._serialized_start=3164
+  _globals['_WAREHOUSESERVICE']._serialized_end=3849
 # @@protoc_insertion_point(module_scope)

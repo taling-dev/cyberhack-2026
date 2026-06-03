@@ -79,6 +79,15 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (UsersProfile, error)
 	GetWarehouseAssignmentByLot(ctx context.Context, lotID string) (WarehouseAssignment, error)
 	GetWarehouseLocation(ctx context.Context, id string) (WarehouseLocation, error)
+	// New for visibility/reversibility
+	GetActiveWarehouseAssignment(ctx context.Context, lotID string) (WarehouseAssignment, error)
+	ReleaseWarehouseAssignment(ctx context.Context, arg ReleaseWarehouseAssignmentParams) error
+	CreateSlotDecision(ctx context.Context, arg CreateSlotDecisionParams) error
+	ListSlotDecisionsByLot(ctx context.Context, lotID string) ([]SlotDecision, error)
+	CreateReviewRequest(ctx context.Context, arg CreateReviewRequestParams) error
+	ListReviewRequests(ctx context.Context, arg ListReviewRequestsParams) ([]ReviewRequest, error)
+	GetReviewRequest(ctx context.Context, id string) (ReviewRequest, error)
+	UpdateReviewRequestStatus(ctx context.Context, arg UpdateReviewRequestStatusParams) error
 	IncrementLocationCapacity(ctx context.Context, id string) (int64, error)
 	IncrementOutboxRetry(ctx context.Context, id string) error
 	LatestQCResultsForLots(ctx context.Context, lotIds []string) ([]LatestQCResultsForLotsRow, error)
